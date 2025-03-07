@@ -1,0 +1,15 @@
+### **File Directory Structure for AlagaDocs**
+
+Creating an organized file directory structure is key for easy code management and collaboration during the AlagaDocs development process. Below is a suggested directory and file layout for the AlagaDocs platform.
+
+`alagadocs/ │ ├── public/ │ ├── static/ # Folder for static assets (e.g., images, logos, icons) │ ├── favicon.ico # Favicon for the web application │ ├── src/ │ ├── components/ # Reusable UI components │ │ ├── Button.tsx # Example button component │ │ ├── Form.tsx # Form component for input handling │ │ ├── Modal.tsx # Modal component for reusable dialogs │ │ └── ... │ ├── pages/ # Individual pages of the app │ │ ├── index.tsx # Home page route │ │ ├── login.tsx # Login page route │ │ ├── signup.tsx # Signup page route │ │ ├── profile.tsx # User profile page route │ │ ├── upload.tsx # Audio upload and recording page │ │ ├── transcribe.tsx # AI transcription functionality page │ │ ├── edit.tsx # Editing transcripts in real-time │ │ ├── copy.tsx # Copy-to-EMR page │ │ ├── billing.tsx # Payment system route │ │ ├── customize.tsx # Custom text structuring page │ │ ├── ratings.tsx # Ratings & Reviews page │ │ └── ... │ ├── hooks/ # Custom hooks for state or logic reuse │ │ ├── useAuth.ts # Hook for user authentication logic │ │ ├── useTranscription.ts# Hook for transcription logic │ │ └── ... │ ├── services/ # API calls and data fetching logic │ │ ├── apiService.ts # API request logic │ │ ├── authService.ts # Authentication related requests │ │ ├── paymentService.ts # Billing and payment handling │ │ └── ... │ ├── styles/ # Global styling files │ │ ├── globals.css # Global styles for the application │ │ ├── themes.css # Theme file for color settings │ │ └── ... │ └── utils/ # Utility functions or helper files │ ├── validators.ts # Functions for data validation │ ├── formatters.ts # Functions for data formatting │ └── ... │ ├── .env # Environment variables for configuration ├── README.md # Project documentation and guide ├── tsconfig.json # TypeScript configuration ├── next.config.js # Next.js configuration setup ├── package.json # Node dependencies and scripts └── package-lock.json # Locked versions of dependencies`
+
+### **Development Notes:**
+
+*   **Reusability:** Major components should be housed within the `components` directory to facilitate reuse across different pages.
+*   **Modularity:** Each page has its own TypeScript file within the `pages` directory, allowing for a clear separation of concern.
+*   **Stylization:** Use of Tailwind CSS along with custom styles in the `styles` directory should be leveraged for maintaining a clean, consistent look throughout the application.
+*   **API Integration and Services:** All backend communication should be managed within the `services` directory, providing a single place for API interaction logic.
+*   **Environment-specific Variables:** Securely manage sensitive information with `.env` for environment configurations.
+
+This directory structure is built to ensure scalability, ease of understanding, and flexibility for future feature additions or refactoring in the AlagaDocs platform.
