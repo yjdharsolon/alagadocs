@@ -1,0 +1,81 @@
+
+import React, { useEffect, useState } from 'react';
+import { useScrollProgress } from '../utils/animate';
+import { cn } from '@/lib/utils';
+
+const Navbar: React.FC = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const scrollProgress = useScrollProgress();
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  return (
+    <header 
+      className={cn(
+        "fixed top-0 left-0 w-full z-50 transition-all duration-500 ease-apple px-6 md:px-10 py-5",
+        isScrolled ? "bg-white/80 backdrop-blur-xl shadow-sm" : "bg-transparent"
+      )}
+    >
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <a 
+          href="#" 
+          className="text-xl font-medium tracking-tight hover:opacity-80 transition-opacity"
+        >
+          <span className="sr-only">Company</span>
+          Minimalist
+        </a>
+        
+        <nav className="hidden md:flex items-center space-x-8">
+          {['Products', 'About', 'Design', 'Contact'].map((item) => (
+            <a 
+              key={item} 
+              href={`#${item.toLowerCase()}`}
+              className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
+            >
+              {item}
+              <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
+            </a>
+          ))}
+        </nav>
+        
+        <button 
+          className="md:hidden flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 transition-colors"
+          aria-label="Menu"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="1.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <line x1="4" x2="20" y1="12" y2="12" />
+            <line x1="4" x2="20" y1="6" y2="6" />
+            <line x1="4" x2="20" y1="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      
+      {/* Progress bar */}
+      <div 
+        className="absolute bottom-0 left-0 h-[1px] bg-black/20" 
+        style={{ width: `${scrollProgress * 100}%`, opacity: isScrolled ? 1 : 0 }}
+      />
+    </header>
+  );
+};
+
+export default Navbar;
