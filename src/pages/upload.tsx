@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -133,15 +132,13 @@ const UploadPage = () => {
       const fileExt = audioFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
-      // Track upload progress
-      let lastLoaded = 0;
-      const uploadProgressCallback = (progress: { loaded: number; total: number }) => {
-        const percent = Math.round((progress.loaded / progress.total) * 100);
-        if (percent > lastLoaded) {
-          lastLoaded = percent;
-          setUploadProgress(percent);
-        }
-      };
+      // Simple progress tracking with mock updates
+      const updateProgressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          const newProgress = prev + 5;
+          return newProgress > 90 ? 90 : newProgress; // Cap at 90% until complete
+        });
+      }, 300);
       
       // Upload to Supabase Storage
       const { error, data } = await supabase.storage
@@ -151,9 +148,13 @@ const UploadPage = () => {
           upsert: true
         });
       
+      clearInterval(updateProgressInterval);
+      
       if (error) {
         throw error;
       }
+      
+      setUploadProgress(100); // Set to 100% when complete
       
       // Get the public URL for the uploaded file
       const { data: { publicUrl } } = supabase.storage
