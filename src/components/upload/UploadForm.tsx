@@ -31,6 +31,7 @@ export const UploadForm: React.FC = () => {
     setFile(recordedFile);
     setIsRecording(false);
     setError(null);
+    toast.success('Recording saved successfully');
   };
   
   const handleSubmit = async () => {
@@ -52,19 +53,19 @@ export const UploadForm: React.FC = () => {
         return;
       }
       
-      // Simulated progress updates for better UX
+      // More gradual progress updates for better UX
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
-          if (prev < 80) return prev + 5;
+          if (prev < 75) return prev + 2;
           return prev;
         });
-      }, 500);
+      }, 300);
       
       // Upload the audio file to Supabase storage
       const audioUrl = await uploadAudio(file);
       
       clearInterval(progressInterval);
-      setUploadProgress(90);
+      setUploadProgress(80);
       setCurrentStep('transcribing');
       
       // Transcribe the audio

@@ -1,7 +1,7 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Upload, FileAudio } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface FileUploaderProps {
   file: File | null;
@@ -10,36 +10,62 @@ interface FileUploaderProps {
 
 export const FileUploader: React.FC<FileUploaderProps> = ({ file, onFileSelect }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      
-      // Validate file type
-      if (!selectedFile.type.includes('audio/')) {
-        toast.error('Please upload an audio file');
-        return;
-      }
-      
-      // Check file size (limit to 50MB)
-      if (selectedFile.size > 50 * 1024 * 1024) {
-        toast.error('File size should be less than 50MB');
-        return;
-      }
-      
-      onFileSelect(selectedFile);
+      validateAndProcessFile(e.target.files[0]);
     }
+  };
+  
+  const validateAndProcessFile = (selectedFile: File) => {
+    // Validate file type
+    if (!selectedFile.type.includes('audio/')) {
+      toast.error('Please upload an audio file');
+      return;
+    }
+    
+    // Check file size (limit to 50MB)
+    if (selectedFile.size > 50 * 1024 * 1024) {
+      toast.error('File size should be less than 50MB');
+      return;
+    }
+    
+    onFileSelect(selectedFile);
   };
   
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
+  
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      validateAndProcessFile(e.dataTransfer.files[0]);
+    }
+  };
 
   return (
     <div className="space-y-4">
       <div 
-        className="border-2 border-dashed rounded-lg p-12 text-center cursor-pointer hover:bg-accent/50 transition-colors"
+        className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors
+          ${isDragging ? 'bg-accent/50 border-primary' : 'hover:bg-accent/50'}`}
         onClick={handleUploadClick}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         <input 
           type="file" 

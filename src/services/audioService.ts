@@ -25,39 +25,62 @@ export const uploadAudio = async (file: File): Promise<string> => {
       throw new Error('No authenticated user found. Please log in.');
     }
     
-    // Upload file to Supabase storage
-    const { data, error } = await supabase.storage
-      .from('transcriptions')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-      
-    if (error) {
-      console.error('Error uploading audio:', error);
-      throw new Error(`Error uploading audio: ${error.message}`);
-    }
+    // Create upload options with metadata
+    const uploadOptions = {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type
+    };
     
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('transcriptions')
-      .getPublicUrl(filePath);
+    // Upload file to Supabase storage with retry logic
+    let attempts = 0;
+    const maxAttempts = 3;
     
-    // Create a record in the transcriptions table
-    const { error: transcriptionError } = await supabase
-      .from('transcriptions')
-      .insert({
-        audio_url: publicUrl,
-        user_id: userData.user.id,
-        text: '' // Empty text initially, will be filled after transcription
-      });
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        const { data, error } = await supabase.storage
+          .from('transcriptions')
+          .upload(filePath, file, uploadOptions);
+          
+        if (error) {
+          if (attempts < maxAttempts) {
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+          throw error;
+        }
         
-    if (transcriptionError) {
-      console.error('Error creating transcription record:', transcriptionError);
-      // Don't throw here, we still want to return the URL
+        // Success - get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('transcriptions')
+          .getPublicUrl(filePath);
+        
+        // Create a record in the transcriptions table
+        const { error: transcriptionError } = await supabase
+          .from('transcriptions')
+          .insert({
+            audio_url: publicUrl,
+            user_id: userData.user.id,
+            text: '' // Empty text initially, will be filled after transcription
+          });
+            
+        if (transcriptionError) {
+          console.error('Error creating transcription record:', transcriptionError);
+          // Don't throw here, we still want to return the URL
+        }
+        
+        return publicUrl;
+      } catch (uploadError) {
+        if (attempts >= maxAttempts) {
+          console.error('Error uploading after multiple attempts:', uploadError);
+          throw new Error(`Upload failed: ${uploadError.message || 'Unknown error'}`);
+        }
+      }
     }
     
-    return publicUrl;
+    throw new Error('Upload failed after multiple attempts');
   } catch (error) {
     console.error('Error in uploadAudio:', error);
     throw error;
@@ -74,43 +97,68 @@ export const transcribeAudio = async (audioUrl: string) => {
     // Add a short delay to ensure the file is available
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const { data, error } = await supabase.functions.invoke('openai-whisper', {
-      body: { audioUrl }
-    });
+    // Initialize transcription attempt
+    let attempts = 0;
+    const maxAttempts = 2;
+    let lastError = null;
     
-    if (error) {
-      throw new Error(`Transcription error: ${error.message}`);
-    }
-    
-    if (!data || !data.transcription) {
-      throw new Error('No transcription data returned');
-    }
-    
-    // Update the transcription record with the transcribed text
-    const { data: userData } = await supabase.auth.getUser();
-    
-    if (userData?.user) {
-      const { error: updateError } = await supabase
-        .from('transcriptions')
-        .update({ 
-          text: data.transcription,
-          // Add additional metadata if available
-          ...(data.duration && { duration: data.duration }),
-          ...(data.language && { language: data.language })
-        })
-        .eq('audio_url', audioUrl)
-        .eq('user_id', userData.user.id);
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        const { data, error } = await supabase.functions.invoke('openai-whisper', {
+          body: { audioUrl }
+        });
         
-      if (updateError) {
-        console.error('Error updating transcription record:', updateError);
+        if (error) {
+          lastError = error;
+          // Wait longer before retrying
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
+        }
+        
+        if (!data || !data.transcription) {
+          lastError = new Error('No transcription data returned');
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+          }
+          throw lastError;
+        }
+        
+        // Update the transcription record with the transcribed text
+        const { data: userData } = await supabase.auth.getUser();
+        
+        if (userData?.user) {
+          const { error: updateError } = await supabase
+            .from('transcriptions')
+            .update({ 
+              text: data.transcription,
+              // Add additional metadata if available
+              ...(data.duration && { duration: data.duration }),
+              ...(data.language && { language: data.language })
+            })
+            .eq('audio_url', audioUrl)
+            .eq('user_id', userData.user.id);
+            
+          if (updateError) {
+            console.error('Error updating transcription record:', updateError);
+          }
+        }
+        
+        return {
+          text: data.transcription,
+          duration: data.duration,
+          language: data.language
+        };
+      } catch (attemptError) {
+        lastError = attemptError;
+        if (attempts >= maxAttempts) {
+          throw lastError;
+        }
       }
     }
     
-    return {
-      text: data.transcription,
-      duration: data.duration,
-      language: data.language
-    };
+    throw lastError || new Error('Transcription failed after multiple attempts');
   } catch (error) {
     console.error('Error transcribing audio:', error);
     throw error;

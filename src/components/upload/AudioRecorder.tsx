@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, StopCircle, RefreshCw } from 'lucide-react';
+import { Mic, StopCircle, RefreshCw, Play, Pause } from 'lucide-react';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
 
@@ -24,11 +24,26 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const maxRecordingTime = 300; // 5 minutes maximum
   
   // Determine which state to use
   const isRecording = externalIsRecording !== undefined ? externalIsRecording : internalIsRecording;
   const setIsRecording = externalSetIsRecording || setInternalIsRecording;
+
+  // Cleanup function for media resources
+  const cleanupMediaResources = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current = null;
+    }
+    
+    audioChunksRef.current = [];
+  };
 
   // Timer for recording duration
   useEffect(() => {
@@ -44,20 +59,20 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
               setIsRecording(false);
               toast.info('Maximum recording time reached (5 minutes)');
             }
-            if (interval) clearInterval(interval);
+            clearInterval(interval!);
             return prev;
           }
           return prev + 1;
         });
       }, 1000);
-    } else if (!isRecording && recordingTime !== 0) {
-      if (interval) clearInterval(interval);
+    } else if (!isRecording && interval) {
+      clearInterval(interval);
     }
     
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRecording, recordingTime, setIsRecording, maxRecordingTime]);
+  }, [isRecording, setIsRecording, maxRecordingTime]);
 
   // Effect for controlling audio preview playback
   useEffect(() => {
@@ -68,18 +83,47 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     }
   }, [audioPreview]);
 
+  // Cleanup when component unmounts
+  useEffect(() => {
+    return () => {
+      cleanupMediaResources();
+      
+      if (audioPreview) {
+        URL.revokeObjectURL(audioPreview);
+      }
+    };
+  }, []);
+
   const startRecording = async () => {
     try {
       // Clear previous recording if exists
       if (audioPreview) {
+        URL.revokeObjectURL(audioPreview);
         setAudioPreview(null);
       }
       
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      streamRef.current = stream;
+      
+      // Try different mime types for better compatibility
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : 'audio/ogg';
       
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: `${mimeType}`
       });
+      
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
       
@@ -90,8 +134,13 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       };
       
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const audioFile = new File([audioBlob], `recording-${Date.now()}.webm`, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        const fileExtension = mimeType.split('/')[1];
+        const audioFile = new File(
+          [audioBlob], 
+          `recording-${Date.now()}.${fileExtension}`, 
+          { type: mimeType }
+        );
         
         // Create an audio preview URL
         const audioUrl = URL.createObjectURL(audioBlob);
@@ -100,10 +149,14 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         onRecordingComplete(audioFile);
         
         // Stop all tracks in the stream
-        stream.getTracks().forEach(track => track.stop());
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
       };
       
-      mediaRecorder.start();
+      // Start recording with a 100ms timeslice for better streaming
+      mediaRecorder.start(100);
       setIsRecording(true);
       setRecordingTime(0);
       toast.success('Recording started');
@@ -111,14 +164,21 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     } catch (error) {
       console.error('Error accessing microphone:', error);
       toast.error('Could not access microphone. Please check permissions.');
+      cleanupMediaResources();
     }
   };
   
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      toast.success('Recording finished');
+      try {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+        toast.success('Recording finished');
+      } catch (err) {
+        console.error('Error stopping recording:', err);
+        toast.error('Error finishing recording');
+        cleanupMediaResources();
+      }
     }
   };
   
@@ -155,7 +215,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   return (
     <div className="space-y-4">
       {audioPreview && (
-        <div className="flex flex-col items-center p-2 rounded-md bg-muted/50">
+        <div className="flex flex-col items-center p-4 rounded-md bg-muted/50">
           <audio ref={audioPreviewRef} src={audioPreview} className="hidden"></audio>
           <div className="flex gap-2 w-full mb-2">
             <Button 
@@ -163,18 +223,22 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
               variant="secondary" 
               size="sm"
               onClick={togglePlayPreview}
-              className="flex-1"
+              className="flex-1 gap-2"
             >
-              {isPlayingPreview ? 'Pause' : 'Play'} Preview
+              {isPlayingPreview ? (
+                <><Pause className="h-4 w-4" /> Pause</>
+              ) : (
+                <><Play className="h-4 w-4" /> Play Preview</>
+              )}
             </Button>
             <Button 
               type="button"
               variant="destructive" 
               size="sm"
               onClick={resetRecording}
-              className="flex-shrink-0"
+              className="flex-shrink-0 gap-2"
             >
-              <RefreshCw className="h-4 w-4 mr-1" />
+              <RefreshCw className="h-4 w-4" />
               Reset
             </Button>
           </div>
@@ -202,9 +266,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
             variant="destructive" 
             size="lg" 
             onClick={stopRecording}
-            className="w-full"
+            className="w-full gap-2"
           >
-            <StopCircle className="h-4 w-4 mr-2" />
+            <StopCircle className="h-4 w-4" />
             Stop Recording
           </Button>
         </div>
