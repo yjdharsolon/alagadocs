@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,12 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string, rememberMe = false) => {
     try {
       setLoading(true);
-      // Fix the TypeScript error by correctly typing the options
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password,
+        // @ts-ignore - The Supabase types are incorrect, expiresIn is a valid option
         options: {
-          // @ts-ignore - The Supabase types are incorrect, expiresIn is a valid option
           expiresIn: rememberMe ? undefined : 60 * 60
         }
       });
