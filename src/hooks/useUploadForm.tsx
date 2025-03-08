@@ -135,6 +135,8 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
       setUploadProgress(5);
       setError(null);
       
+      const isSimulation = file.name.includes('simulation-recording');
+      
       // Get session but don't force a refresh
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
@@ -161,12 +163,17 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
       // More gradual progress updates for better UX
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
-          if (prev < 75) return prev + 2;
+          if (prev < 75) return prev + 1;
           return prev;
         });
-      }, 300);
+      }, 100);
       
       console.log('Starting audio upload process with file:', file.name);
+      
+      // For simulation, move a bit faster
+      if (isSimulation) {
+        setUploadProgress(30);
+      }
       
       // Upload the audio file to Supabase storage
       const audioUrl = await uploadAudio(file);

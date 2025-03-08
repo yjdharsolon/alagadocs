@@ -34,31 +34,47 @@ export const uploadAudio = async (file: File): Promise<string> => {
     
     console.log('Starting file upload with authenticated user:', userId);
     
-    // First, ensure the bucket exists
-    try {
-      await supabase.functions.invoke('ensure-transcription-bucket');
-      console.log('Bucket verification completed');
-    } catch (bucketError) {
-      console.error('Bucket verification error:', bucketError);
+    // Create the transcription record FIRST, before attempting upload
+    // This is a proven pattern for working with RLS policies
+    console.log('Creating transcription record before upload');
+    
+    // Get public URL pattern for the file that will be uploaded
+    const { data: { publicUrl } } = supabase.storage
+      .from('transcriptions')
+      .getPublicUrl(filePath);
+    
+    // Create the transcription record first
+    const { data: insertData, error: transcriptionError } = await supabase
+      .from('transcriptions')
+      .insert({
+        audio_url: publicUrl,
+        user_id: userId,
+        text: '', // Empty text initially, will be filled after transcription
+        status: 'pending'
+      })
+      .select();
+        
+    if (transcriptionError) {
+      console.error('Error creating initial transcription record:', transcriptionError);
+      throw new Error(`Failed to create transcription record: ${transcriptionError.message}`);
     }
     
-    // Refresh the session token before upload
-    const { error: refreshError } = await supabase.auth.refreshSession();
-    if (refreshError) {
-      console.error('Error refreshing session:', refreshError);
-      throw new Error('Session refresh failed. Please log in again.');
-    }
+    console.log('Created initial transcription record:', insertData);
     
-    // Upload the file to storage with retry logic
+    // Wait a moment for the database to process the insert
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Now upload the file
+    console.log('Now uploading file to storage');
     let attempts = 0;
     const maxAttempts = 3;
     
     while (attempts < maxAttempts) {
       attempts++;
+      
       try {
-        console.log(`Attempt ${attempts}: Uploading file to Supabase storage`);
+        console.log(`Upload attempt ${attempts} for file: ${filePath}`);
         
-        // Upload the file to storage
         const { data, error } = await supabase.storage
           .from('transcriptions')
           .upload(filePath, file, uploadOptions);
@@ -66,94 +82,27 @@ export const uploadAudio = async (file: File): Promise<string> => {
         if (error) {
           console.error(`Upload attempt ${attempts} failed:`, error);
           
-          // Special handling for RLS policy violations
-          if (error.message?.includes('row-level security policy')) {
-            // Try to create the transcription record first
-            console.log('Attempting alternative approach: Create record first then upload');
-            
-            // Get public URL pattern for the file that will be uploaded
-            const { data: { publicUrl } } = supabase.storage
-              .from('transcriptions')
-              .getPublicUrl(filePath);
-            
-            // Create the transcription record first
-            const { data: insertData, error: transcriptionError } = await supabase
-              .from('transcriptions')
-              .insert({
-                audio_url: publicUrl,
-                user_id: userId,
-                text: '' // Empty text initially, will be filled after transcription
-              })
-              .select();
-            
-            if (transcriptionError) {
-              console.error('Error creating initial transcription record:', transcriptionError);
-              
-              if (transcriptionError.message?.includes('row-level security policy')) {
-                throw new Error('Permission error: RLS policy violation. Please log out and log in again.');
-              }
-              
-              throw new Error(`Failed to create initial transcription record: ${transcriptionError.message}`);
-            }
-            
-            console.log('Created initial transcription record, now trying upload again');
-            
-            // Now try the upload again
-            const { data: retryData, error: retryError } = await supabase.storage
-              .from('transcriptions')
-              .upload(filePath, file, uploadOptions);
-              
-            if (retryError) {
-              console.error('Second upload attempt failed:', retryError);
-              throw retryError;
-            }
-            
-            console.log('Alternative approach successful: File uploaded after record creation');
-            return publicUrl;
+          if (attempts >= maxAttempts) {
+            throw error;
           }
           
-          if (attempts < maxAttempts) {
-            // Wait before retrying
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            continue;
-          }
-          throw error;
+          // Wait longer between retries
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+          continue;
         }
         
-        // Success - get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('transcriptions')
-          .getPublicUrl(filePath);
+        console.log('File uploaded successfully:', data);
         
-        console.log('File uploaded successfully by user:', userId);
-        
-        // Create a record in the transcriptions table
-        const { data: insertData, error: transcriptionError } = await supabase
-          .from('transcriptions')
-          .insert({
-            audio_url: publicUrl,
-            user_id: userId,
-            text: '' // Empty text initially, will be filled after transcription
-          })
-          .select();
-            
-        if (transcriptionError) {
-          console.error('Error creating transcription record:', transcriptionError);
-          
-          if (transcriptionError.message?.includes('row-level security policy')) {
-            throw new Error('Permission error: Cannot create transcription record due to RLS policy. Please log out and log in again.');
-          }
-          
-          throw new Error(`Failed to create transcription record: ${transcriptionError.message}`);
-        }
-        
-        console.log('Transcription record created successfully:', insertData);
         return publicUrl;
       } catch (uploadError) {
+        console.error(`Error in upload attempt ${attempts}:`, uploadError);
+        
         if (attempts >= maxAttempts) {
-          console.error('Error uploading after multiple attempts:', uploadError);
-          throw new Error(`Upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
+          throw new Error(`Upload failed after ${maxAttempts} attempts: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
         }
+        
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
       }
     }
     
