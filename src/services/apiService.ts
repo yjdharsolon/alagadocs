@@ -7,16 +7,67 @@
 const API_BASE_URL = '/api';
 
 /**
+ * API Service object with methods for making HTTP requests
+ */
+export const apiService = {
+  /**
+   * Make a GET request
+   */
+  get: async (endpoint: string, options: RequestInit = {}) => {
+    return fetchWithErrorHandling(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Make a POST request
+   */
+  post: async (endpoint: string, data: any, options: RequestInit = {}) => {
+    return fetchWithErrorHandling(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      method: 'POST',
+      body: data instanceof FormData ? data : JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Make a PUT request
+   */
+  put: async (endpoint: string, data: any, options: RequestInit = {}) => {
+    return fetchWithErrorHandling(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Make a DELETE request
+   */
+  delete: async (endpoint: string, options: RequestInit = {}) => {
+    return fetchWithErrorHandling(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      method: 'DELETE',
+    });
+  }
+};
+
+/**
  * Generic fetch wrapper with error handling
  */
 async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
   try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
+    const headers = options.body instanceof FormData
+      ? { ...options.headers } 
+      : {
         'Content-Type': 'application/json',
         ...options.headers,
-      },
+      };
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
     });
 
     if (!response.ok) {
@@ -26,71 +77,15 @@ async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
       throw new Error(errorData.message || `Error: ${response.status}`);
     }
 
-    return await response.json();
+    // For non-JSON responses (like file downloads)
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json();
+    }
+    
+    return await response.text();
   } catch (error) {
     console.error('API request failed:', error);
     throw error;
   }
 }
-
-/**
- * Audio Upload API
- */
-export const uploadAudio = async (file: File) => {
-  const formData = new FormData();
-  formData.append('audio', file);
-
-  return await fetch(`${API_BASE_URL}/upload`, {
-    method: 'POST',
-    body: formData,
-  }).then(res => res.json());
-};
-
-/**
- * Transcription API
- */
-export const transcribeAudio = async (audioUrl: string) => {
-  return await fetchWithErrorHandling(`${API_BASE_URL}/transcribe`, {
-    method: 'POST',
-    body: JSON.stringify({ audioUrl }),
-  });
-};
-
-/**
- * Text Structuring API
- */
-export const structureText = async (text: string) => {
-  return await fetchWithErrorHandling(`${API_BASE_URL}/structure`, {
-    method: 'POST',
-    body: JSON.stringify({ text }),
-  });
-};
-
-/**
- * Billing API
- */
-export const processPayment = async (paymentDetails: any) => {
-  return await fetchWithErrorHandling(`${API_BASE_URL}/billing`, {
-    method: 'POST',
-    body: JSON.stringify(paymentDetails),
-  });
-};
-
-/**
- * Get User Profile
- */
-export const getUserProfile = async () => {
-  return await fetchWithErrorHandling(`${API_BASE_URL}/profile`, {
-    method: 'GET',
-  });
-};
-
-/**
- * Update User Profile
- */
-export const updateUserProfile = async (profileData: any) => {
-  return await fetchWithErrorHandling(`${API_BASE_URL}/profile`, {
-    method: 'PUT',
-    body: JSON.stringify(profileData),
-  });
-};
