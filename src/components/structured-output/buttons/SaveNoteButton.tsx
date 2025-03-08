@@ -6,11 +6,12 @@ import { saveStructuredNote } from '@/services/noteService';
 import toast from 'react-hot-toast';
 
 export interface SaveNoteButtonProps {
+  user: any; // Added user prop
   sections: any;
   structuredText: string;
 }
 
-export function SaveNoteButton({ sections, structuredText }: SaveNoteButtonProps) {
+export function SaveNoteButton({ user, sections, structuredText }: SaveNoteButtonProps) {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveNote = async () => {
