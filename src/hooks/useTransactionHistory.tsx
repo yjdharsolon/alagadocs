@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { getUserTransactionHistory, TransactionHistory } from '@/services/billingService';
+import { getUserTransactionHistory, TransactionHistory } from '@/services/billing';
 
 export function useTransactionHistory() {
   const [transactions, setTransactions] = useState<TransactionHistory[]>([]);

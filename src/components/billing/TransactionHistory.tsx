@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { TransactionHistory } from '@/services/billingService';
+import { TransactionHistory } from '@/services/billing';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface TransactionHistoryProps {

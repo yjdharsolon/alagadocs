@@ -1,15 +1,13 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { 
   getUserSubscription, 
   updateUserSubscription, 
-  cancelUserSubscription 
-} from '@/services/billingService';
+  cancelUserSubscription,
+  SubscriptionStatus 
+} from '@/services/billing';
 import toast from 'react-hot-toast';
 import { BillingPlan } from './useSubscriptionPlans';
-
-export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'unpaid' | 'inactive';
 
 export type Subscription = {
   id: string;
@@ -25,7 +23,6 @@ export function useSubscriptionManagement(setSelectedPlan: (plan: BillingPlan | 
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
 
-  // Load user's current subscription
   useEffect(() => {
     async function loadSubscription() {
       if (user) {
@@ -42,7 +39,6 @@ export function useSubscriptionManagement(setSelectedPlan: (plan: BillingPlan | 
               updatedAt: subscription.updated_at
             });
             
-            // Set selected plan based on current subscription
             const userPlan = billingPlans.find(plan => plan.id === subscription.plan_id);
             if (userPlan) {
               setSelectedPlan(userPlan);
@@ -81,7 +77,6 @@ export function useSubscriptionManagement(setSelectedPlan: (plan: BillingPlan | 
       if (canceled) {
         toast.success('Subscription canceled successfully!');
         
-        // Update local subscription state
         const updatedSubscription = await getUserSubscription(user.id);
         if (updatedSubscription) {
           setCurrentSubscription({

@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useAuth } from './useAuth';
-import { processBillingTransaction } from '@/services/billingService';
+import { processBillingTransaction } from '@/services/billing';
 import toast from 'react-hot-toast';
 import { BillingPlan } from './useSubscriptionPlans';
 
