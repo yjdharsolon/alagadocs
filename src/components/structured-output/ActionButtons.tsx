@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Clipboard, CheckCircle2, Save, Loader2, Pencil, FileDown } from 'lucide-react';
@@ -62,28 +61,28 @@ const ActionButtons = ({ onCopy, onEdit, user, sections, structuredText }: Actio
           `MEDICAL DOCUMENTATION
           
 CHIEF COMPLAINT:
-${sections.chiefComplaint}
+${sections?.chiefComplaint}
 
 HISTORY OF PRESENT ILLNESS:
-${sections.historyOfPresentIllness}
+${sections?.historyOfPresentIllness}
 
 PAST MEDICAL HISTORY:
-${sections.pastMedicalHistory}
+${sections?.pastMedicalHistory}
 
 MEDICATIONS:
-${sections.medications}
+${sections?.medications}
 
 ALLERGIES:
-${sections.allergies}
+${sections?.allergies}
 
 PHYSICAL EXAMINATION:
-${sections.physicalExamination}
+${sections?.physicalExamination}
 
 ASSESSMENT:
-${sections.assessment}
+${sections?.assessment}
 
 PLAN:
-${sections.plan}
+${sections?.plan}
           `
         ], 
         { type: 'text/plain' }
