@@ -28,6 +28,7 @@ const StructuredOutputPage = () => {
     assessment: '',
     plan: ''
   });
+  const [timestamp, setTimestamp] = useState<string>('');
   
   const transcription = location.state?.transcription;
   const userRole = location.state?.userRole || localStorage.getItem('userRole') || 'doctor';
@@ -36,6 +37,17 @@ const StructuredOutputPage = () => {
     if (!transcription) {
       toast.error('No transcription provided');
       navigate('/upload');
+      return;
+    }
+    
+    // If there's already structured text in the location state, use that
+    if (location.state?.structuredText) {
+      setSections(location.state.structuredText);
+      setStructuredText(typeof location.state.structuredText === 'string' 
+        ? location.state.structuredText 
+        : JSON.stringify(location.state.structuredText));
+      setTimestamp(location.state.timestamp || new Date().toISOString());
+      setLoading(false);
       return;
     }
     
@@ -53,6 +65,9 @@ const StructuredOutputPage = () => {
       const parsedSections = parseStructuredText(result);
       setSections(parsedSections);
       
+      // Set current timestamp
+      setTimestamp(new Date().toISOString());
+      
       toast.success('Text structured successfully!');
     } catch (error: any) {
       console.error('Error structuring text:', error);
@@ -65,9 +80,10 @@ const StructuredOutputPage = () => {
   const handleEdit = () => {
     navigate('/edit-transcript', { 
       state: { 
-        structuredText,
+        structuredText: sections,
         transcription,
-        userRole
+        userRole,
+        timestamp
       } 
     });
   };
@@ -98,6 +114,7 @@ const StructuredOutputPage = () => {
           sections={sections}
           structuredText={structuredText}
           handleEdit={handleEdit}
+          timestamp={timestamp}
         />
       </div>
     </Layout>

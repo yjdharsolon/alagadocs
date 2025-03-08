@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Clipboard, CheckCircle2, Save, Loader2, Pencil } from 'lucide-react';
+import { Clipboard, CheckCircle2, Save, Loader2, Pencil, FileDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { saveStructuredNote } from '@/services/transcriptionService';
 import { MedicalSections } from './types';
@@ -16,6 +16,7 @@ interface ActionButtonsProps {
 const ActionButtons = ({ user, sections, structuredText, handleEdit }: ActionButtonsProps) => {
   const [copied, setCopied] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
+  const [exporting, setExporting] = React.useState(false);
   
   const copyToClipboard = () => {
     // Format the text nicely for clipboard
@@ -70,6 +71,61 @@ const ActionButtons = ({ user, sections, structuredText, handleEdit }: ActionBut
     }
   };
   
+  const exportAsPDF = () => {
+    setExporting(true);
+    
+    // For now, just simulate PDF generation
+    // In a real implementation, you would use a library like jsPDF or react-pdf
+    setTimeout(() => {
+      const blob = new Blob(
+        [
+          `MEDICAL DOCUMENTATION
+          
+CHIEF COMPLAINT:
+${sections.chiefComplaint}
+
+HISTORY OF PRESENT ILLNESS:
+${sections.historyOfPresentIllness}
+
+PAST MEDICAL HISTORY:
+${sections.pastMedicalHistory}
+
+MEDICATIONS:
+${sections.medications}
+
+ALLERGIES:
+${sections.allergies}
+
+PHYSICAL EXAMINATION:
+${sections.physicalExamination}
+
+ASSESSMENT:
+${sections.assessment}
+
+PLAN:
+${sections.plan}
+          `
+        ], 
+        { type: 'text/plain' }
+      );
+      
+      // Create a download link
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `medical_note_${new Date().toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      setExporting(false);
+      toast.success('Document exported!');
+    }, 1000);
+  };
+  
   return (
     <div className="flex justify-between w-full flex-wrap gap-2">
       <Button 
@@ -80,7 +136,26 @@ const ActionButtons = ({ user, sections, structuredText, handleEdit }: ActionBut
         <Pencil className="h-4 w-4" />
         Edit
       </Button>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
+        <Button
+          variant="outline"
+          onClick={exportAsPDF}
+          disabled={exporting}
+          className="flex items-center gap-1"
+        >
+          {exporting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Exporting...
+            </>
+          ) : (
+            <>
+              <FileDown className="h-4 w-4" />
+              Export
+            </>
+          )}
+        </Button>
+        
         <Button
           variant="outline"
           onClick={handleSaveNote}
@@ -99,6 +174,7 @@ const ActionButtons = ({ user, sections, structuredText, handleEdit }: ActionBut
             </>
           )}
         </Button>
+        
         <Button
           onClick={copyToClipboard}
           className="flex items-center gap-1"

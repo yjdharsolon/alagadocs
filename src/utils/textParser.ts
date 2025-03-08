@@ -7,6 +7,11 @@ import { MedicalSections } from '@/components/structured-output/types';
  * @returns Object containing parsed sections
  */
 export const parseStructuredText = (text: string): MedicalSections => {
+  // If the input is already an object (from edit page), just return it
+  if (typeof text !== 'string') {
+    return text as unknown as MedicalSections;
+  }
+  
   // Basic parsing of headers and content
   const parsedSections: MedicalSections = {
     chiefComplaint: '',

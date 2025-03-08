@@ -8,17 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import toast from 'react-hot-toast';
+import { MedicalSections } from '@/components/structured-output/types';
 
 const EditTranscriptPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [transcription, setTranscription] = useState<string>('');
-  const [structuredText, setStructuredText] = useState<{
-    chiefComplaint: string;
-    historyOfPresentIllness: string;
-    assessment: string;
-    plan: string;
-  } | null>(null);
+  const [structuredSections, setStructuredSections] = useState<MedicalSections | null>(null);
   
   useEffect(() => {
     const { transcription, structuredText } = location.state || {};
@@ -31,13 +27,19 @@ const EditTranscriptPage = () => {
     
     setTranscription(transcription);
     if (structuredText) {
-      setStructuredText(structuredText);
+      setStructuredSections(structuredText);
     }
   }, [location.state]);
   
   const handleSaveTranscription = () => {
-    if (structuredText) {
-      navigate('/structured-output', { state: { transcription, structuredText } });
+    if (structuredSections) {
+      navigate('/structured-output', { 
+        state: { 
+          transcription, 
+          structuredText: structuredSections,
+          timestamp: new Date().toISOString()
+        } 
+      });
     } else {
       navigate('/transcribe', { state: { transcription } });
     }
@@ -53,7 +55,7 @@ const EditTranscriptPage = () => {
       <div className="container mx-auto py-12 px-4">
         <h1 className="text-3xl font-bold mb-6 text-center">Edit Transcription</h1>
         
-        {!structuredText ? (
+        {!structuredSections ? (
           // Edit raw transcription
           <Card className="w-full max-w-3xl mx-auto">
             <CardHeader>
@@ -106,9 +108,9 @@ const EditTranscriptPage = () => {
                 <Label htmlFor="chiefComplaint">Chief Complaint</Label>
                 <Input 
                   id="chiefComplaint"
-                  value={structuredText.chiefComplaint} 
-                  onChange={(e) => setStructuredText({
-                    ...structuredText,
+                  value={structuredSections.chiefComplaint} 
+                  onChange={(e) => setStructuredSections({
+                    ...structuredSections,
                     chiefComplaint: e.target.value
                   })}
                 />
@@ -118,10 +120,62 @@ const EditTranscriptPage = () => {
                 <Label htmlFor="historyOfPresentIllness">History of Present Illness</Label>
                 <Textarea 
                   id="historyOfPresentIllness"
-                  value={structuredText.historyOfPresentIllness} 
-                  onChange={(e) => setStructuredText({
-                    ...structuredText,
+                  value={structuredSections.historyOfPresentIllness} 
+                  onChange={(e) => setStructuredSections({
+                    ...structuredSections,
                     historyOfPresentIllness: e.target.value
+                  })}
+                  className="min-h-[100px]"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="pastMedicalHistory">Past Medical History</Label>
+                <Textarea 
+                  id="pastMedicalHistory"
+                  value={structuredSections.pastMedicalHistory} 
+                  onChange={(e) => setStructuredSections({
+                    ...structuredSections,
+                    pastMedicalHistory: e.target.value
+                  })}
+                  className="min-h-[100px]"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="medications">Medications</Label>
+                <Textarea 
+                  id="medications"
+                  value={structuredSections.medications} 
+                  onChange={(e) => setStructuredSections({
+                    ...structuredSections,
+                    medications: e.target.value
+                  })}
+                  className="min-h-[100px]"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="allergies">Allergies</Label>
+                <Textarea 
+                  id="allergies"
+                  value={structuredSections.allergies} 
+                  onChange={(e) => setStructuredSections({
+                    ...structuredSections,
+                    allergies: e.target.value
+                  })}
+                  className="min-h-[100px]"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="physicalExamination">Physical Examination</Label>
+                <Textarea 
+                  id="physicalExamination"
+                  value={structuredSections.physicalExamination} 
+                  onChange={(e) => setStructuredSections({
+                    ...structuredSections,
+                    physicalExamination: e.target.value
                   })}
                   className="min-h-[100px]"
                 />
@@ -131,9 +185,9 @@ const EditTranscriptPage = () => {
                 <Label htmlFor="assessment">Assessment</Label>
                 <Textarea 
                   id="assessment"
-                  value={structuredText.assessment} 
-                  onChange={(e) => setStructuredText({
-                    ...structuredText,
+                  value={structuredSections.assessment} 
+                  onChange={(e) => setStructuredSections({
+                    ...structuredSections,
                     assessment: e.target.value
                   })}
                   className="min-h-[100px]"
@@ -144,9 +198,9 @@ const EditTranscriptPage = () => {
                 <Label htmlFor="plan">Plan</Label>
                 <Textarea 
                   id="plan"
-                  value={structuredText.plan} 
-                  onChange={(e) => setStructuredText({
-                    ...structuredText,
+                  value={structuredSections.plan} 
+                  onChange={(e) => setStructuredSections({
+                    ...structuredSections,
                     plan: e.target.value
                   })}
                   className="min-h-[100px]"
