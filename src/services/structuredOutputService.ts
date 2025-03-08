@@ -114,6 +114,13 @@ export const saveStructuredNote = async (
   transcriptionId: string
 ): Promise<{ id: string }> => {
   try {
+    // Get the current user's ID
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to save structured notes');
+    }
+    
     // Convert MedicalSections to a valid JSON object that Supabase can store
     const content = structuredNote as unknown as Json;
     
@@ -121,7 +128,8 @@ export const saveStructuredNote = async (
       .from('structured_notes')
       .insert({
         content,
-        transcription_id: transcriptionId
+        transcription_id: transcriptionId,
+        user_id: user.id
       })
       .select('id')
       .single();
