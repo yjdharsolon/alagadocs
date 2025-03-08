@@ -38,13 +38,19 @@ export const uploadAudio = async (file: File): Promise<string> => {
     while (attempts < maxAttempts) {
       attempts++;
       try {
-        // Upload the file with explicit user ID
+        // Upload the file to storage
         const { data, error } = await supabase.storage
           .from('transcriptions')
           .upload(filePath, file, uploadOptions);
           
         if (error) {
           console.error(`Upload attempt ${attempts} failed:`, error);
+          
+          // Special handling for RLS policy violations
+          if (error.message?.includes('row-level security policy')) {
+            throw new Error('Permission error: RLS policy violation. Please log out and log in again.');
+          }
+          
           if (attempts < maxAttempts) {
             // Wait before retrying
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -60,20 +66,37 @@ export const uploadAudio = async (file: File): Promise<string> => {
         
         console.log('File uploaded successfully by user:', userId);
         
-        // Create a record in the transcriptions table with explicit user_id
-        const { error: transcriptionError } = await supabase
+        // First check if transcriptions table has RLS policies for insert
+        const { data: policies, error: policyError } = await supabase
+          .rpc('get_policies_for_table', { table_name: 'transcriptions' });
+        
+        if (policyError) {
+          console.error('Error checking RLS policies:', policyError);
+        } else {
+          console.log('Available policies for transcriptions table:', policies);
+        }
+        
+        // Create a record in the transcriptions table
+        const { data: insertData, error: transcriptionError } = await supabase
           .from('transcriptions')
           .insert({
             audio_url: publicUrl,
             user_id: userId,
             text: '' // Empty text initially, will be filled after transcription
-          });
+          })
+          .select();
             
         if (transcriptionError) {
           console.error('Error creating transcription record:', transcriptionError);
+          
+          if (transcriptionError.message?.includes('row-level security policy')) {
+            throw new Error('Permission error: Cannot create transcription record due to RLS policy. Please log out and log in again.');
+          }
+          
           throw new Error(`Failed to create transcription record: ${transcriptionError.message}`);
         }
         
+        console.log('Transcription record created successfully:', insertData);
         return publicUrl;
       } catch (uploadError) {
         if (attempts >= maxAttempts) {
@@ -115,6 +138,8 @@ export const transcribeAudio = async (audioUrl: string) => {
     while (attempts < maxAttempts) {
       attempts++;
       try {
+        console.log(`Transcription attempt ${attempts} for URL: ${audioUrl}`);
+        
         const { data, error } = await supabase.functions.invoke('openai-whisper', {
           body: { audioUrl },
           headers: {
@@ -123,6 +148,7 @@ export const transcribeAudio = async (audioUrl: string) => {
         });
         
         if (error) {
+          console.error(`Transcription attempt ${attempts} failed:`, error);
           lastError = error;
           // Wait longer before retrying
           await new Promise(resolve => setTimeout(resolve, 2000));
@@ -130,6 +156,7 @@ export const transcribeAudio = async (audioUrl: string) => {
         }
         
         if (!data || !data.transcription) {
+          console.error(`No transcription data returned in attempt ${attempts}`);
           lastError = new Error('No transcription data returned');
           if (attempts < maxAttempts) {
             await new Promise(resolve => setTimeout(resolve, 2000));
@@ -137,6 +164,8 @@ export const transcribeAudio = async (audioUrl: string) => {
           }
           throw lastError;
         }
+        
+        console.log('Transcription successful, updating record');
         
         // Update the transcription record with the transcribed text
         const { error: updateError } = await supabase
@@ -172,6 +201,18 @@ export const transcribeAudio = async (audioUrl: string) => {
   } catch (error) {
     console.error('Error transcribing audio:', error);
     throw error;
+  }
+};
+
+// Adding a custom RPC function to check policies for debugging
+const getPoliciesForTable = async (tableName: string) => {
+  try {
+    const { data, error } = await supabase.rpc('get_policies_for_table', { table_name: tableName });
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error getting policies:', error);
+    return null;
   }
 };
 

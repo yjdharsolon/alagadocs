@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,16 +11,41 @@ import { AudioRecorder } from './audio-recorder';
 import { useAuth } from '@/hooks/useAuth';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
 
 export const UploadForm: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState<'idle' | 'uploading' | 'transcribing'>('idle');
+  const [currentStep, setCurrentStep] = useState<'idle' | 'uploading' | 'transcribing' | 'verifying'>('idle');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  
+  // Verify authentication status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!user) {
+        toast.error('Please log in to upload audio');
+        navigate('/login');
+        return;
+      }
+      
+      // Verify user session is valid
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error || !data.session) {
+          toast.error('Session expired. Please log in again.');
+          navigate('/login');
+        }
+      } catch (err) {
+        console.error('Error checking auth session:', err);
+      }
+    };
+    
+    checkAuth();
+  }, [user, navigate]);
   
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
@@ -32,6 +57,11 @@ export const UploadForm: React.FC = () => {
     setIsRecording(false);
     setError(null);
     toast.success('Recording saved successfully');
+  };
+  
+  const handleLogoutAndLogin = async () => {
+    await signOut();
+    navigate('/login');
   };
   
   const handleSubmit = async () => {
@@ -49,9 +79,18 @@ export const UploadForm: React.FC = () => {
 
     try {
       setIsUploading(true);
-      setCurrentStep('uploading');
-      setUploadProgress(0);
+      setCurrentStep('verifying');
+      setUploadProgress(5);
       setError(null);
+      
+      // Verify session before proceeding
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error('Authentication error. Please log in again.');
+      }
+      
+      setCurrentStep('uploading');
+      setUploadProgress(10);
       
       // More gradual progress updates for better UX
       const progressInterval = setInterval(() => {
@@ -97,9 +136,11 @@ export const UploadForm: React.FC = () => {
       }
       
       // Handle RLS policy errors
-      if (error instanceof Error && error.message.includes('row-level security policy')) {
+      if (error instanceof Error && 
+         (error.message.includes('row-level security policy') || 
+          error.message.includes('Permission error'))) {
         setError('Permission error. Please try logging out and logging back in.');
-        toast.error('Permission error. Make sure you have the correct role assigned.');
+        toast.error('Permission error detected. This is often fixed by logging out and back in again.');
         return;
       }
       
@@ -113,6 +154,7 @@ export const UploadForm: React.FC = () => {
   
   const getStepLabel = () => {
     switch (currentStep) {
+      case 'verifying': return 'Verifying Authentication...';
       case 'uploading': return 'Uploading Audio...';
       case 'transcribing': return 'Transcribing Audio...';
       default: return 'Continue to Transcription';
@@ -124,8 +166,18 @@ export const UploadForm: React.FC = () => {
       {error && (
         <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error}
+          <AlertDescription className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between">
+            <span>{error}</span>
+            {error.includes('Permission error') && (
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={handleLogoutAndLogin}
+                className="mt-2 sm:mt-0"
+              >
+                Logout and Login Again
+              </Button>
+            )}
           </AlertDescription>
         </Alert>
       )}
@@ -164,7 +216,7 @@ export const UploadForm: React.FC = () => {
       {isUploading && (
         <div className="mb-6 space-y-2">
           <div className="flex justify-between text-sm">
-            <span>{currentStep === 'uploading' ? 'Uploading' : 'Transcribing'}</span>
+            <span>{currentStep === 'uploading' ? 'Uploading' : currentStep === 'transcribing' ? 'Transcribing' : 'Verifying'}</span>
             <span>{uploadProgress}%</span>
           </div>
           <Progress value={uploadProgress} className="h-2" />
