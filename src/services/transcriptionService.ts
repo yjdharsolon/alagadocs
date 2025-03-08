@@ -4,9 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 /**
  * Uploads an audio file to Supabase storage
  * @param file The audio file to upload
- * @returns The URL of the uploaded file
+ * @returns An object containing the URL and ID of the uploaded file
  */
-export const uploadAudio = async (file: File): Promise<string> => {
+export const uploadAudio = async (file: File): Promise<{ url: string; id: string }> => {
   // Create a unique file name
   const fileExt = file.name.split('.').pop();
   const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
@@ -27,16 +27,59 @@ export const uploadAudio = async (file: File): Promise<string> => {
     .from('transcriptions')
     .getPublicUrl(filePath);
     
-  return publicUrl;
+  // Create a record in the transcriptions table if the user is authenticated
+  let transcriptionId = '';
+  const user = supabase.auth.getUser();
+  
+  if ((await user).data.user) {
+    const { data: transcription, error: transcriptionError } = await supabase
+      .from('transcriptions')
+      .insert([
+        { 
+          audio_url: publicUrl,
+          user_id: (await user).data.user?.id,
+          status: 'uploaded'
+        }
+      ])
+      .select('id')
+      .single();
+      
+    if (transcriptionError) {
+      console.error('Error creating transcription record:', transcriptionError);
+    } else if (transcription) {
+      transcriptionId = transcription.id;
+    }
+  }
+  
+  return { 
+    url: publicUrl,
+    id: transcriptionId
+  };
 };
 
 /**
  * Transcribes audio from a URL using OpenAI Whisper API
  * @param audioUrl The URL of the audio file to transcribe
- * @returns The transcription text
+ * @param transcriptionId Optional ID of the transcription record
+ * @returns An object containing the transcription text and metadata
  */
-export const transcribeAudio = async (audioUrl: string): Promise<string> => {
+export const transcribeAudio = async (
+  audioUrl: string, 
+  transcriptionId?: string
+): Promise<{
+  text: string;
+  duration?: number;
+  language?: string;
+}> => {
   try {
+    // Update transcription status if ID is provided
+    if (transcriptionId) {
+      await supabase
+        .from('transcriptions')
+        .update({ status: 'processing' })
+        .eq('id', transcriptionId);
+    }
+    
     // Call the Supabase Edge Function for Whisper API
     const { data, error } = await supabase.functions.invoke('openai-whisper', {
       body: { audioUrl },
@@ -44,14 +87,51 @@ export const transcribeAudio = async (audioUrl: string): Promise<string> => {
     
     if (error) {
       console.error('Error calling transcription function:', error);
+      
+      // Update transcription status to failed if ID is provided
+      if (transcriptionId) {
+        await supabase
+          .from('transcriptions')
+          .update({ status: 'failed', error_message: error.message })
+          .eq('id', transcriptionId);
+      }
+      
       throw new Error(`Error in transcription: ${error.message}`);
     }
     
     if (!data || !data.transcription) {
-      throw new Error('No transcription returned');
+      const errorMsg = 'No transcription returned';
+      
+      // Update transcription status to failed if ID is provided
+      if (transcriptionId) {
+        await supabase
+          .from('transcriptions')
+          .update({ status: 'failed', error_message: errorMsg })
+          .eq('id', transcriptionId);
+      }
+      
+      throw new Error(errorMsg);
     }
     
-    return data.transcription;
+    // Update transcription record with the transcribed text if ID is provided
+    if (transcriptionId) {
+      await supabase
+        .from('transcriptions')
+        .update({ 
+          text: data.transcription,
+          status: 'completed',
+          duration: data.duration,
+          language: data.language || 'en',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', transcriptionId);
+    }
+    
+    return {
+      text: data.transcription,
+      duration: data.duration,
+      language: data.language
+    };
   } catch (error: any) {
     console.error('Transcription error:', error);
     throw new Error(`Transcription failed: ${error.message}`);
@@ -67,34 +147,16 @@ export const transcribeAudio = async (audioUrl: string): Promise<string> => {
  */
 export const structureText = async (
   transcription: string, 
-  userRole?: string,
-  customTemplate?: string
-): Promise<string> => {
+  userRole: string = 'Doctor',
+  customTemplate?: { sections: string[] }
+): Promise<any> => {
   try {
-    let prompt = `
-      Please structure the following medical transcription into a proper clinical note format with sections for:
-      - Chief Complaint
-      - History of Present Illness
-      - Past Medical History
-      - Medications
-      - Allergies
-      - Physical Examination
-      - Assessment
-      - Plan
-      
-      If a section has no relevant information in the transcription, you can write "Not mentioned".
-      
-      Here's the transcription:
-      
-      ${transcription}
-    `;
-    
-    // Call the OpenAI Chat function to structure the text
-    const { data, error } = await supabase.functions.invoke('openai-chat', {
+    // Call the OpenAI Structure Text function to structure the text
+    const { data, error } = await supabase.functions.invoke('openai-structure-text', {
       body: { 
-        prompt,
+        text: transcription,
         role: userRole,
-        customTemplate
+        template: customTemplate
       },
     });
     
@@ -103,11 +165,11 @@ export const structureText = async (
       throw new Error(`Error in text structuring: ${error.message}`);
     }
     
-    if (!data || !data.message) {
+    if (!data) {
       throw new Error('No structured text returned');
     }
     
-    return data.message;
+    return data;
   } catch (error: any) {
     console.error('Text structuring error:', error);
     throw new Error(`Text structuring failed: ${error.message}`);
@@ -124,7 +186,7 @@ export const structureText = async (
 export const saveStructuredNote = async (
   userId: string,
   title: string,
-  content: string
+  content: object
 ): Promise<string> => {
   try {
     const { data, error } = await supabase
@@ -148,5 +210,55 @@ export const saveStructuredNote = async (
   } catch (error: any) {
     console.error('Save note error:', error);
     throw new Error(`Failed to save note: ${error.message}`);
+  }
+};
+
+/**
+ * Retrieves saved notes for a user
+ * @param userId The ID of the user
+ * @returns An array of saved notes
+ */
+export const getUserNotes = async (userId: string): Promise<any[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching user notes:', error);
+      throw new Error(`Error fetching notes: ${error.message}`);
+    }
+    
+    return data || [];
+  } catch (error: any) {
+    console.error('Fetch notes error:', error);
+    throw new Error(`Failed to fetch notes: ${error.message}`);
+  }
+};
+
+/**
+ * Gets a single transcription by ID
+ * @param transcriptionId The ID of the transcription
+ * @returns The transcription data
+ */
+export const getTranscriptionById = async (transcriptionId: string): Promise<any> => {
+  try {
+    const { data, error } = await supabase
+      .from('transcriptions')
+      .select('*')
+      .eq('id', transcriptionId)
+      .single();
+      
+    if (error) {
+      console.error('Error fetching transcription:', error);
+      throw new Error(`Error fetching transcription: ${error.message}`);
+    }
+    
+    return data;
+  } catch (error: any) {
+    console.error('Fetch transcription error:', error);
+    throw new Error(`Failed to fetch transcription: ${error.message}`);
   }
 };

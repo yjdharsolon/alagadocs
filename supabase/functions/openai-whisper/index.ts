@@ -35,6 +35,7 @@ serve(async (req) => {
     formData.append('file', audioBlob, 'audio.webm');
     formData.append('model', 'whisper-1');
     formData.append('language', 'en'); // Set language to English
+    formData.append('response_format', 'verbose_json'); // Get detailed response
     
     // Call the OpenAI Whisper API
     const openaiResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
@@ -54,7 +55,9 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({
-        transcription: transcription.text
+        transcription: transcription.text,
+        duration: transcription.duration,
+        language: transcription.language
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

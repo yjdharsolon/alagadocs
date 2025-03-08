@@ -1,6 +1,5 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 interface RequestBody {
   text: string;
@@ -11,19 +10,17 @@ interface RequestBody {
 }
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
+      headers: corsHeaders
     });
   }
 
@@ -39,7 +36,7 @@ serve(async (req) => {
         status: 400,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          ...corsHeaders
         },
       });
     }
@@ -50,10 +47,10 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: text }
@@ -76,7 +73,7 @@ serve(async (req) => {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          ...corsHeaders
         },
       });
     } catch (e) {
@@ -87,7 +84,7 @@ serve(async (req) => {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          ...corsHeaders
         },
       });
     }
@@ -96,7 +93,7 @@ serve(async (req) => {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        ...corsHeaders
       },
     });
   }
