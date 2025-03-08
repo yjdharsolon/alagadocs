@@ -29,7 +29,19 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
         if (error || !data.session) {
           toast.error('Session expired. Please log in again.');
           navigate('/login');
+          return;
         }
+        
+        // Refresh the session token
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.error('Error refreshing token:', refreshError);
+          toast.error('Authentication error. Please log in again.');
+          handleLogoutAndLogin();
+          return;
+        }
+        
+        console.log('Auth session verified and refreshed successfully');
       } catch (err) {
         console.error('Error checking auth session:', err);
       }
@@ -51,8 +63,15 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
   };
   
   const handleLogoutAndLogin = async () => {
-    await signOut();
-    navigate('/login');
+    try {
+      await signOut();
+      navigate('/login');
+      toast.success('Logged out successfully. Please log in again to continue.');
+    } catch (err) {
+      console.error('Error during logout:', err);
+      // Force navigate to login even if signOut fails
+      navigate('/login');
+    }
   };
   
   const handleSubmit = async () => {
@@ -80,6 +99,12 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
         throw new Error('Authentication error. Please log in again.');
       }
       
+      // Refresh token before proceeding
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        throw new Error('Authentication error. Please refresh your session.');
+      }
+      
       setCurrentStep('uploading');
       setUploadProgress(10);
       
@@ -91,8 +116,12 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
         });
       }, 300);
       
+      console.log('Starting audio upload process with file:', file.name);
+      
       // Upload the audio file to Supabase storage
       const audioUrl = await uploadAudio(file);
+      
+      console.log('Audio successfully uploaded:', audioUrl);
       
       clearInterval(progressInterval);
       setUploadProgress(80);
@@ -101,6 +130,7 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
       // Transcribe the audio
       const transcriptionData = await transcribeAudio(audioUrl);
       
+      console.log('Transcription completed successfully');
       setUploadProgress(100);
       
       // After successful transcription, navigate to the transcribe page with the data
