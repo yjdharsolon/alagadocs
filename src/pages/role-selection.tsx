@@ -57,7 +57,7 @@ export default function RoleSelection() {
             .from('user_roles')
             .select('role')
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
 
           if (error && error.code !== 'PGRST116') {
             console.error('Error fetching user role:', error);
@@ -97,7 +97,7 @@ export default function RoleSelection() {
         // Update existing role
         const { error: updateError } = await supabase
           .from('user_roles')
-          .update({ role })
+          .update({ role, updated_at: new Date().toISOString() })
           .eq('user_id', user.id);
         
         error = updateError;
