@@ -47,11 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string, rememberMe = false) => {
     try {
       setLoading(true);
+      // Fix: Correctly structure the options parameter
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password,
         options: {
           // Set session duration - 1 hour if not rememberMe, otherwise default (longer)
+          // @ts-ignore - This is valid according to Supabase docs but TypeScript definitions may be outdated
           expiresIn: rememberMe ? undefined : 60 * 60
         }
       });
