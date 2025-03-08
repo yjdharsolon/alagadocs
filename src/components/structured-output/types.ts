@@ -15,3 +15,6 @@ export interface MedicalSection {
   title: string;
   content: string;
 }
+
+// Add the StructuredNote type that was missing
+export type StructuredNote = MedicalSections;

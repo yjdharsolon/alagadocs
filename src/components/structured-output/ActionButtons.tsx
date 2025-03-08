@@ -7,52 +7,21 @@ import { saveStructuredNote } from '@/services/transcriptionService';
 import { MedicalSections } from './types';
 
 interface ActionButtonsProps {
-  user: any;
-  sections: MedicalSections;
-  structuredText: string;
-  handleEdit: () => void;
+  onCopy: () => void;
+  onEdit: () => void;
+  user?: any;
+  sections?: MedicalSections;
+  structuredText?: string;
 }
 
-const ActionButtons = ({ user, sections, structuredText, handleEdit }: ActionButtonsProps) => {
+const ActionButtons = ({ onCopy, onEdit, user, sections, structuredText }: ActionButtonsProps) => {
   const [copied, setCopied] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [exporting, setExporting] = React.useState(false);
   
-  const copyToClipboard = () => {
-    // Format the text nicely for clipboard
-    const formattedText = [
-      'CHIEF COMPLAINT:',
-      sections.chiefComplaint,
-      '\nHISTORY OF PRESENT ILLNESS:',
-      sections.historyOfPresentIllness,
-      '\nPAST MEDICAL HISTORY:',
-      sections.pastMedicalHistory,
-      '\nMEDICATIONS:',
-      sections.medications,
-      '\nALLERGIES:',
-      sections.allergies,
-      '\nPHYSICAL EXAMINATION:',
-      sections.physicalExamination,
-      '\nASSESSMENT:',
-      sections.assessment,
-      '\nPLAN:',
-      sections.plan
-    ].join('\n');
-    
-    navigator.clipboard.writeText(formattedText)
-      .then(() => {
-        setCopied(true);
-        toast.success('Copied to clipboard!');
-        setTimeout(() => setCopied(false), 3000);
-      })
-      .catch(() => {
-        toast.error('Failed to copy to clipboard');
-      });
-  };
-  
   const handleSaveNote = async () => {
-    if (!user) {
-      toast.error('You must be logged in to save notes');
+    if (!user || !sections || !structuredText) {
+      toast.error('Missing required data to save note');
       return;
     }
     
@@ -72,10 +41,14 @@ const ActionButtons = ({ user, sections, structuredText, handleEdit }: ActionBut
   };
   
   const exportAsPDF = () => {
+    if (!sections) {
+      toast.error('No data to export');
+      return;
+    }
+    
     setExporting(true);
     
     // For now, just simulate PDF generation
-    // In a real implementation, you would use a library like jsPDF or react-pdf
     setTimeout(() => {
       const blob = new Blob(
         [
@@ -130,7 +103,7 @@ ${sections.plan}
     <div className="flex justify-between w-full flex-wrap gap-2">
       <Button 
         variant="outline" 
-        onClick={handleEdit}
+        onClick={onEdit}
         className="flex items-center gap-1"
       >
         <Pencil className="h-4 w-4" />
@@ -140,7 +113,7 @@ ${sections.plan}
         <Button
           variant="outline"
           onClick={exportAsPDF}
-          disabled={exporting}
+          disabled={exporting || !sections}
           className="flex items-center gap-1"
         >
           {exporting ? (
@@ -159,7 +132,7 @@ ${sections.plan}
         <Button
           variant="outline"
           onClick={handleSaveNote}
-          disabled={saving || !user}
+          disabled={saving || !user || !sections || !structuredText}
           className="flex items-center gap-1"
         >
           {saving ? (
@@ -176,7 +149,7 @@ ${sections.plan}
         </Button>
         
         <Button
-          onClick={copyToClipboard}
+          onClick={onCopy}
           className="flex items-center gap-1"
         >
           {copied ? (

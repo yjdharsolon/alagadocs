@@ -90,16 +90,19 @@ export default function StructuredOutput() {
     let formattedText = '';
     Object.entries(structuredData).forEach(([key, value]) => {
       if (value && typeof value === 'string' && value.trim() !== '') {
-        const sectionTitle = key.split('_').map(word => 
-          word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' ');
+        const sectionTitle = key.replace(/([A-Z])/g, ' $1')
+          .replace(/^./, str => str.toUpperCase())
+          .trim();
         
         formattedText += `${sectionTitle}:\n${value}\n\n`;
       }
     });
     
     navigator.clipboard.writeText(formattedText.trim())
-      .then(() => toast.success('Copied to clipboard'))
+      .then(() => {
+        toast.success('Copied to clipboard');
+        // Don't set copied state here to avoid ActionButtons re-render issues
+      })
       .catch(() => toast.error('Failed to copy to clipboard'));
   };
   
@@ -135,6 +138,9 @@ export default function StructuredOutput() {
                   audioUrl
                 } 
               })}
+              user={user}
+              sections={structuredData}
+              structuredText={JSON.stringify(structuredData)}
             />
           </>
         ) : (

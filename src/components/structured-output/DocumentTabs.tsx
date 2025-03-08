@@ -5,10 +5,10 @@ import SectionContent from './SectionContent';
 import { MedicalSections } from './types';
 
 interface DocumentTabsProps {
-  sections: MedicalSections;
+  structuredData: MedicalSections; // Changed from sections to structuredData
 }
 
-const DocumentTabs = ({ sections }: DocumentTabsProps) => {
+const DocumentTabs = ({ structuredData }: DocumentTabsProps) => {
   return (
     <Tabs defaultValue="all" className="w-full">
       <TabsList className="grid w-full grid-cols-5 mb-6">
@@ -20,34 +20,34 @@ const DocumentTabs = ({ sections }: DocumentTabsProps) => {
       </TabsList>
       
       <TabsContent value="all" className="space-y-6">
-        <SectionContent title="CHIEF COMPLAINT" content={sections.chiefComplaint} />
-        <SectionContent title="HISTORY OF PRESENT ILLNESS" content={sections.historyOfPresentIllness} />
-        <SectionContent title="PAST MEDICAL HISTORY" content={sections.pastMedicalHistory} />
-        <SectionContent title="MEDICATIONS" content={sections.medications} />
-        <SectionContent title="ALLERGIES" content={sections.allergies} />
-        <SectionContent title="PHYSICAL EXAMINATION" content={sections.physicalExamination} />
-        <SectionContent title="ASSESSMENT" content={sections.assessment} />
-        <SectionContent title="PLAN" content={sections.plan} />
+        <SectionContent title="CHIEF COMPLAINT" content={structuredData.chiefComplaint} />
+        <SectionContent title="HISTORY OF PRESENT ILLNESS" content={structuredData.historyOfPresentIllness} />
+        <SectionContent title="PAST MEDICAL HISTORY" content={structuredData.pastMedicalHistory} />
+        <SectionContent title="MEDICATIONS" content={structuredData.medications} />
+        <SectionContent title="ALLERGIES" content={structuredData.allergies} />
+        <SectionContent title="PHYSICAL EXAMINATION" content={structuredData.physicalExamination} />
+        <SectionContent title="ASSESSMENT" content={structuredData.assessment} />
+        <SectionContent title="PLAN" content={structuredData.plan} />
       </TabsContent>
       
       <TabsContent value="cc-hpi">
-        <SectionContent title="CHIEF COMPLAINT" content={sections.chiefComplaint} />
-        <SectionContent title="HISTORY OF PRESENT ILLNESS" content={sections.historyOfPresentIllness} />
+        <SectionContent title="CHIEF COMPLAINT" content={structuredData.chiefComplaint} />
+        <SectionContent title="HISTORY OF PRESENT ILLNESS" content={structuredData.historyOfPresentIllness} />
       </TabsContent>
       
       <TabsContent value="medical-info">
-        <SectionContent title="PAST MEDICAL HISTORY" content={sections.pastMedicalHistory} />
-        <SectionContent title="MEDICATIONS" content={sections.medications} />
-        <SectionContent title="ALLERGIES" content={sections.allergies} />
-        <SectionContent title="PHYSICAL EXAMINATION" content={sections.physicalExamination} />
+        <SectionContent title="PAST MEDICAL HISTORY" content={structuredData.pastMedicalHistory} />
+        <SectionContent title="MEDICATIONS" content={structuredData.medications} />
+        <SectionContent title="ALLERGIES" content={structuredData.allergies} />
+        <SectionContent title="PHYSICAL EXAMINATION" content={structuredData.physicalExamination} />
       </TabsContent>
       
       <TabsContent value="assessment">
-        <SectionContent title="ASSESSMENT" content={sections.assessment} />
+        <SectionContent title="ASSESSMENT" content={structuredData.assessment} />
       </TabsContent>
       
       <TabsContent value="plan">
-        <SectionContent title="PLAN" content={sections.plan} />
+        <SectionContent title="PLAN" content={structuredData.plan} />
       </TabsContent>
     </Tabs>
   );
