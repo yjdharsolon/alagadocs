@@ -3,10 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { useScrollProgress } from '../utils/animate';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import MobileMenu from './MobileMenu';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const scrollProgress = useScrollProgress();
+  const { user, signOut } = useAuth();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -36,32 +40,61 @@ const Navbar: React.FC = () => {
         </Link>
         
         <nav className="hidden md:flex items-center space-x-8">
-          <Link 
-            to="/login" 
-            className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
-          >
-            Login
-            <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
-          </Link>
-          <Link 
-            to="/signup" 
-            className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
-          >
-            Sign Up
-            <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
-          </Link>
-          <Link 
-            to="/profile" 
-            className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
-          >
-            Profile
-            <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
-          </Link>
+          {user ? (
+            <>
+              <Link 
+                to="/profile" 
+                className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
+              >
+                Profile
+                <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
+              </Link>
+              <Link 
+                to="/role-selection" 
+                className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
+              >
+                Role Selection
+                <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
+              </Link>
+              <Link 
+                to="/upload" 
+                className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
+              >
+                Upload Audio
+                <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
+              </Link>
+              <button 
+                onClick={() => signOut()}
+                className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
+              >
+                Sign Out
+                <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
+              </button>
+            </>
+          ) : (
+            <>
+              <Link 
+                to="/login" 
+                className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
+              >
+                Login
+                <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
+              </Link>
+              <Link 
+                to="/signup" 
+                className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
+              >
+                Sign Up
+                <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
+              </Link>
+            </>
+          )}
         </nav>
         
         <button 
           className="md:hidden flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 transition-colors"
           aria-label="Menu"
+          onClick={() => setIsMobileMenuOpen(true)}
         >
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
@@ -85,6 +118,12 @@ const Navbar: React.FC = () => {
       <div 
         className="absolute bottom-0 left-0 h-[1px] bg-black/20" 
         style={{ width: `${scrollProgress * 100}%`, opacity: isScrolled ? 1 : 0 }}
+      />
+      
+      {/* Mobile Menu */}
+      <MobileMenu 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)} 
       />
     </header>
   );

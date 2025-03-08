@@ -4,18 +4,37 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { Link, Navigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn, user, loading } = useAuth();
+  const [rememberMe, setRememberMe] = useState(false);
+  const { signIn, signInWithGoogle, signInWithFacebook, user, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn(email, password);
+    await signIn(email, password, rememberMe);
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      toast.error('Google sign in failed');
+    }
+  };
+
+  const handleFacebookSignIn = async () => {
+    try {
+      await signInWithFacebook();
+    } catch (error) {
+      toast.error('Facebook sign in failed');
+    }
   };
 
   // Redirect if already logged in
@@ -57,6 +76,19 @@ export default function Login() {
                     required
                   />
                 </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="remember" 
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  />
+                  <label
+                    htmlFor="remember"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Remember me
+                  </label>
+                </div>
               </div>
             </form>
           </CardContent>
@@ -77,10 +109,10 @@ export default function Login() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleGoogleSignIn} disabled={loading}>
                 Google
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleFacebookSignIn} disabled={loading}>
                 Facebook
               </Button>
             </div>

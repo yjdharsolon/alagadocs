@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -12,6 +13,7 @@ import AudioUploadPage from './pages/upload';
 import TranscribePage from './pages/transcribe';
 import StructuredOutputPage from './pages/structured-output';
 import EditTranscriptPage from './pages/edit-transcript';
+import AuthCallback from './pages/auth/callback';
 import { AuthProvider } from './hooks/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useEffect } from 'react';
@@ -28,6 +30,7 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/profile" element={
           <ProtectedRoute>
             <Profile />

@@ -7,13 +7,14 @@ import { Label } from '@/components/ui/label';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { Link, Navigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const { signUp, user, loading } = useAuth();
+  const { signUp, signInWithGoogle, signInWithFacebook, user, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +27,22 @@ export default function Signup() {
     
     setPasswordError('');
     await signUp(email, password);
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      toast.error('Google sign in failed');
+    }
+  };
+
+  const handleFacebookSignIn = async () => {
+    try {
+      await signInWithFacebook();
+    } catch (error) {
+      toast.error('Facebook sign in failed');
+    }
   };
 
   // Redirect if already logged in
@@ -100,10 +117,10 @@ export default function Signup() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleGoogleSignIn} disabled={loading}>
                 Google
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleFacebookSignIn} disabled={loading}>
                 Facebook
               </Button>
             </div>
