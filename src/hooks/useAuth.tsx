@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +13,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithFacebook: () => Promise<void>;
+  signInWithMicrosoft: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,14 +25,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -47,13 +45,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string, rememberMe = false) => {
     try {
       setLoading(true);
-      // Fix: Correctly structure the options parameter
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password,
         options: {
-          // Set session duration - 1 hour if not rememberMe, otherwise default (longer)
-          // @ts-ignore - This is valid according to Supabase docs but TypeScript definitions may be outdated
           expiresIn: rememberMe ? undefined : 60 * 60
         }
       });
@@ -112,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = () => signInWithProvider('google');
   const signInWithFacebook = () => signInWithProvider('facebook');
+  const signInWithMicrosoft = () => signInWithProvider('azure');
 
   const signOut = async () => {
     try {
@@ -141,7 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp, 
       signOut,
       signInWithGoogle,
-      signInWithFacebook
+      signInWithFacebook,
+      signInWithMicrosoft
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +13,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const { signIn, signInWithGoogle, signInWithFacebook, user, loading } = useAuth();
+  const { signIn, signInWithGoogle, signInWithFacebook, signInWithMicrosoft, user, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +36,14 @@ export default function Login() {
     }
   };
 
-  // Redirect if already logged in
+  const handleMicrosoftSignIn = async () => {
+    try {
+      await signInWithMicrosoft();
+    } catch (error) {
+      toast.error('Microsoft sign in failed');
+    }
+  };
+
   if (user && !loading) {
     return <Navigate to="/role-selection" />;
   }
@@ -108,12 +114,15 @@ export default function Login() {
                 <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-2">
               <Button variant="outline" onClick={handleGoogleSignIn} disabled={loading}>
                 Google
               </Button>
               <Button variant="outline" onClick={handleFacebookSignIn} disabled={loading}>
                 Facebook
+              </Button>
+              <Button variant="outline" onClick={handleMicrosoftSignIn} disabled={loading}>
+                Microsoft
               </Button>
             </div>
             <div className="text-center text-sm">
