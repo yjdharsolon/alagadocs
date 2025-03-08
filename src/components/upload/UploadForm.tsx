@@ -7,7 +7,7 @@ import { FileAudio, Mic, Loader2, AlertCircle } from 'lucide-react';
 import { uploadAudio, transcribeAudio } from '@/services/audioService';
 import { toast } from 'sonner';
 import { FileUploader } from './FileUploader';
-import { AudioRecorder } from './AudioRecorder';
+import { AudioRecorder } from './audio-recorder';
 import { useAuth } from '@/hooks/useAuth';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
