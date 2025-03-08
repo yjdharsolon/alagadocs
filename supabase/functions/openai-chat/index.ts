@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -13,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt } = await req.json();
+    const { prompt, medicalRole = 'Doctor' } = await req.json();
     
     if (!prompt) {
       throw new Error('No prompt provided');
@@ -31,7 +32,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful medical assistant that provides accurate, concise information about medical topics. You should be professional but friendly, and always prioritize evidence-based information. Do not diagnose conditions or prescribe treatments.'
+            content: `You are a helpful medical assistant that provides accurate, concise information about medical topics. 
+            You should be professional but friendly, and always prioritize evidence-based information.
+            You are assisting a healthcare professional with the role of ${medicalRole}.
+            Do not diagnose conditions or prescribe treatments.
+            Focus on providing factual information, analysis, and context that would be helpful to a ${medicalRole}.`
           },
           {
             role: 'user',
