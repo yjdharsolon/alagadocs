@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -11,6 +10,7 @@ import { StructuredNote } from '@/components/structured-output/types';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { formatClipboardText } from '@/components/structured-output/utils/exportUtils';
 
 export default function StructuredOutput() {
   const { user, getUserRole } = useAuth();
@@ -20,7 +20,6 @@ export default function StructuredOutput() {
   const [structuredData, setStructuredData] = useState<StructuredNote | null>(null);
   const [processingText, setProcessingText] = useState(false);
   
-  // Get the transcription data from the location state
   const transcriptionData = location.state?.transcriptionData;
   const transcriptionId = location.state?.transcriptionId;
   const audioUrl = location.state?.audioUrl;
@@ -33,7 +32,6 @@ export default function StructuredOutput() {
       }
       
       try {
-        // First check if we already have structured data for this transcription
         const existingData = await getStructuredText(transcriptionId);
         
         if (existingData?.content) {
@@ -42,7 +40,6 @@ export default function StructuredOutput() {
           return;
         }
         
-        // If not, process the transcription text
         setProcessingText(true);
         const userRole = await getUserRole();
         const structuredResult = await structureText(transcriptionData.text, userRole);
@@ -50,7 +47,6 @@ export default function StructuredOutput() {
         if (structuredResult) {
           setStructuredData(structuredResult);
           
-          // Save the structured data
           await saveStructuredText(user.id, transcriptionId, structuredResult);
           toast.success('Medical notes structured successfully');
         }
@@ -66,7 +62,6 @@ export default function StructuredOutput() {
     processTranscription();
   }, [transcriptionData, transcriptionId, user, getUserRole]);
   
-  // If no transcription data is available, redirect to upload page
   if (!loading && (!transcriptionData || !transcriptionId)) {
     toast.error('No transcription data found. Please upload an audio file first.');
     navigate('/upload');
@@ -86,19 +81,9 @@ export default function StructuredOutput() {
   const handleCopyToClipboard = () => {
     if (!structuredData) return;
     
-    // Format the structured data for clipboard
-    let formattedText = '';
-    Object.entries(structuredData).forEach(([key, value]) => {
-      if (value && typeof value === 'string' && value.trim() !== '') {
-        const sectionTitle = key.replace(/([A-Z])/g, ' $1')
-          .replace(/^./, str => str.toUpperCase())
-          .trim();
-        
-        formattedText += `${sectionTitle}:\n${value}\n\n`;
-      }
-    });
+    const formattedText = formatClipboardText(structuredData);
     
-    navigator.clipboard.writeText(formattedText.trim())
+    navigator.clipboard.writeText(formattedText)
       .then(() => {
         toast.success('Copied to clipboard');
       })
@@ -120,7 +105,7 @@ export default function StructuredOutput() {
           
           <h1 className="text-2xl font-bold">Structured Medical Notes</h1>
           
-          <div className="w-[100px]"></div> {/* Empty div for flex alignment */}
+          <div className="w-[100px]"></div>
         </div>
         
         {loading || processingText ? (
