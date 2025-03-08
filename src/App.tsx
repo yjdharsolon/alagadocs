@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import Index from './pages/index';
-import NotFound from './pages/404';
+import Index from './pages/Index';
+import NotFound from './pages/NotFound';
 import AskAIPage from './pages/ask-ai';
 import Login from './pages/login';
 import Signup from './pages/signup';
