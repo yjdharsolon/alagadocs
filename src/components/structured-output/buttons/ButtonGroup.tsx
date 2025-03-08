@@ -1,38 +1,34 @@
 
 import React from 'react';
-import EditButton from './EditButton';
-import ViewNotesButton from './ViewNotesButton';
-import ExportButton from './ExportButton';
-import SaveNoteButton from './SaveNoteButton';
-import CopyButton from './CopyButton';
-import { MedicalSections } from '../types';
+import { CopyButton } from './CopyButton';
+import { EditButton } from './EditButton';
+import { ExportButton } from './ExportButton';
+import { SaveNoteButton } from './SaveNoteButton';
+import { ViewNotesButton } from './ViewNotesButton';
 
 interface ButtonGroupProps {
-  onEdit: () => void;
-  user?: any;
-  sections?: MedicalSections;
-  structuredText?: string;
+  isEditing: boolean;
+  setIsEditing: (value: boolean) => void;
+  sections: any;
+  structuredText: string;
 }
 
-const ButtonGroup = ({ onEdit, user, sections, structuredText }: ButtonGroupProps) => {
+export function ButtonGroup({
+  isEditing,
+  setIsEditing,
+  sections,
+  structuredText,
+}: ButtonGroupProps) {
   return (
-    <div className="flex justify-between w-full flex-wrap gap-2">
-      <div className="flex gap-2">
-        <EditButton onClick={onEdit} />
-        <ViewNotesButton />
-      </div>
-      
-      <div className="flex gap-2 flex-wrap">
-        <ExportButton sections={sections} />
-        <SaveNoteButton 
-          user={user} 
-          sections={sections} 
-          structuredText={structuredText} 
-        />
-        <CopyButton sections={sections} />
-      </div>
+    <div className="flex flex-wrap gap-2">
+      <CopyButton structuredText={structuredText} />
+      <EditButton isEditing={isEditing} setIsEditing={setIsEditing} />
+      <ExportButton structuredText={structuredText} />
+      <SaveNoteButton 
+        sections={sections}
+        structuredText={structuredText}
+      />
+      <ViewNotesButton />
     </div>
   );
-};
-
-export default ButtonGroup;
+}
