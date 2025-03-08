@@ -147,6 +147,39 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          payment_method: string
+          plan_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency: string
+          id?: string
+          payment_method: string
+          plan_id: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method?: string
+          plan_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       transcriptions: {
         Row: {
           audio_url: string | null

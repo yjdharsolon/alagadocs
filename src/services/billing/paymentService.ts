@@ -46,3 +46,6 @@ export const processTransaction = async (transaction: BillingTransaction): Promi
     };
   }
 };
+
+// Rename function to match what's being imported in usePaymentManagement
+export const processBillingTransaction = processTransaction;

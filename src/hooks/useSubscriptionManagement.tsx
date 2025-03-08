@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { 
@@ -16,6 +17,9 @@ export type Subscription = {
   createdAt: string;
   updatedAt: string;
 };
+
+// Re-export the SubscriptionStatus type from the billing service
+export type { SubscriptionStatus };
 
 export function useSubscriptionManagement(setSelectedPlan: (plan: BillingPlan | null) => void, billingPlans: BillingPlan[]) {
   const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
