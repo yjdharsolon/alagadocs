@@ -16,6 +16,13 @@ export interface MedicalSection {
   content: string;
 }
 
+export interface TextTemplate {
+  id: string;
+  title: string;
+  description?: string;
+  sections: string[];
+  isDefault: boolean;
+}
+
 // Define StructuredNote type to be used in the application
 export type StructuredNote = MedicalSections;
-

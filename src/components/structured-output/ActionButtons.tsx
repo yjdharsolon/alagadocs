@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Clipboard, CheckCircle2, Save, Loader2, Pencil, FileDown } from 'lucide-react';
+import { Clipboard, CheckCircle2, Save, Loader2, Pencil, FileDown, List } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { saveStructuredNote } from '@/services/transcriptionService';
 import { MedicalSections } from './types';
+import { useNavigate } from 'react-router-dom';
 
 interface ActionButtonsProps {
   onCopy: () => void;
@@ -18,6 +18,7 @@ const ActionButtons = ({ onCopy, onEdit, user, sections, structuredText }: Actio
   const [copied, setCopied] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [exporting, setExporting] = React.useState(false);
+  const navigate = useNavigate();
   
   const handleSaveNote = async () => {
     if (!user || !sections || !structuredText) {
@@ -233,16 +234,32 @@ ${sections?.plan || 'None documented'}
     }
   };
   
+  const handleViewAllNotes = () => {
+    navigate('/dashboard');
+  };
+  
   return (
     <div className="flex justify-between w-full flex-wrap gap-2">
-      <Button 
-        variant="outline" 
-        onClick={onEdit}
-        className="flex items-center gap-1"
-      >
-        <Pencil className="h-4 w-4" />
-        Edit
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          variant="outline" 
+          onClick={onEdit}
+          className="flex items-center gap-1"
+        >
+          <Pencil className="h-4 w-4" />
+          Edit
+        </Button>
+        
+        <Button 
+          variant="outline"
+          onClick={handleViewAllNotes}
+          className="flex items-center gap-1"
+        >
+          <List className="h-4 w-4" />
+          View All Notes
+        </Button>
+      </div>
+      
       <div className="flex gap-2 flex-wrap">
         <Button
           variant="outline"
