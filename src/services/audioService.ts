@@ -21,6 +21,9 @@ export const uploadAudio = async (file: File): Promise<string> => {
     const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
     const filePath = `audio/${fileName}`;
     
+    // Explicitly set the owner to the current user ID
+    const userId = sessionData.session.user.id;
+    
     // Upload options with metadata
     const uploadOptions = {
       cacheControl: '3600',
@@ -35,11 +38,13 @@ export const uploadAudio = async (file: File): Promise<string> => {
     while (attempts < maxAttempts) {
       attempts++;
       try {
+        // Upload the file with explicit user ID
         const { data, error } = await supabase.storage
           .from('transcriptions')
           .upload(filePath, file, uploadOptions);
           
         if (error) {
+          console.error(`Upload attempt ${attempts} failed:`, error);
           if (attempts < maxAttempts) {
             // Wait before retrying
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -53,12 +58,14 @@ export const uploadAudio = async (file: File): Promise<string> => {
           .from('transcriptions')
           .getPublicUrl(filePath);
         
-        // Create a record in the transcriptions table
+        console.log('File uploaded successfully by user:', userId);
+        
+        // Create a record in the transcriptions table with explicit user_id
         const { error: transcriptionError } = await supabase
           .from('transcriptions')
           .insert({
             audio_url: publicUrl,
-            user_id: sessionData.session.user.id, // Explicitly set the user_id from the session
+            user_id: userId,
             text: '' // Empty text initially, will be filled after transcription
           });
             

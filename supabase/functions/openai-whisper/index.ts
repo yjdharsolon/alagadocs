@@ -15,11 +15,20 @@ serve(async (req) => {
   }
 
   try {
+    // Get the authorization header from the request
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing Authorization header');
+    }
+
+    // Get the audio URL from the request body
     const { audioUrl } = await req.json();
     
     if (!audioUrl) {
       throw new Error('No audio URL provided');
     }
+
+    console.log('Processing audio transcription for URL:', audioUrl);
 
     // Fetch the audio file from the provided URL
     const audioResponse = await fetch(audioUrl);
@@ -29,6 +38,7 @@ serve(async (req) => {
     }
     
     const audioBlob = await audioResponse.blob();
+    console.log('Audio file fetched successfully, size:', audioBlob.size);
     
     // Create a FormData object to send to the OpenAI API
     const formData = new FormData();
@@ -38,10 +48,16 @@ serve(async (req) => {
     formData.append('response_format', 'verbose_json'); // Get detailed response
     
     // Call the OpenAI Whisper API
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+    
+    console.log('Calling OpenAI Whisper API...');
     const openaiResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`
+        'Authorization': `Bearer ${openaiApiKey}`
       },
       body: formData
     });
@@ -52,6 +68,7 @@ serve(async (req) => {
     }
     
     const transcription = await openaiResponse.json();
+    console.log('Transcription successful, length:', transcription.text.length);
     
     return new Response(
       JSON.stringify({

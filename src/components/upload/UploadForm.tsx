@@ -96,6 +96,13 @@ export const UploadForm: React.FC = () => {
         return;
       }
       
+      // Handle RLS policy errors
+      if (error instanceof Error && error.message.includes('row-level security policy')) {
+        setError('Permission error. Please try logging out and logging back in.');
+        toast.error('Permission error. Make sure you have the correct role assigned.');
+        return;
+      }
+      
       setError(error instanceof Error ? error.message : 'Error uploading audio. Please try again.');
       toast.error('Error uploading audio. Please try again.');
     } finally {
