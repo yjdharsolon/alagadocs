@@ -152,7 +152,9 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
       if (error instanceof Error && error.message.includes('Authentication error')) {
         setError('Authentication error. Please log in again.');
         toast.error('Authentication error. Please log in again.');
-        navigate('/login');
+        setTimeout(() => {
+          navigate('/login');
+        }, 1500);
         return;
       }
       
