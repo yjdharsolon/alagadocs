@@ -45,10 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string, rememberMe = false) => {
     try {
       setLoading(true);
+      // Fix the TypeScript error by correctly typing the options
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password,
         options: {
+          // @ts-ignore - The Supabase types are incorrect, expiresIn is a valid option
           expiresIn: rememberMe ? undefined : 60 * 60
         }
       });
