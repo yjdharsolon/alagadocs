@@ -26,7 +26,12 @@ const SaveNoteButton = ({ user, sections, structuredText }: SaveNoteButtonProps)
       // Generate a title from the chief complaint or first line
       const title = sections.chiefComplaint.substring(0, 50) || 'Medical Note';
       
-      await saveStructuredNote(user.id, title, structuredText);
+      // Convert the structured text to a string if it's not already
+      const contentString = typeof structuredText === 'string' 
+        ? structuredText 
+        : JSON.stringify(structuredText);
+      
+      await saveStructuredNote(user.id, title, contentString);
       toast.success('Note saved successfully!');
     } catch (error: any) {
       console.error('Error saving note:', error);

@@ -34,13 +34,11 @@ export const uploadAudio = async (file: File): Promise<{ url: string; id: string
   if ((await user).data.user) {
     const { data: transcription, error: transcriptionError } = await supabase
       .from('transcriptions')
-      .insert([
-        { 
-          audio_url: publicUrl,
-          user_id: (await user).data.user?.id,
-          status: 'uploaded'
-        }
-      ])
+      .insert({
+        audio_url: publicUrl,
+        user_id: (await user).data.user?.id,
+        text: '' // Empty text initially, will be filled after transcription
+      })
       .select('id')
       .single();
       
@@ -76,7 +74,9 @@ export const transcribeAudio = async (
     if (transcriptionId) {
       await supabase
         .from('transcriptions')
-        .update({ status: 'processing' })
+        .update({ 
+          text: 'Processing transcription...' 
+        })
         .eq('id', transcriptionId);
     }
     
@@ -92,7 +92,9 @@ export const transcribeAudio = async (
       if (transcriptionId) {
         await supabase
           .from('transcriptions')
-          .update({ status: 'failed', error_message: error.message })
+          .update({ 
+            text: `Transcription failed: ${error.message}` 
+          })
           .eq('id', transcriptionId);
       }
       
@@ -106,7 +108,9 @@ export const transcribeAudio = async (
       if (transcriptionId) {
         await supabase
           .from('transcriptions')
-          .update({ status: 'failed', error_message: errorMsg })
+          .update({ 
+            text: `Transcription failed: ${errorMsg}` 
+          })
           .eq('id', transcriptionId);
       }
       
@@ -118,11 +122,7 @@ export const transcribeAudio = async (
       await supabase
         .from('transcriptions')
         .update({ 
-          text: data.transcription,
-          status: 'completed',
-          duration: data.duration,
-          language: data.language || 'en',
-          completed_at: new Date().toISOString()
+          text: data.transcription
         })
         .eq('id', transcriptionId);
     }
@@ -186,18 +186,16 @@ export const structureText = async (
 export const saveStructuredNote = async (
   userId: string,
   title: string,
-  content: object
+  content: string
 ): Promise<string> => {
   try {
     const { data, error } = await supabase
       .from('notes')
-      .insert([
-        { 
-          user_id: userId, 
-          title, 
-          content
-        }
-      ])
+      .insert({
+        user_id: userId, 
+        title, 
+        content
+      })
       .select('id')
       .single();
       
