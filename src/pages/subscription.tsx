@@ -5,7 +5,7 @@ import { useBilling } from '@/hooks/useBilling';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import CurrentSubscription from '@/components/billing/CurrentSubscription';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function SubscriptionPage() {
   const {
@@ -14,10 +14,10 @@ export default function SubscriptionPage() {
     billingPlans,
   } = useBilling();
   
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleUpgrade = () => {
-    router.navigate('/billing');
+    navigate('/billing');
   };
 
   return (
