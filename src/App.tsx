@@ -9,21 +9,35 @@ import Login from './pages/login';
 import Signup from './pages/signup';
 import Profile from './pages/profile';
 import RoleSelection from './pages/role-selection';
+import { AuthProvider } from './hooks/useAuth';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <>
+    <AuthProvider>
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/role-selection" element={<RoleSelection />} />
-        <Route path="/ask-ai" element={<AskAIPage />} />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/role-selection" element={
+          <ProtectedRoute>
+            <RoleSelection />
+          </ProtectedRoute>
+        } />
+        <Route path="/ask-ai" element={
+          <ProtectedRoute>
+            <AskAIPage />
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
-    </>
+    </AuthProvider>
   );
 }
 

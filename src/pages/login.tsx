@@ -1,12 +1,28 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Layout from '@/components/Layout';
+import { useAuth } from '@/hooks/useAuth';
+import { Link, Navigate } from 'react-router-dom';
 
 export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { signIn, user, loading } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await signIn(email, password);
+  };
+
+  // Redirect if already logged in
+  if (user && !loading) {
+    return <Navigate to="/role-selection" />;
+  }
+
   return (
     <Layout>
       <div className="flex justify-center items-center min-h-screen px-4">
@@ -18,21 +34,40 @@ export default function Login() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="doctor@example.com" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="doctor@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" />
+                  <Input 
+                    id="password" 
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
                 </div>
               </div>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button className="w-full">Sign In</Button>
+            <Button 
+              className="w-full" 
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Button>
             <div className="relative w-full">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t"></span>
@@ -51,9 +86,9 @@ export default function Login() {
             </div>
             <div className="text-center text-sm">
               Don't have an account?{" "}
-              <a href="/signup" className="underline hover:text-primary">
+              <Link to="/signup" className="underline hover:text-primary">
                 Sign up
-              </a>
+              </Link>
             </div>
           </CardFooter>
         </Card>

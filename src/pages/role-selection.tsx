@@ -1,8 +1,12 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Layout from '@/components/Layout';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const roles = [
   {
@@ -38,6 +42,98 @@ const roles = [
 ];
 
 export default function RoleSelection() {
+  const { user } = useAuth();
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const navigate = useNavigate();
+
+  // Check if user already has a role
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+
+          if (error && error.code !== 'PGRST116') {
+            console.error('Error fetching user role:', error);
+          }
+
+          if (data) {
+            setSelectedRole(data.role);
+          }
+        } catch (error) {
+          console.error('Error checking user role:', error);
+        } finally {
+          setInitialLoading(false);
+        }
+      }
+    };
+
+    checkUserRole();
+  }, [user]);
+
+  const handleRoleSelection = async (role: string) => {
+    if (!user) return;
+
+    setLoading(true);
+    setSelectedRole(role);
+
+    try {
+      // Check if user already has a role
+      const { data: existingRole } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let error;
+
+      if (existingRole) {
+        // Update existing role
+        const { error: updateError } = await supabase
+          .from('user_roles')
+          .update({ role })
+          .eq('user_id', user.id);
+        
+        error = updateError;
+      } else {
+        // Insert new role
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .insert({ user_id: user.id, role });
+        
+        error = insertError;
+      }
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success(`Role set to ${role}`);
+      navigate('/profile');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to set role');
+      console.error('Error setting role:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (initialLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="container mx-auto py-10 px-4">
@@ -47,18 +143,36 @@ export default function RoleSelection() {
             Choose your role to help us personalize your experience with templates and workflows
             tailored to your specific needs.
           </p>
+          {selectedRole && (
+            <div className="mt-4 p-2 bg-green-50 text-green-800 rounded-md">
+              Current role: <strong>{selectedRole}</strong>
+            </div>
+          )}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {roles.map((role, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card 
+              key={index} 
+              className={`hover:shadow-md transition-shadow cursor-pointer ${
+                selectedRole === role.title ? 'border-primary border-2' : ''
+              }`}
+            >
               <CardHeader>
                 <div className="text-4xl mb-2">{role.icon}</div>
                 <CardTitle>{role.title}</CardTitle>
                 <CardDescription>{role.description}</CardDescription>
               </CardHeader>
               <CardFooter>
-                <Button className="w-full">Select {role.title}</Button>
+                <Button 
+                  className="w-full"
+                  onClick={() => handleRoleSelection(role.title)}
+                  disabled={loading}
+                >
+                  {loading && selectedRole === role.title 
+                    ? 'Setting Role...' 
+                    : `Select ${role.title}`}
+                </Button>
               </CardFooter>
             </Card>
           ))}
