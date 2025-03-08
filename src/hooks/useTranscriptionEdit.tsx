@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { updateTranscriptionText } from '@/services/audioService';
+import { updateTranscriptionText } from '@/services/audio';
 
-// This structure matches the state from the transcribe page
 interface TranscriptionState {
   transcriptionData: {
     text: string;
@@ -24,7 +22,6 @@ export const useTranscriptionEdit = (locationState: any) => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const navigate = useNavigate();
 
-  // Initialize state from the location state
   useEffect(() => {
     if (!locationState) {
       navigate('/upload');
@@ -43,7 +40,6 @@ export const useTranscriptionEdit = (locationState: any) => {
     setTranscriptionId(transcriptionId || '');
   }, [locationState, navigate]);
 
-  // Reset success message after 3 seconds
   useEffect(() => {
     let timer: number;
     if (saveSuccess) {
@@ -84,7 +80,6 @@ export const useTranscriptionEdit = (locationState: any) => {
       state: {
         transcriptionData: {
           text: transcriptionText,
-          // Pass through any other transcriptionData properties
           ...(locationState?.transcriptionData?.duration && { 
             duration: locationState.transcriptionData.duration 
           }),

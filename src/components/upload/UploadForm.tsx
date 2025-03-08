@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileAudio, Mic, Loader2, AlertCircle } from 'lucide-react';
-import { uploadAudio, transcribeAudio } from '@/services/audioService';
+import { uploadAudio, transcribeAudio } from '@/services/audio';
 import { toast } from 'sonner';
 import { FileUploader } from './FileUploader';
 import { AudioRecorder } from './audio-recorder';
