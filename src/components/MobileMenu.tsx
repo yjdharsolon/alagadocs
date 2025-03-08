@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { X, BookOpen, FileText, Star, CreditCard } from 'lucide-react';
+import { X, BookOpen, FileText, Star, CreditCard, FileEdit, Copy, LayoutTemplate } from 'lucide-react';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -85,14 +85,36 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
             >
               Upload Audio
             </Link>
-            
-            {/* New links for Phase 3 completion */}
+            <Link 
+              to="/transcribe" 
+              onClick={onClose}
+              className="font-medium hover:text-black/70 transition-colors flex items-center gap-2"
+            >
+              <FileEdit className="h-5 w-5" />
+              Transcribe
+            </Link>
+            <Link 
+              to="/templates" 
+              onClick={onClose}
+              className="font-medium hover:text-black/70 transition-colors flex items-center gap-2"
+            >
+              <LayoutTemplate className="h-5 w-5" />
+              Templates
+            </Link>
+            <Link 
+              to="/customize-template" 
+              onClick={onClose}
+              className="font-medium hover:text-black/70 transition-colors flex items-center gap-2"
+            >
+              <LayoutTemplate className="h-5 w-5" />
+              Customize Templates
+            </Link>
             <Link 
               to="/copy-to-emr" 
               onClick={onClose}
               className="font-medium hover:text-black/70 transition-colors flex items-center gap-2"
             >
-              <FileText className="h-5 w-5" />
+              <Copy className="h-5 w-5" />
               Copy to EMR
             </Link>
             <Link 

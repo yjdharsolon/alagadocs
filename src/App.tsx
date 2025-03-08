@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   BrowserRouter as Router,
@@ -33,24 +34,26 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <Toaster position="top-center" />
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/role-selection" element={<RoleSelectionPage />} />
-          <Route path="/upload" element={<UploadPage />} />
-          <Route path="/transcribe" element={<TranscriptionPage />} />
-          <Route path="/edit-transcript" element={<EditTranscriptPage />} />
-          <Route path="/ask-ai" element={<AskAIPage />} />
-          <Route path="/templates" element={<TemplatesPage />} />
-          
-          {/* New routes for Phase 3 completion */}
-          <Route path="/copy-to-emr" element={<CopyToEMRPage />} />
-          <Route path="/customize-template" element={<CustomizeTemplatePage />} />
-          <Route path="/ratings" element={<RatingsPage />} />
-          <Route path="/billing" element={<BillingPage />} />
-        </Routes>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/role-selection" element={<RoleSelectionPage />} />
+            <Route path="/upload" element={<UploadPage />} />
+            <Route path="/transcribe" element={<TranscriptionPage />} />
+            <Route path="/edit-transcript" element={<EditTranscriptPage />} />
+            <Route path="/ask-ai" element={<AskAIPage />} />
+            <Route path="/templates" element={<TemplatesPage />} />
+            
+            {/* Phase 3 completion routes */}
+            <Route path="/copy-to-emr" element={<CopyToEMRPage />} />
+            <Route path="/customize-template" element={<CustomizeTemplatePage />} />
+            <Route path="/ratings" element={<RatingsPage />} />
+            <Route path="/billing" element={<BillingPage />} />
+          </Routes>
+        </Router>
       </QueryClientProvider>
     </AuthProvider>
   );
