@@ -10,7 +10,7 @@ type AuthContextType = {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, userData?: Record<string, string>) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithFacebook: () => Promise<void>;
@@ -70,16 +70,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, userData?: Record<string, string>) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({ email, password });
+      // For now, we'll disable email verification to simplify the process
+      const { error, data } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: userData,
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
       
       if (error) {
         throw error;
       }
       
-      toast.success('Registration successful! Please check your email for confirmation.');
+      // Auto-sign in the user after signup for better UX
+      if (data.user) {
+        setUser(data.user);
+        
+        // Add user profile data to the profiles table if provided
+        if (userData && data.user.id) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+            })
+            .eq('id', data.user.id);
+            
+          if (profileError) {
+            console.error('Error updating profile:', profileError);
+          }
+        }
+      }
+      
+      toast.success('Registration successful!');
     } catch (error: any) {
       toast.error(error.message || 'Error signing up');
       console.error('Error signing up:', error);

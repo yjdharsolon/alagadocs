@@ -17,8 +17,6 @@ import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
 
-<lov-add-dependency>react-icons@latest</lov-add-dependency>
-
 export default function Login() {
   const { signIn, signInWithGoogle, signInWithFacebook, loading } = useAuth();
   const navigate = useNavigate();
