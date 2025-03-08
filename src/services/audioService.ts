@@ -8,24 +8,20 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const uploadAudio = async (file: File): Promise<string> => {
   try {
+    // Get the current user session first to ensure authentication
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !sessionData.session) {
+      console.error('Authentication error:', sessionError || 'No active session');
+      throw new Error('Authentication error. Please log in again.');
+    }
+    
     // Create a unique file name
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
     const filePath = `audio/${fileName}`;
     
-    // Get the current user
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) {
-      console.error('Error getting user:', userError);
-      throw new Error('Authentication error. Please log in again.');
-    }
-    
-    if (!userData?.user) {
-      throw new Error('No authenticated user found. Please log in.');
-    }
-    
-    // Create upload options with metadata
+    // Upload options with metadata
     const uploadOptions = {
       cacheControl: '3600',
       upsert: false,
@@ -62,13 +58,13 @@ export const uploadAudio = async (file: File): Promise<string> => {
           .from('transcriptions')
           .insert({
             audio_url: publicUrl,
-            user_id: userData.user.id,
+            user_id: sessionData.session.user.id, // Explicitly set the user_id from the session
             text: '' // Empty text initially, will be filled after transcription
           });
             
         if (transcriptionError) {
           console.error('Error creating transcription record:', transcriptionError);
-          // Don't throw here, we still want to return the URL
+          throw new Error(`Failed to create transcription record: ${transcriptionError.message}`);
         }
         
         return publicUrl;
@@ -94,6 +90,13 @@ export const uploadAudio = async (file: File): Promise<string> => {
  */
 export const transcribeAudio = async (audioUrl: string) => {
   try {
+    // Ensure user is authenticated
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !sessionData.session) {
+      throw new Error('Authentication error. Please log in again.');
+    }
+    
     // Add a short delay to ensure the file is available
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -106,7 +109,10 @@ export const transcribeAudio = async (audioUrl: string) => {
       attempts++;
       try {
         const { data, error } = await supabase.functions.invoke('openai-whisper', {
-          body: { audioUrl }
+          body: { audioUrl },
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`
+          }
         });
         
         if (error) {
@@ -126,23 +132,20 @@ export const transcribeAudio = async (audioUrl: string) => {
         }
         
         // Update the transcription record with the transcribed text
-        const { data: userData } = await supabase.auth.getUser();
-        
-        if (userData?.user) {
-          const { error: updateError } = await supabase
-            .from('transcriptions')
-            .update({ 
-              text: data.transcription,
-              // Add additional metadata if available
-              ...(data.duration && { duration: data.duration }),
-              ...(data.language && { language: data.language })
-            })
-            .eq('audio_url', audioUrl)
-            .eq('user_id', userData.user.id);
+        const { error: updateError } = await supabase
+          .from('transcriptions')
+          .update({ 
+            text: data.transcription,
+            // Add additional metadata if available
+            ...(data.duration && { duration: data.duration }),
+            ...(data.language && { language: data.language })
+          })
+          .eq('audio_url', audioUrl)
+          .eq('user_id', sessionData.session.user.id);
             
-          if (updateError) {
-            console.error('Error updating transcription record:', updateError);
-          }
+        if (updateError) {
+          console.error('Error updating transcription record:', updateError);
+          throw new Error(`Failed to update transcription: ${updateError.message}`);
         }
         
         return {
@@ -170,16 +173,16 @@ export const transcribeAudio = async (audioUrl: string) => {
  */
 export const getUserTranscriptions = async () => {
   try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    if (userError || !userData?.user) {
+    if (sessionError || !sessionData.session) {
       throw new Error('Authentication error. Please log in again.');
     }
     
     const { data, error } = await supabase
       .from('transcriptions')
       .select('*')
-      .eq('user_id', userData.user.id)
+      .eq('user_id', sessionData.session.user.id)
       .order('created_at', { ascending: false });
       
     if (error) {
@@ -198,9 +201,9 @@ export const getUserTranscriptions = async () => {
  */
 export const updateTranscriptionText = async (id: string, text: string) => {
   try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    if (userError || !userData?.user) {
+    if (sessionError || !sessionData.session) {
       throw new Error('Authentication error. Please log in again.');
     }
     
@@ -208,7 +211,7 @@ export const updateTranscriptionText = async (id: string, text: string) => {
       .from('transcriptions')
       .update({ text })
       .eq('id', id)
-      .eq('user_id', userData.user.id);
+      .eq('user_id', sessionData.session.user.id);
       
     if (error) {
       throw new Error(`Error updating transcription: ${error.message}`);

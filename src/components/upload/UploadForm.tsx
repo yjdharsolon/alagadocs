@@ -40,18 +40,18 @@ export const UploadForm: React.FC = () => {
       return;
     }
 
+    // Check if user is logged in
+    if (!user) {
+      toast.error('Please log in to upload audio');
+      navigate('/login');
+      return;
+    }
+
     try {
       setIsUploading(true);
       setCurrentStep('uploading');
       setUploadProgress(0);
       setError(null);
-      
-      // Check if user is logged in
-      if (!user) {
-        toast.error('Please log in to upload audio');
-        navigate('/login');
-        return;
-      }
       
       // More gradual progress updates for better UX
       const progressInterval = setInterval(() => {
@@ -87,6 +87,15 @@ export const UploadForm: React.FC = () => {
       
     } catch (error) {
       console.error('Error uploading audio:', error);
+      
+      // Handle authentication errors specifically
+      if (error instanceof Error && error.message.includes('Authentication error')) {
+        setError('Authentication error. Please log in again.');
+        toast.error('Authentication error. Please log in again.');
+        navigate('/login');
+        return;
+      }
+      
       setError(error instanceof Error ? error.message : 'Error uploading audio. Please try again.');
       toast.error('Error uploading audio. Please try again.');
     } finally {
