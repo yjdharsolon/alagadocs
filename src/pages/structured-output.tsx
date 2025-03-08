@@ -1,16 +1,25 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
-import { structureText, saveStructuredText, getStructuredText } from '@/services/structuredTextService';
+import { 
+  structureText, 
+  saveStructuredText, 
+  getStructuredText,
+  getDefaultTemplate 
+} from '@/services/structuredTextService';
+import { getUserTemplates } from '@/services/templateService';
 import DocumentTabs from '@/components/structured-output/DocumentTabs';
 import LoadingState from '@/components/structured-output/LoadingState';
 import ActionButtons from '@/components/structured-output/ActionButtons';
-import { StructuredNote } from '@/components/structured-output/types';
+import { StructuredNote, TextTemplate } from '@/components/structured-output/types';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { formatClipboardText } from '@/components/structured-output/utils/exportUtils';
+import EditButton from '@/components/structured-output/buttons/EditButton';
+import ViewNotesButton from '@/components/structured-output/buttons/ViewNotesButton';
 
 export default function StructuredOutput() {
   const { user, getUserRole } = useAuth();
@@ -19,10 +28,34 @@ export default function StructuredOutput() {
   const [loading, setLoading] = useState(true);
   const [structuredData, setStructuredData] = useState<StructuredNote | null>(null);
   const [processingText, setProcessingText] = useState(false);
+  const [templates, setTemplates] = useState<TextTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   
   const transcriptionData = location.state?.transcriptionData;
   const transcriptionId = location.state?.transcriptionId;
   const audioUrl = location.state?.audioUrl;
+  
+  // Fetch user templates
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      if (user) {
+        try {
+          const userTemplates = await getUserTemplates(user.id);
+          setTemplates(userTemplates);
+          
+          // Check if a default template exists
+          const defaultTemplate = await getDefaultTemplate(user.id);
+          if (defaultTemplate) {
+            setSelectedTemplateId(defaultTemplate.id);
+          }
+        } catch (error) {
+          console.error('Error fetching templates:', error);
+        }
+      }
+    };
+    
+    fetchTemplates();
+  }, [user]);
   
   useEffect(() => {
     const processTranscription = async () => {
@@ -42,7 +75,18 @@ export default function StructuredOutput() {
         
         setProcessingText(true);
         const userRole = await getUserRole();
-        const structuredResult = await structureText(transcriptionData.text, userRole);
+        
+        // Get selected template if exists
+        let selectedTemplate = null;
+        if (selectedTemplateId) {
+          selectedTemplate = templates.find(t => t.id === selectedTemplateId) || null;
+        }
+        
+        const structuredResult = await structureText(
+          transcriptionData.text, 
+          userRole,
+          selectedTemplate
+        );
         
         if (structuredResult) {
           setStructuredData(structuredResult);
@@ -60,7 +104,7 @@ export default function StructuredOutput() {
     };
     
     processTranscription();
-  }, [transcriptionData, transcriptionId, user, getUserRole]);
+  }, [transcriptionData, transcriptionId, user, getUserRole, templates, selectedTemplateId]);
   
   if (!loading && (!transcriptionData || !transcriptionId)) {
     toast.error('No transcription data found. Please upload an audio file first.');
@@ -89,6 +133,30 @@ export default function StructuredOutput() {
       })
       .catch(() => toast.error('Failed to copy to clipboard'));
   };
+
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    setLoading(true);
+    setProcessingText(true);
+    
+    // Re-trigger the useEffect to reprocess with the new template
+    const timer = setTimeout(() => {
+      setLoading(false);
+      setProcessingText(false);
+    }, 3000); // Fallback timer
+    
+    return () => clearTimeout(timer);
+  };
+  
+  const handleEdit = () => {
+    navigate('/edit-transcript', { 
+      state: { 
+        structuredData,
+        transcriptionId,
+        audioUrl
+      } 
+    });
+  };
   
   return (
     <Layout>
@@ -113,19 +181,22 @@ export default function StructuredOutput() {
         ) : structuredData ? (
           <>
             <DocumentTabs structuredData={structuredData} />
-            <ActionButtons 
-              onCopy={handleCopyToClipboard}
-              onEdit={() => navigate('/edit-transcript', { 
-                state: { 
-                  structuredData,
-                  transcriptionId,
-                  audioUrl
-                } 
-              })}
-              user={user}
-              sections={structuredData}
-              structuredText={JSON.stringify(structuredData)}
-            />
+            <div className="mt-6 flex justify-end space-x-2">
+              <EditButton 
+                onClick={handleEdit}
+                templates={templates}
+                onTemplateSelect={handleTemplateSelect}
+                showTemplateSelector={templates.length > 0}
+              />
+              <ViewNotesButton />
+              <ActionButtons 
+                onCopy={handleCopyToClipboard}
+                onEdit={handleEdit}
+                user={user}
+                sections={structuredData}
+                structuredText={JSON.stringify(structuredData)}
+              />
+            </div>
           </>
         ) : (
           <div className="text-center p-10">

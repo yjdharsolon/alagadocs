@@ -5,6 +5,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 interface RequestBody {
   text: string;
   role?: string;
+  template?: {
+    sections: string[];
+  };
 }
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
@@ -29,7 +32,7 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    const { text, role = 'Doctor' } = await req.json() as RequestBody;
+    const { text, role = 'Doctor', template } = await req.json() as RequestBody;
 
     if (!text) {
       return new Response(JSON.stringify({ error: 'Text is required' }), {
@@ -41,7 +44,7 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = getSystemPrompt(role);
+    const systemPrompt = getSystemPrompt(role, template);
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -99,38 +102,49 @@ serve(async (req) => {
   }
 });
 
-function getSystemPrompt(role: string): string {
+function getSystemPrompt(role: string, template?: { sections: string[] }): string {
+  const standardSections = [
+    "Chief Complaint",
+    "History of Present Illness",
+    "Past Medical History",
+    "Medications",
+    "Allergies",
+    "Physical Examination",
+    "Assessment",
+    "Plan"
+  ];
+  
+  const sections = template?.sections || standardSections;
+  
+  const sectionsList = sections.map(section => `- ${section}`).join('\n');
+  
   const basePrompt = `
 You are an expert medical assistant helping to structure transcriptions of medical conversations or dictations. You're assisting a healthcare professional with role: ${role}.
 
 Take the provided transcription text and organize it into a structured medical note with the following sections:
-1. Chief Complaint (CC): A concise statement describing the patient's primary reason for the visit
-2. History of Present Illness (HPI): A chronological description of the development of the patient's illness
-3. Past Medical History (PMH): Previous medical conditions, surgeries, and treatments
-4. Medications: Current medications including dose and frequency
-5. Allergies: Any known allergies and reactions
-6. Review of Systems (ROS): Systematic review of relevant body systems
-7. Physical Examination: Findings from the physical examination
-8. Assessment: Clinical impression or diagnosis
-9. Plan: Treatment plan, including medications, follow-up, etc.
+${sectionsList}
 
-Return the structured information in JSON format with these sections as keys. 
+Return the structured information in JSON format with these sections as keys with camelCase format. 
 If certain sections are not present in the transcription, include the key with an empty string or "Not mentioned" as the value.
 Be accurate, concise and professional in your structuring. Do not invent information not present in the transcription.
 
-Example response format:
+Example response format (using camelCase for keys):
 {
-  "chief_complaint": "...",
-  "history_of_present_illness": "...",
-  "past_medical_history": "...",
-  "medications": "...",
-  "allergies": "...",
-  "review_of_systems": "...",
-  "physical_examination": "...",
-  "assessment": "...",
-  "plan": "..."
+  ${sections.map(section => `"${toCamelCase(section)}": "..."`).join(',\n  ')}
 }
 `;
 
   return basePrompt;
+}
+
+function toCamelCase(str: string): string {
+  return str
+    .split(' ')
+    .map((word, index) => {
+      if (index === 0) {
+        return word.toLowerCase();
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join('');
 }
