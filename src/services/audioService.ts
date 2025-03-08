@@ -66,14 +66,18 @@ export const uploadAudio = async (file: File): Promise<string> => {
         
         console.log('File uploaded successfully by user:', userId);
         
-        // First check if transcriptions table has RLS policies for insert
-        const { data: policies, error: policyError } = await supabase
-          .rpc('get_policies_for_table', { table_name: 'transcriptions' });
-        
-        if (policyError) {
-          console.error('Error checking RLS policies:', policyError);
-        } else {
-          console.log('Available policies for transcriptions table:', policies);
+        // Check RLS policies for transcriptions table
+        try {
+          const { data: policies, error: policyError } = await supabase
+            .rpc('get_policies_for_table', { table_name: 'transcriptions' });
+          
+          if (policyError) {
+            console.error('Error checking RLS policies:', policyError);
+          } else {
+            console.log('Available policies for transcriptions table:', policies);
+          }
+        } catch (policyCheckError) {
+          console.error('Error checking policies:', policyCheckError);
         }
         
         // Create a record in the transcriptions table
@@ -101,7 +105,7 @@ export const uploadAudio = async (file: File): Promise<string> => {
       } catch (uploadError) {
         if (attempts >= maxAttempts) {
           console.error('Error uploading after multiple attempts:', uploadError);
-          throw new Error(`Upload failed: ${uploadError.message || 'Unknown error'}`);
+          throw new Error(`Upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
         }
       }
     }
@@ -133,7 +137,7 @@ export const transcribeAudio = async (audioUrl: string) => {
     // Initialize transcription attempt
     let attempts = 0;
     const maxAttempts = 2;
-    let lastError = null;
+    let lastError: Error | null = null;
     
     while (attempts < maxAttempts) {
       attempts++;
@@ -149,7 +153,7 @@ export const transcribeAudio = async (audioUrl: string) => {
         
         if (error) {
           console.error(`Transcription attempt ${attempts} failed:`, error);
-          lastError = error;
+          lastError = new Error(error.message);
           // Wait longer before retrying
           await new Promise(resolve => setTimeout(resolve, 2000));
           continue;
@@ -190,7 +194,7 @@ export const transcribeAudio = async (audioUrl: string) => {
           language: data.language
         };
       } catch (attemptError) {
-        lastError = attemptError;
+        lastError = attemptError instanceof Error ? attemptError : new Error(String(attemptError));
         if (attempts >= maxAttempts) {
           throw lastError;
         }
