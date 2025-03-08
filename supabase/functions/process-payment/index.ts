@@ -1,9 +1,6 @@
 
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,55 +14,137 @@ serve(async (req) => {
   }
 
   try {
-    // Get the request payload
-    const payload = await req.json()
-    console.log('Payment processing request:', payload)
-
-    // Validate the required fields
-    const { userId, planId, paymentMethod, amount, currency } = payload
+    // Get the request body
+    const { userId, planId, paymentMethod, amount, currency } = await req.json()
+    
+    // Validate the request
     if (!userId || !planId || !paymentMethod || !amount || !currency) {
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Missing required payment information'
+        JSON.stringify({ 
+          success: false, 
+          error: 'Missing required fields' 
         }),
         { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
 
-    // In a real implementation, this would integrate with a payment processor
-    // For now, we'll simulate a successful payment
-    
-    // Generate a mock transaction ID
-    const transactionId = `tx_${Math.random().toString(36).substring(2, 12)}`
-    
-    console.log(`Successfully processed payment for user ${userId}. Transaction ID: ${transactionId}`)
+    // Create a Supabase client with the service role key
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Return success response
-    return new Response(
-      JSON.stringify({
-        success: true,
-        transactionId
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
+    // Generate a transaction ID
+    const transactionId = crypto.randomUUID()
+    
+    // In a real application, you would integrate with a payment provider here
+    // For now, we'll simulate a successful payment
+    const paymentSuccessful = true
+    
+    if (paymentSuccessful) {
+      // Create a transaction record
+      const { error } = await supabase
+        .from('transactions')
+        .insert({
+          id: transactionId,
+          user_id: userId,
+          plan_id: planId,
+          payment_method: paymentMethod,
+          amount,
+          currency,
+          status: 'success'
+        })
+
+      if (error) {
+        console.error('Error creating transaction:', error)
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: `Error creating transaction: ${error.message}` 
+          }),
+          { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
       }
-    )
+
+      // If this is a subscription, update or create a subscription record
+      if (planId !== 'one-time') {
+        const { data: existingSubscription } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', userId)
+          .single()
+
+        if (existingSubscription) {
+          // Update existing subscription
+          await supabase
+            .from('subscriptions')
+            .update({
+              plan_id: planId,
+              status: 'active',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingSubscription.id)
+        } else {
+          // Create new subscription
+          await supabase
+            .from('subscriptions')
+            .insert({
+              user_id: userId,
+              plan_id: planId,
+              status: 'active'
+            })
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          transactionId 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    } else {
+      // Payment failed
+      await supabase
+        .from('transactions')
+        .insert({
+          id: transactionId,
+          user_id: userId,
+          plan_id: planId,
+          payment_method: paymentMethod,
+          amount,
+          currency,
+          status: 'failed'
+        })
+
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Payment processing failed' 
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
   } catch (error) {
     console.error('Error processing payment:', error)
-    
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || 'Internal server error'
+      JSON.stringify({ 
+        success: false, 
+        error: `Server error: ${error.message}` 
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
   }
