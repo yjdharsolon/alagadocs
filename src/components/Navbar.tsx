@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useScrollProgress } from '../utils/animate';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -26,25 +27,36 @@ const Navbar: React.FC = () => {
       )}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <a 
-          href="#" 
+        <Link 
+          to="/" 
           className="text-xl font-medium tracking-tight hover:opacity-80 transition-opacity"
         >
-          <span className="sr-only">Company</span>
-          Minimalist
-        </a>
+          <span className="sr-only">AlagaDocs</span>
+          AlagaDocs
+        </Link>
         
         <nav className="hidden md:flex items-center space-x-8">
-          {['Products', 'About', 'Design', 'Contact'].map((item) => (
-            <a 
-              key={item} 
-              href={`#${item.toLowerCase()}`}
-              className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
-            >
-              {item}
-              <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
-            </a>
-          ))}
+          <Link 
+            to="/login" 
+            className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
+          >
+            Login
+            <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
+          </Link>
+          <Link 
+            to="/signup" 
+            className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
+          >
+            Sign Up
+            <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
+          </Link>
+          <Link 
+            to="/profile" 
+            className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
+          >
+            Profile
+            <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
+          </Link>
         </nav>
         
         <button 
