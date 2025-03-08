@@ -5,7 +5,7 @@ import SectionContent from './SectionContent';
 import { MedicalSections } from './types';
 
 interface DocumentTabsProps {
-  structuredData: MedicalSections; // Changed from sections to structuredData
+  structuredData: MedicalSections;
 }
 
 const DocumentTabs = ({ structuredData }: DocumentTabsProps) => {

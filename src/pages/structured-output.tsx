@@ -101,7 +101,6 @@ export default function StructuredOutput() {
     navigator.clipboard.writeText(formattedText.trim())
       .then(() => {
         toast.success('Copied to clipboard');
-        // Don't set copied state here to avoid ActionButtons re-render issues
       })
       .catch(() => toast.error('Failed to copy to clipboard'));
   };

@@ -60,6 +60,33 @@ export type Database = {
         }
         Relationships: []
       }
+      structured_notes: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          transcription_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id?: string
+          transcription_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          transcription_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
