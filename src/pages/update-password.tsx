@@ -14,38 +14,48 @@ export default function UpdatePasswordPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
-  // Check if the user is authenticated via the recovery flow
   useEffect(() => {
-    const checkRecoverySession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        toast.error('Invalid or expired recovery link. Please try again.');
+    // Check if the user is authenticated via recovery token
+    const checkUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data?.user) {
+        toast.error('Password reset link is invalid or has expired');
         navigate('/password-reset');
+        return;
       }
+      
+      setUser(data.user);
     };
-    
-    checkRecoverySession();
+
+    checkUser();
   }, [navigate]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError('');
     
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+    // Validate password
+    if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
       return;
     }
     
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match');
       return;
     }
     
     try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.updateUser({ password });
+      setLoading(true);
+      
+      const { error } = await supabase.auth.updateUser({
+        password
+      });
       
       if (error) {
         throw error;
@@ -53,11 +63,17 @@ export default function UpdatePasswordPage() {
       
       setIsSuccess(true);
       toast.success('Password updated successfully');
+      
+      // Redirect to login after short delay
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+      
     } catch (error: any) {
       toast.error(error.message || 'Error updating password');
-      console.error('Update password error:', error);
+      console.error('Password update error:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -66,11 +82,13 @@ export default function UpdatePasswordPage() {
       <div className="container flex items-center justify-center min-h-[calc(100vh-16rem)] py-8">
         <Card className="w-full max-w-md mx-auto">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Update Password</CardTitle>
+            <CardTitle className="text-2xl font-bold">
+              {isSuccess ? 'Password Updated' : 'Update Your Password'}
+            </CardTitle>
             <CardDescription>
               {isSuccess 
                 ? "Your password has been updated successfully" 
-                : "Enter your new password below"}
+                : "Create a new password for your account"}
             </CardDescription>
           </CardHeader>
           
@@ -80,7 +98,7 @@ export default function UpdatePasswordPage() {
                 <Check className="h-8 w-8 text-green-600" />
               </div>
               <p className="text-muted-foreground">
-                Your password has been updated successfully.
+                You will be redirected to the login page shortly.
               </p>
             </CardContent>
           ) : (
@@ -97,6 +115,7 @@ export default function UpdatePasswordPage() {
                     required
                   />
                 </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <Input 
@@ -107,15 +126,18 @@ export default function UpdatePasswordPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                   />
+                  {passwordError && (
+                    <p className="text-sm text-red-500">{passwordError}</p>
+                  )}
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col space-y-2">
                 <Button 
                   type="submit" 
                   className="w-full" 
-                  disabled={isLoading}
+                  disabled={loading}
                 >
-                  {isLoading ? 'Updating Password...' : 'Update Password'}
+                  {loading ? 'Updating Password...' : 'Update Password'}
                 </Button>
                 <Button 
                   type="button"
