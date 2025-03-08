@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -49,15 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password,
-        options: {
-          // Remove captcha verification by setting captchaToken to any non-empty string
-          captchaToken: 'disabled-for-testing',
-          // Don't set expiresIn when rememberMe is true (use default longer expiry)
-          ...(!rememberMe && {
-            // @ts-ignore - The Supabase types are incorrect, expiresIn is a valid option
-            expiresIn: 60 * 60 // 1 hour expiry when "remember me" is false
-          })
-        }
+        options: !rememberMe ? {
+          // @ts-ignore - The Supabase types are incorrect, expiresIn is a valid option
+          expiresIn: 60 * 60 // 1 hour expiry when "remember me" is false
+        } : undefined
       });
       
       if (error) {
@@ -83,9 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         options: {
           data: userData,
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          // Remove captcha verification by setting captchaToken to any non-empty string
-          captchaToken: 'disabled-for-testing'
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
       
@@ -128,9 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          // Remove captcha verification by setting captchaToken to any non-empty string
-          captchaToken: 'disabled-for-testing'
+          redirectTo: `${window.location.origin}/auth/callback`
         },
       });
       
