@@ -37,7 +37,54 @@ Below is a step-by-step implementation plan, divided into phases. Each step cite
 
     *   Run `node -v` to confirm Node.js v20.2.1 is installed.
 
-## Phase 2: Frontend Development
+## Phase 2: Backend Development
+
+1.  **Set Up API Route Framework in Next.js**
+
+    *   Within `/src/pages/api`, structure endpoints for audio, transcription, and billing.
+    *   **Reference:** Backend Structure Document
+
+2.  **Implement Audio Upload API**
+
+    *   Create `/src/pages/api/upload.ts` to handle audio file uploads and forward them to Supabase File Storage.
+    *   **Validation:** Use Postman to verify file upload and response.
+    *   **Reference:** PRD Section 4 (Audio Upload & Voice Recording)
+
+3.  **Develop Transcription API Endpoint**
+
+    *   Create `/src/pages/api/transcribe.ts` to receive the audio file reference and call the OpenAI Whisper API for transcription.
+    *   **Validation:** Test the endpoint with `curl` or Postman to verify transcription output.
+    *   **Reference:** PRD Section 4 (AI Transcription)
+
+4.  **Implement Text Structuring API Endpoint**
+
+    *   Create `/src/pages/api/structure.ts` that takes transcribed text and calls GPT-4o to format it into structured medical notes (Chief Complaint, History of Present Illness, Assessment & Plan).
+    *   **Validation:** Invoke the endpoint and ensure formatted output matches design specs.
+    *   **Reference:** PRD Section 4 (Intelligent Text Structuring)
+
+5.  **Configure Supabase Authentication Integration**
+
+    *   Use Supabase’s client libraries on both frontend and backend to manage user accounts and secure data.
+    *   **Reference:** PRD Section 4 (User Authentication & Secure Accounts)
+
+6.  **Develop Billing API Endpoint**
+
+    *   Create `/src/pages/api/billing.ts` to process payments and support flexible models.
+    *   Ensure the structure is flexible to accommodate region-specific payment providers (Gcash, Paymaya, bank/card transfers).
+    *   **Validation:** Use test transactions to verify billing responses.
+    *   **Reference:** PRD Section 4 (Flexible Payment System)
+
+7.  **Implement Server-Side Security & HIPAA Compliance Measures**
+
+    *   Integrate data encryption for sensitive information in API routes and ensure secure access controls.
+    *   Set up audit logging for critical actions.
+    *   **Reference:** PRD Section 6 (Security & Compliance)
+
+8.  **Validation:**
+
+    *   Test all API endpoints individually using Postman/cURL to ensure correct responses and error handling.
+
+## Phase 3: Frontend Development
 
 1.  **Configure Package Dependencies**
 
@@ -126,52 +173,7 @@ Below is a step-by-step implementation plan, divided into phases. Each step cite
     *   Ensure all pages are responsive with Tailwind CSS breakpoints and test using browser dev tools.
     *   **Validation:** Check layout on different screen sizes.
 
-## Phase 3: Backend Development
-
-1.  **Set Up API Route Framework in Next.js**
-
-    *   Within `/src/pages/api`, structure endpoints for audio, transcription, and billing.
-    *   **Reference:** Backend Structure Document
-
-2.  **Implement Audio Upload API**
-
-    *   Create `/src/pages/api/upload.ts` to handle audio file uploads and forward them to Supabase File Storage.
-    *   **Validation:** Use Postman to verify file upload and response.
-    *   **Reference:** PRD Section 4 (Audio Upload & Voice Recording)
-
-3.  **Develop Transcription API Endpoint**
-
-    *   Create `/src/pages/api/transcribe.ts` to receive the audio file reference and call the OpenAI Whisper API for transcription.
-    *   **Validation:** Test the endpoint with `curl` or Postman to verify transcription output.
-    *   **Reference:** PRD Section 4 (AI Transcription)
-
-4.  **Implement Text Structuring API Endpoint**
-
-    *   Create `/src/pages/api/structure.ts` that takes transcribed text and calls GPT-4o to format it into structured medical notes (Chief Complaint, History of Present Illness, Assessment & Plan).
-    *   **Validation:** Invoke the endpoint and ensure formatted output matches design specs.
-    *   **Reference:** PRD Section 4 (Intelligent Text Structuring)
-
-5.  **Configure Supabase Authentication Integration**
-
-    *   Use Supabase’s client libraries on both frontend and backend to manage user accounts and secure data.
-    *   **Reference:** PRD Section 4 (User Authentication & Secure Accounts)
-
-6.  **Develop Billing API Endpoint**
-
-    *   Create `/src/pages/api/billing.ts` to process payments and support flexible models.
-    *   Ensure the structure is flexible to accommodate region-specific payment providers (Gcash, Paymaya, bank/card transfers).
-    *   **Validation:** Use test transactions to verify billing responses.
-    *   **Reference:** PRD Section 4 (Flexible Payment System)
-
-7.  **Implement Server-Side Security & HIPAA Compliance Measures**
-
-    *   Integrate data encryption for sensitive information in API routes and ensure secure access controls.
-    *   Set up audit logging for critical actions.
-    *   **Reference:** PRD Section 6 (Security & Compliance)
-
-8.  **Validation:**
-
-    *   Test all API endpoints individually using Postman/cURL to ensure correct responses and error handling.
+##
 
 ## Phase 4: Integration
 
