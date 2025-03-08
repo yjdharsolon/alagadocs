@@ -7,6 +7,8 @@ import NotFound from './pages/NotFound';
 import AskAIPage from './pages/ask-ai';
 import Login from './pages/login';
 import Signup from './pages/signup';
+import PasswordResetPage from './pages/password-reset';
+import UpdatePasswordPage from './pages/update-password';
 import Profile from './pages/profile';
 import RoleSelection from './pages/role-selection';
 import AudioUploadPage from './pages/upload';
@@ -30,6 +32,8 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/password-reset" element={<PasswordResetPage />} />
+        <Route path="/update-password" element={<UpdatePasswordPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/profile" element={
           <ProtectedRoute>

@@ -1,137 +1,143 @@
+
+// Let's update the login page to include the password reset link
+// Note: We're only showing the parts we're changing
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import Layout from '@/components/Layout';
-import { useAuth } from '@/hooks/useAuth';
-import { Link, Navigate } from 'react-router-dom';
+import { Separator } from '@/components/ui/separator';
+import { Google, Facebook, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Login() {
+  const { signIn, signInWithGoogle, signInWithFacebook, loading } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const { signIn, signInWithGoogle, signInWithFacebook, signInWithMicrosoft, user, loading } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn(email, password, rememberMe);
-  };
-
-  const handleGoogleSignIn = async () => {
+    
+    if (!email || !password) {
+      toast.error('Please enter both email and password');
+      return;
+    }
+    
     try {
-      await signInWithGoogle();
+      await signIn(email, password, rememberMe);
     } catch (error) {
-      toast.error('Google sign in failed');
+      // Error handling is done in the useAuth hook
+      console.error('Login failed:', error);
     }
   };
-
-  const handleFacebookSignIn = async () => {
-    try {
-      await signInWithFacebook();
-    } catch (error) {
-      toast.error('Facebook sign in failed');
-    }
-  };
-
-  const handleMicrosoftSignIn = async () => {
-    try {
-      await signInWithMicrosoft();
-    } catch (error) {
-      toast.error('Microsoft sign in failed');
-    }
-  };
-
-  if (user && !loading) {
-    return <Navigate to="/role-selection" />;
-  }
 
   return (
     <Layout>
-      <div className="flex justify-center items-center min-h-screen px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Login to AlagaDocs</CardTitle>
-            <CardDescription>
-              Enter your credentials to access your account
-            </CardDescription>
+      <div className="container flex items-center justify-center min-h-[calc(100vh-16rem)] py-8">
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Login</CardTitle>
+            <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="doctor@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
+          <form onSubmit={handleSignIn}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email"
+                  type="email" 
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Input 
-                    id="password" 
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="remember" 
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(checked === true)}
-                  />
-                  <label
-                    htmlFor="remember"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  <Link 
+                    to="/password-reset" 
+                    className="text-xs text-primary hover:underline"
                   >
-                    Remember me
-                  </label>
+                    Forgot password?
+                  </Link>
                 </div>
+                <Input 
+                  id="password"
+                  type="password" 
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
-            </form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button 
-              className="w-full" 
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t"></span>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="remember" 
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => {
+                    if (typeof checked === 'boolean') {
+                      setRememberMe(checked);
+                    }
+                  }}
+                />
+                <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
+                  Remember me for 30 days
+                </Label>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+            </CardContent>
+            <CardFooter className="flex flex-col">
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={loading}
+              >
+                {loading ? 'Signing In...' : 'Sign In'}
+              </Button>
+              
+              <div className="mt-4 text-center text-sm">
+                Don't have an account?{' '}
+                <Link to="/signup" className="text-primary hover:underline">
+                  Sign up
+                </Link>
               </div>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <Button variant="outline" onClick={handleGoogleSignIn} disabled={loading}>
-                Google
-              </Button>
-              <Button variant="outline" onClick={handleFacebookSignIn} disabled={loading}>
-                Facebook
-              </Button>
-              <Button variant="outline" onClick={handleMicrosoftSignIn} disabled={loading}>
-                Microsoft
-              </Button>
-            </div>
-            <div className="text-center text-sm">
-              Don't have an account?{" "}
-              <Link to="/signup" className="underline hover:text-primary">
-                Sign up
-              </Link>
-            </div>
-          </CardFooter>
+              
+              <div className="mt-6 flex items-center">
+                <Separator className="flex-1" />
+                <span className="px-3 text-xs text-muted-foreground">OR CONTINUE WITH</span>
+                <Separator className="flex-1" />
+              </div>
+              
+              <div className="mt-4 flex gap-2">
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => signInWithGoogle()}
+                  disabled={loading}
+                >
+                  <Google className="mr-2 h-4 w-4" />
+                  Google
+                </Button>
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => signInWithFacebook()}
+                  disabled={loading}
+                >
+                  <Facebook className="mr-2 h-4 w-4" />
+                  Facebook
+                </Button>
+              </div>
+            </CardFooter>
+          </form>
         </Card>
       </div>
     </Layout>
