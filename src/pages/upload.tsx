@@ -140,7 +140,7 @@ const UploadPage = () => {
         });
       }, 300);
       
-      // Upload to Supabase Storage
+      // Upload to Supabase Storage - Fix: don't use 'new' and pass only the required arguments
       const { error, data } = await supabase.storage
         .from('audio_uploads')
         .upload(fileName, audioFile, {
