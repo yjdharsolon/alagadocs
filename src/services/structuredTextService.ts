@@ -85,12 +85,13 @@ export const saveStructuredNote = async (
 ): Promise<any> => {
   try {
     // Insert into structured_notes table with correct fields
+    // Convert MedicalSections to a valid Json object that Supabase can store
     const { data, error } = await supabase
       .from('structured_notes')
       .insert({
         user_id: userId,
         transcription_id: transcriptionId,
-        content: content // Store the entire MedicalSections object as JSON in the content field
+        content: content as unknown as Json // Type cast to satisfy TypeScript
       })
       .select()
       .single();
