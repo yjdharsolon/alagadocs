@@ -1,6 +1,4 @@
 
-// Let's update the login page to include the password reset link
-// Note: We're only showing the parts we're changing
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,8 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { Google, Facebook, Mail } from 'lucide-react';
+import { LogIn, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+// Import these if you want to use them instead of Lucide icons
+import { FcGoogle } from 'react-icons/fc';
+import { FaFacebook } from 'react-icons/fa';
+import { MdEmail } from 'react-icons/md';
+
+<lov-add-dependency>react-icons@latest</lov-add-dependency>
 
 export default function Login() {
   const { signIn, signInWithGoogle, signInWithFacebook, loading } = useAuth();
@@ -122,7 +127,7 @@ export default function Login() {
                   onClick={() => signInWithGoogle()}
                   disabled={loading}
                 >
-                  <Google className="mr-2 h-4 w-4" />
+                  <FcGoogle className="mr-2 h-4 w-4" />
                   Google
                 </Button>
                 <Button 
@@ -132,7 +137,7 @@ export default function Login() {
                   onClick={() => signInWithFacebook()}
                   disabled={loading}
                 >
-                  <Facebook className="mr-2 h-4 w-4" />
+                  <FaFacebook className="mr-2 h-4 w-4 text-blue-600" />
                   Facebook
                 </Button>
               </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { MdEmail } from 'react-icons/md';
 import toast from 'react-hot-toast';
 
 export default function PasswordResetPage() {
@@ -60,7 +60,7 @@ export default function PasswordResetPage() {
           {isSubmitted ? (
             <CardContent className="space-y-4 text-center py-8">
               <div className="rounded-full bg-primary/10 p-6 w-20 h-20 mx-auto flex items-center justify-center">
-                <Mail className="h-8 w-8 text-primary" />
+                <MdEmail className="h-8 w-8 text-primary" />
               </div>
               <p className="text-muted-foreground">
                 If an account exists for <span className="font-medium">{email}</span>, 
