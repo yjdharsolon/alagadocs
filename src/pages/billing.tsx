@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { useBilling, PaymentMethod } from '@/hooks/useBilling';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import CurrentSubscription from '@/components/billing/CurrentSubscription';
+import TransactionHistory from '@/components/billing/TransactionHistory';
 
 export default function BillingPage() {
   const {
@@ -21,6 +22,8 @@ export default function BillingPage() {
     paymentMethod,
     billingPlans,
     currentSubscription,
+    transactions,
+    isLoadingTransactions,
     handlePlanSelection,
     handlePaymentMethodChange,
     processPayment,
@@ -50,6 +53,12 @@ export default function BillingPage() {
                 isProcessing={isProcessing}
               />
             )}
+
+            {/* Transaction History */}
+            <TransactionHistory 
+              transactions={transactions}
+              isLoading={isLoadingTransactions}
+            />
 
             {/* Plans Selection */}
             <div className="grid md:grid-cols-3 gap-6">

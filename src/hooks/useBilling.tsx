@@ -1,7 +1,14 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { processBillingTransaction, getUserSubscription, updateUserSubscription, cancelUserSubscription } from '@/services/billingService';
+import { 
+  processBillingTransaction, 
+  getUserSubscription, 
+  updateUserSubscription, 
+  cancelUserSubscription,
+  getUserTransactionHistory,
+  TransactionHistory
+} from '@/services/billingService';
 import toast from 'react-hot-toast';
 
 export type PaymentMethod = 'card' | 'gcash' | 'paymaya' | 'bank_transfer';
@@ -32,6 +39,8 @@ export function useBilling() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [transactions, setTransactions] = useState<TransactionHistory[]>([]);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
   const { user } = useAuth();
 
   // Standard plans available
@@ -116,6 +125,27 @@ export function useBilling() {
     loadSubscription();
   }, [user]);
 
+  // Load transaction history
+  useEffect(() => {
+    async function loadTransactionHistory() {
+      if (user) {
+        setIsLoadingTransactions(true);
+        try {
+          const history = await getUserTransactionHistory(user.id);
+          setTransactions(history);
+        } catch (error) {
+          console.error('Error loading transaction history:', error);
+        } finally {
+          setIsLoadingTransactions(false);
+        }
+      } else {
+        setTransactions([]);
+      }
+    }
+    
+    loadTransactionHistory();
+  }, [user]);
+
   const handlePlanSelection = (plan: BillingPlan) => {
     setSelectedPlan(plan);
   };
@@ -164,6 +194,10 @@ export function useBilling() {
               updatedAt: updatedSubscription.updated_at
             });
           }
+          
+          // Refresh transaction history
+          const history = await getUserTransactionHistory(user.id);
+          setTransactions(history);
         } else {
           toast.error('Failed to update subscription. Please contact support.');
         }
@@ -226,6 +260,8 @@ export function useBilling() {
     paymentMethod,
     billingPlans,
     currentSubscription,
+    transactions,
+    isLoadingTransactions,
     handlePlanSelection,
     handlePaymentMethodChange,
     processPayment,

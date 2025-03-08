@@ -15,6 +15,17 @@ export type BillingResult = {
   error?: string;
 };
 
+export type TransactionHistory = {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  payment_method: string;
+  amount: number;
+  currency: string;
+  status: 'success' | 'failed' | 'pending';
+  created_at: string;
+};
+
 /**
  * Process a billing transaction
  * @param transaction The transaction details
@@ -40,9 +51,23 @@ export const processBillingTransaction = async (
     // For demo purposes, simulate successful transaction
     // In production, this would be handled by the Edge Function
     if (!data) {
+      // Log the transaction to the transactions table
+      const transactionId = `tx_${Math.random().toString(36).substring(2, 12)}`;
+      
+      await supabase.from('transactions').insert([{
+        id: transactionId,
+        user_id: transaction.userId,
+        plan_id: transaction.planId,
+        payment_method: transaction.paymentMethod,
+        amount: transaction.amount,
+        currency: transaction.currency,
+        status: 'success',
+        created_at: new Date().toISOString()
+      }]);
+      
       return {
         success: true,
-        transactionId: `tx_${Math.random().toString(36).substring(2, 12)}`
+        transactionId
       };
     }
     
@@ -142,5 +167,30 @@ export const cancelUserSubscription = async (userId: string) => {
   } catch (error) {
     console.error('Subscription cancellation error:', error);
     return false;
+  }
+};
+
+/**
+ * Get transaction history for a user
+ * @param userId The ID of the user
+ * @returns Array of transaction records
+ */
+export const getUserTransactionHistory = async (userId: string): Promise<TransactionHistory[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching transaction history:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Transaction history fetch error:', error);
+    return [];
   }
 };
