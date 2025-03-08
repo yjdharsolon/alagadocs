@@ -11,13 +11,16 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useBilling, PaymentMethod } from '@/hooks/useBilling';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import CurrentSubscription from '@/components/billing/CurrentSubscription';
 
 export default function BillingPage() {
   const {
     isProcessing,
+    isLoading,
     selectedPlan,
     paymentMethod,
     billingPlans,
+    currentSubscription,
     handlePlanSelection,
     handlePaymentMethodChange,
     processPayment
@@ -34,6 +37,16 @@ export default function BillingPage() {
                 Choose the perfect plan for your needs. Upgrade or downgrade at any time.
               </p>
             </div>
+
+            {/* Current Subscription */}
+            {(currentSubscription || isLoading) && (
+              <CurrentSubscription 
+                subscription={currentSubscription}
+                plans={billingPlans}
+                onUpgrade={() => {}}
+                isLoading={isLoading}
+              />
+            )}
 
             {/* Plans Selection */}
             <div className="grid md:grid-cols-3 gap-6">

@@ -1,102 +1,35 @@
 
 /**
- * Formatters for data display
+ * Formats a date string into a human-readable format
+ * @param dateString ISO date string
+ * @returns Formatted date string (e.g., "Jan 15, 2023")
  */
+export function formatDate(dateString: string): string {
+  if (!dateString) return 'N/A';
+  
+  try {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(date);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid date';
+  }
+}
 
 /**
- * Format date to locale string
+ * Formats a number as currency
+ * @param amount Number to format
+ * @param currency Currency code (default: USD)
+ * @returns Formatted currency string
  */
-export const formatDate = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-};
-
-/**
- * Format time to locale string
- */
-export const formatTime = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-/**
- * Format currency
- */
-export const formatCurrency = (amount: number, currency: string = 'USD'): string => {
+export function formatCurrency(amount: number, currency: string = 'USD'): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency
+    currency: currency,
+    minimumFractionDigits: 2
   }).format(amount);
-};
-
-/**
- * Format file size
- */
-export const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-/**
- * Format phone number (US)
- */
-export const formatPhoneNumber = (phoneNumber: string): string => {
-  const cleaned = phoneNumber.replace(/\D/g, '');
-  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-  
-  if (match) {
-    return '(' + match[1] + ') ' + match[2] + '-' + match[3];
-  }
-  
-  return phoneNumber;
-};
-
-/**
- * Truncate text with ellipsis
- */
-export const truncateText = (text: string, maxLength: number): string => {
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + '...';
-};
-
-/**
- * Format medical note structure
- */
-export const formatMedicalNote = (note: {
-  chiefComplaint?: string;
-  historyOfPresentIllness?: string;
-  assessment?: string;
-  plan?: string;
-}): string => {
-  let formattedNote = '';
-  
-  if (note.chiefComplaint) {
-    formattedNote += `CHIEF COMPLAINT:\n${note.chiefComplaint}\n\n`;
-  }
-  
-  if (note.historyOfPresentIllness) {
-    formattedNote += `HISTORY OF PRESENT ILLNESS:\n${note.historyOfPresentIllness}\n\n`;
-  }
-  
-  if (note.assessment) {
-    formattedNote += `ASSESSMENT:\n${note.assessment}\n\n`;
-  }
-  
-  if (note.plan) {
-    formattedNote += `PLAN:\n${note.plan}\n\n`;
-  }
-  
-  return formattedNote;
-};
+}
