@@ -9,6 +9,10 @@ import Login from './pages/login';
 import Signup from './pages/signup';
 import Profile from './pages/profile';
 import RoleSelection from './pages/role-selection';
+import AudioUploadPage from './pages/upload';
+import TranscribePage from './pages/transcribe';
+import StructuredOutputPage from './pages/structured-output';
+import EditTranscriptPage from './pages/edit-transcript';
 import { AuthProvider } from './hooks/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -32,6 +36,26 @@ function App() {
         <Route path="/ask-ai" element={
           <ProtectedRoute>
             <AskAIPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/upload" element={
+          <ProtectedRoute>
+            <AudioUploadPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/transcribe" element={
+          <ProtectedRoute>
+            <TranscribePage />
+          </ProtectedRoute>
+        } />
+        <Route path="/structured-output" element={
+          <ProtectedRoute>
+            <StructuredOutputPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/edit-transcript" element={
+          <ProtectedRoute>
+            <EditTranscriptPage />
           </ProtectedRoute>
         } />
         <Route path="*" element={<NotFound />} />
