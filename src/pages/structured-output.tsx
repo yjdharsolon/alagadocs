@@ -1,15 +1,21 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { structureText } from '@/services/transcriptionService';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
-import { DocumentCard } from '@/components/structured-output/DocumentCard';
-import { DocumentTabs } from '@/components/structured-output/DocumentTabs';
-import { ActionButtons } from '@/components/structured-output/ActionButtons';
-import { LoadingState } from '@/components/structured-output/LoadingState';
-import { MedicalSection } from '@/components/structured-output/types';
+import DocumentCard from '@/components/structured-output/DocumentCard';
+import DocumentTabs from '@/components/structured-output/DocumentTabs';
+import ActionButtons from '@/components/structured-output/ActionButtons';
+import LoadingState from '@/components/structured-output/LoadingState';
+import { MedicalSections } from '@/components/structured-output/types';
+
+// Define a proper interface for MedicalSection items that will be used in this component
+interface MedicalSection {
+  id: string;
+  title: string;
+  content: string;
+}
 
 export default function StructuredOutputPage() {
   const location = useLocation();
@@ -133,17 +139,22 @@ export default function StructuredOutputPage() {
             <LoadingState />
           ) : (
             <div className="grid gap-6">
-              <DocumentCard sections={sections} />
+              <DocumentCard 
+                user={user}
+                sections={sections as unknown as MedicalSections}
+                structuredText={transcriptionText}
+                handleEdit={() => {}}
+              />
               
               <DocumentTabs 
-                sections={sections} 
-                rawTranscription={transcriptionText}
-                onEditSection={handleEditSection}
+                sections={sections as unknown as MedicalSections}
               />
               
               <ActionButtons 
-                onSave={handleSaveDocument}
-                onCopy={handleCopyDocument}
+                user={user}
+                sections={sections as unknown as MedicalSections}
+                structuredText={transcriptionText}
+                handleEdit={() => {}}
               />
             </div>
           )}

@@ -9,3 +9,9 @@ export interface MedicalSections {
   assessment: string;
   plan: string;
 }
+
+export interface MedicalSection {
+  id: string;
+  title: string;
+  content: string;
+}

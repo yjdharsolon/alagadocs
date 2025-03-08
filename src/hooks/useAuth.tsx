@@ -49,9 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password,
-        // @ts-ignore - The Supabase types are incorrect, expiresIn is a valid option
-        options: {
-          expiresIn: rememberMe ? undefined : 60 * 60
+        options: rememberMe ? undefined : { 
+          // Don't set expiresIn when rememberMe is true (use default longer expiry)
+          // @ts-ignore - The Supabase types are incorrect, expiresIn is a valid option
+          expiresIn: 60 * 60 // 1 hour expiry when "remember me" is false
         }
       });
       
