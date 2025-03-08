@@ -18,12 +18,22 @@ export const structureTranscription = async (
   transcriptionId?: string
 ): Promise<MedicalSections> => {
   try {
+    // Get current user session to include the token in the request
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    if (!sessionData.session) {
+      throw new Error('User must be authenticated to structure transcriptions');
+    }
+
     const { data, error } = await supabase.functions.invoke('structure-medical-transcript', {
       body: { 
         text, 
         role, 
         template,
         transcriptionId
+      },
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`
       }
     });
     
@@ -51,15 +61,26 @@ export const getStructuredNoteById = async (noteId: string): Promise<{
   created_at: string;
 }> => {
   try {
+    // Ensure user is authenticated before trying to fetch the note
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    if (!sessionData.session) {
+      throw new Error('User must be authenticated to get structured notes');
+    }
+
     const { data, error } = await supabase
       .from('structured_notes')
       .select('*')
       .eq('id', noteId)
-      .single();
+      .maybeSingle();
       
     if (error) {
       console.error('Error getting structured note:', error);
       throw new Error(`Error getting structured note: ${error.message}`);
+    }
+    
+    if (!data) {
+      throw new Error('Structured note not found');
     }
     
     return {
@@ -83,6 +104,13 @@ export const getUserStructuredNotes = async (): Promise<{
   created_at: string;
 }[]> => {
   try {
+    // Ensure user is authenticated before trying to fetch notes
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    if (!sessionData.session) {
+      throw new Error('User must be authenticated to get structured notes');
+    }
+
     const { data, error } = await supabase
       .from('structured_notes')
       .select('*')
@@ -114,10 +142,10 @@ export const saveStructuredNote = async (
   transcriptionId: string
 ): Promise<{ id: string }> => {
   try {
-    // Get the current user's ID
-    const { data: { user } } = await supabase.auth.getUser();
+    // Get the current user's session
+    const { data: sessionData } = await supabase.auth.getSession();
     
-    if (!user) {
+    if (!sessionData.session) {
       throw new Error('User must be authenticated to save structured notes');
     }
     
@@ -129,7 +157,7 @@ export const saveStructuredNote = async (
       .insert({
         content,
         transcription_id: transcriptionId,
-        user_id: user.id
+        user_id: sessionData.session.user.id
       })
       .select('id')
       .single();
@@ -153,6 +181,13 @@ export const saveStructuredNote = async (
  */
 export const deleteStructuredNote = async (noteId: string): Promise<boolean> => {
   try {
+    // Ensure user is authenticated before trying to delete the note
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    if (!sessionData.session) {
+      throw new Error('User must be authenticated to delete structured notes');
+    }
+
     const { error } = await supabase
       .from('structured_notes')
       .delete()

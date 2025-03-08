@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -88,25 +87,60 @@ serve(async (req) => {
       
       // If transcriptionId is provided, save the structured output to the database
       if (transcriptionId) {
-        const { data: userData } = await supabase.auth.getUser(req.headers.get('Authorization')?.split('Bearer ')[1] || '');
+        // Get the user's JWT from the request headers
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) {
+          console.error("No authorization header found");
+          return new Response(JSON.stringify({ error: 'Authorization header required' }), {
+            status: 401,
+            headers: {
+              'Content-Type': 'application/json',
+              ...corsHeaders
+            },
+          });
+        }
+
+        // Extract the JWT token
+        const token = authHeader.replace('Bearer ', '');
         
-        if (userData?.user) {
-          console.log(`Saving structured output for transcription ID ${transcriptionId} and user ID ${userData.user.id}`);
+        // Get the user from the token
+        const { data: userData, error: authError } = await supabase.auth.getUser(token);
+        
+        if (authError || !userData?.user) {
+          console.error("Authentication error:", authError);
+          return new Response(JSON.stringify({ error: 'Authentication failed' }), {
+            status: 401,
+            headers: {
+              'Content-Type': 'application/json',
+              ...corsHeaders
+            },
+          });
+        }
+        
+        console.log(`Saving structured output for transcription ID ${transcriptionId} and user ID ${userData.user.id}`);
+        
+        const { error: saveError } = await supabase
+          .from('structured_notes')
+          .insert({
+            transcription_id: transcriptionId,
+            user_id: userData.user.id,
+            content: structuredContent
+          });
           
-          const { error: saveError } = await supabase
-            .from('structured_notes')
-            .insert({
-              transcription_id: transcriptionId,
-              user_id: userData.user.id,
-              content: structuredContent,
-              created_at: new Date().toISOString()
-            });
-            
-          if (saveError) {
-            console.error("Error saving structured note:", saveError);
-          } else {
-            console.log("Structured note saved successfully");
-          }
+        if (saveError) {
+          console.error("Error saving structured note:", saveError);
+          return new Response(JSON.stringify({ 
+            error: 'Failed to save structured note', 
+            details: saveError 
+          }), {
+            status: 500,
+            headers: {
+              'Content-Type': 'application/json',
+              ...corsHeaders
+            },
+          });
+        } else {
+          console.log("Structured note saved successfully");
         }
       }
       
