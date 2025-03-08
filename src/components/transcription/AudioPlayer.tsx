@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface AudioPlayerProps {
@@ -45,7 +45,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     };
   }, [audioUrl]);
   
-  const togglePlayPause = () => {
+  const togglePlayPause = useCallback(() => {
     if (!audioElement) return;
     
     if (isPlaying) {
@@ -58,19 +58,63 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     }
     
     setIsPlaying(!isPlaying);
-  };
+  }, [audioElement, isPlaying]);
   
-  const skipBackward = () => {
+  const skipBackward = useCallback(() => {
     if (!audioElement) return;
     audioElement.currentTime = Math.max(0, audioElement.currentTime - 10);
     setCurrentTime(Math.floor(audioElement.currentTime));
-  };
+  }, [audioElement]);
   
-  const skipForward = () => {
+  const skipForward = useCallback(() => {
     if (!audioElement) return;
     audioElement.currentTime = Math.min(audioDuration, audioElement.currentTime + 10);
     setCurrentTime(Math.floor(audioElement.currentTime));
-  };
+  }, [audioElement, audioDuration]);
+  
+  const downloadAudio = useCallback(() => {
+    if (!audioUrl) {
+      toast.error('No audio available for download');
+      return;
+    }
+    
+    // Create an anchor element and trigger download
+    const a = document.createElement('a');
+    a.href = audioUrl;
+    a.download = 'transcription_audio.mp3'; // Default name
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    toast.success('Audio download started');
+  }, [audioUrl]);
+
+  // Add keyboard event listeners
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Space bar toggles play/pause
+      if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        e.preventDefault(); // Prevent scrolling with space
+        togglePlayPause();
+      }
+      
+      // Left arrow skips backward
+      if (e.code === 'ArrowLeft' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        skipBackward();
+      }
+      
+      // Right arrow skips forward
+      if (e.code === 'ArrowRight' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        skipForward();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [togglePlayPause, skipBackward, skipForward]);
   
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -90,14 +134,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
         {audioUrl ? (
           <>
             <div className="flex justify-center items-center gap-2">
-              <Button variant="outline" size="icon" onClick={skipBackward}>
+              <Button variant="outline" size="icon" onClick={skipBackward} title="Skip backward 10s (Left arrow)">
                 <SkipBack className="h-4 w-4" />
               </Button>
-              <Button size="icon" className="h-10 w-10 rounded-full" onClick={togglePlayPause}>
+              <Button size="icon" className="h-10 w-10 rounded-full" onClick={togglePlayPause} title="Play/Pause (Space)">
                 {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
-              <Button variant="outline" size="icon" onClick={skipForward}>
+              <Button variant="outline" size="icon" onClick={skipForward} title="Skip forward 10s (Right arrow)">
                 <SkipForward className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" onClick={downloadAudio} title="Download audio">
+                <Download className="h-4 w-4" />
               </Button>
             </div>
             <div className="text-center text-sm">
@@ -108,6 +155,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
                 className="bg-primary h-2 rounded-full transition-all" 
                 style={{ width: `${(currentTime / audioDuration) * 100}%` }}
               ></div>
+            </div>
+            <div className="text-xs text-muted-foreground text-center">
+              Keyboard shortcuts: Space (play/pause), ← (backward), → (forward)
             </div>
           </>
         ) : (
