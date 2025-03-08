@@ -1,7 +1,20 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import toast from 'react-hot-toast';
-import { TextTemplate } from '@/components/structured-output/types';
+import { TextTemplate, TextTemplateResponse } from '@/components/structured-output/types';
+
+/**
+ * Maps database response to TextTemplate interface
+ */
+const mapToTextTemplate = (template: TextTemplateResponse): TextTemplate => {
+  return {
+    id: template.id,
+    title: template.title,
+    description: template.description || undefined,
+    sections: template.sections as string[],
+    isDefault: template.is_default
+  };
+};
 
 /**
  * Processes raw transcription text into structured medical notes
@@ -114,7 +127,7 @@ export const getDefaultTemplate = async (userId: string): Promise<TextTemplate |
       throw error;
     }
     
-    return data as TextTemplate;
+    return mapToTextTemplate(data as TextTemplateResponse);
   } catch (error) {
     console.error('Error fetching default template:', error);
     return null;

@@ -1,7 +1,20 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { TextTemplate } from '@/components/structured-output/types';
+import { TextTemplate, TextTemplateResponse } from '@/components/structured-output/types';
 import toast from 'react-hot-toast';
+
+/**
+ * Maps database response to TextTemplate interface
+ */
+const mapToTextTemplate = (template: TextTemplateResponse): TextTemplate => {
+  return {
+    id: template.id,
+    title: template.title,
+    description: template.description || undefined,
+    sections: template.sections as string[],
+    isDefault: template.is_default
+  };
+};
 
 /**
  * Fetches all templates for a user
@@ -19,7 +32,7 @@ export const getUserTemplates = async (userId: string): Promise<TextTemplate[]> 
       throw error;
     }
     
-    return data as TextTemplate[];
+    return (data as TextTemplateResponse[]).map(mapToTextTemplate);
   } catch (error: any) {
     console.error('Error fetching templates:', error);
     toast.error(error.message || 'Failed to load templates');
@@ -55,7 +68,7 @@ export const createTemplate = async (
     }
     
     toast.success('Template created successfully');
-    return data as TextTemplate;
+    return mapToTextTemplate(data as TextTemplateResponse);
   } catch (error: any) {
     console.error('Error creating template:', error);
     toast.error(error.message || 'Failed to create template');
@@ -71,15 +84,17 @@ export const updateTemplate = async (
   template: Partial<TextTemplate>
 ): Promise<TextTemplate | null> => {
   try {
+    const updateData: any = {};
+    
+    if (template.title !== undefined) updateData.title = template.title;
+    if (template.description !== undefined) updateData.description = template.description;
+    if (template.sections !== undefined) updateData.sections = template.sections;
+    if (template.isDefault !== undefined) updateData.is_default = template.isDefault;
+    updateData.updated_at = new Date().toISOString();
+    
     const { data, error } = await supabase
       .from('text_templates')
-      .update({
-        title: template.title,
-        description: template.description,
-        sections: template.sections,
-        is_default: template.isDefault,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', templateId)
       .select()
       .single();
@@ -90,7 +105,7 @@ export const updateTemplate = async (
     }
     
     toast.success('Template updated successfully');
-    return data as TextTemplate;
+    return mapToTextTemplate(data as TextTemplateResponse);
   } catch (error: any) {
     console.error('Error updating template:', error);
     toast.error(error.message || 'Failed to update template');
@@ -138,7 +153,7 @@ export const getTemplateById = async (templateId: string): Promise<TextTemplate 
       throw error;
     }
     
-    return data as TextTemplate;
+    return mapToTextTemplate(data as TextTemplateResponse);
   } catch (error: any) {
     console.error('Error fetching template:', error);
     toast.error(error.message || 'Failed to load template');

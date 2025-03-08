@@ -41,3 +41,15 @@ export interface TemplateFormValues {
   sections: TemplateSection[];
   isDefault: boolean;
 }
+
+// Database response type for text_templates table
+export interface TextTemplateResponse {
+  id: string;
+  title: string;
+  description: string | null;
+  sections: any;
+  is_default: boolean;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
