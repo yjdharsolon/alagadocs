@@ -7,12 +7,36 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import toast from 'react-hot-toast';
 
 export default function AudioUploadPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const initializeStorageBucket = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Call the function to ensure storage bucket exists
+      const { error: bucketError } = await supabase.functions.invoke('ensure-transcription-bucket');
+      
+      if (bucketError) {
+        console.error('Error initializing storage bucket:', bucketError);
+        setError('Error initializing storage. Please try again or contact support.');
+      }
+      
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error initializing storage bucket:', err);
+      setError('Error initializing storage. Please try again or contact support.');
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Check if user is authenticated
@@ -21,27 +45,15 @@ export default function AudioUploadPage() {
       return;
     }
 
-    const initializeStorageBucket = async () => {
-      try {
-        setIsLoading(true);
-        // Call the function to ensure storage bucket exists
-        const { error: bucketError } = await supabase.functions.invoke('ensure-transcription-bucket');
-        
-        if (bucketError) {
-          console.error('Error initializing storage bucket:', bucketError);
-          setError('Error initializing storage. Uploads may not work properly.');
-        }
-        
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Error initializing storage bucket:', err);
-        setError('Error initializing storage. Uploads may not work properly.');
-        setIsLoading(false);
-      }
-    };
-
     initializeStorageBucket();
   }, [user, navigate]);
+
+  const handleRetry = async () => {
+    setRetrying(true);
+    await initializeStorageBucket();
+    setRetrying(false);
+    toast.success('Storage initialization attempted again');
+  };
 
   return (
     <Layout>
@@ -54,13 +66,25 @@ export default function AudioUploadPage() {
         {error && (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription className="flex items-center justify-between">
+              <span>{error}</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRetry}
+                disabled={retrying}
+                className="ml-4"
+              >
+                {retrying ? 'Retrying...' : 'Retry'}
+              </Button>
+            </AlertDescription>
           </Alert>
         )}
         
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+            <p className="text-muted-foreground">Initializing storage...</p>
           </div>
         ) : (
           <UploadForm />

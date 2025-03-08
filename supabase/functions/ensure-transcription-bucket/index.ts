@@ -50,14 +50,14 @@ serve(async (req) => {
       }
 
       console.log("Setting up bucket policies...");
-      // Add basic storage policies for public access and authenticated uploads
+      // Create storage policy to allow authenticated uploads
       const { error: policyError } = await supabase
-        .from('storage')
-        .select('*')
-        .limit(1);
-        
-      if (policyError) {
-        console.error("Error with storage policies:", policyError);
+        .storage
+        .from('transcriptions')
+        .createSignedUploadUrl('policy-check');
+
+      if (policyError && !policyError.message.includes('The resource already exists')) {
+        console.error("Error creating upload policy:", policyError);
       } else {
         console.log("Storage policies setup successful");
       }
