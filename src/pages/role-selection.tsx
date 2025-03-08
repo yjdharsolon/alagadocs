@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 const roles = [
   {
@@ -42,7 +43,7 @@ const roles = [
 ];
 
 export default function RoleSelection() {
-  const { user } = useAuth();
+  const { user, getUserRole } = useAuth();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -53,29 +54,22 @@ export default function RoleSelection() {
     const checkUserRole = async () => {
       if (user) {
         try {
-          const { data, error } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-          if (error && error.code !== 'PGRST116') {
-            console.error('Error fetching user role:', error);
+          const role = await getUserRole();
+          if (role) {
+            setSelectedRole(role);
           }
-
-          if (data) {
-            setSelectedRole(data.role);
-          }
+          setInitialLoading(false);
         } catch (error) {
           console.error('Error checking user role:', error);
-        } finally {
           setInitialLoading(false);
         }
+      } else {
+        setInitialLoading(false);
       }
     };
 
     checkUserRole();
-  }, [user]);
+  }, [user, getUserRole]);
 
   const handleRoleSelection = async (role: string) => {
     if (!user) return;
@@ -115,7 +109,11 @@ export default function RoleSelection() {
       }
 
       toast.success(`Role set to ${role}`);
-      navigate('/profile');
+      
+      // Navigate to the upload page to start the transcription process
+      setTimeout(() => {
+        navigate('/upload');
+      }, 1000);
     } catch (error: any) {
       toast.error(error.message || 'Failed to set role');
       console.error('Error setting role:', error);
@@ -128,7 +126,7 @@ export default function RoleSelection() {
     return (
       <Layout>
         <div className="flex justify-center items-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
       </Layout>
     );
@@ -169,9 +167,14 @@ export default function RoleSelection() {
                   onClick={() => handleRoleSelection(role.title)}
                   disabled={loading}
                 >
-                  {loading && selectedRole === role.title 
-                    ? 'Setting Role...' 
-                    : `Select ${role.title}`}
+                  {loading && selectedRole === role.title ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Setting Role...
+                    </>
+                  ) : (
+                    `Select ${role.title}`
+                  )}
                 </Button>
               </CardFooter>
             </Card>

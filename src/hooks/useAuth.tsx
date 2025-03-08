@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,7 @@ type AuthContextType = {
   signInWithGoogle: () => Promise<void>;
   signInWithFacebook: () => Promise<void>;
   signInWithMicrosoft: () => Promise<void>;
+  getUserRole: () => Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -157,6 +159,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Function to get the user's current role
+  const getUserRole = async (): Promise<string | null> => {
+    if (!user) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+        
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return null;
+      }
+      
+      return data?.role || null;
+    } catch (error) {
+      console.error('Error getting user role:', error);
+      return null;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -167,7 +192,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       signInWithGoogle,
       signInWithFacebook,
-      signInWithMicrosoft
+      signInWithMicrosoft,
+      getUserRole
     }}>
       {children}
     </AuthContext.Provider>
