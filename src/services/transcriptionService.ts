@@ -61,12 +61,18 @@ export const transcribeAudio = async (audioUrl: string): Promise<string> => {
 /**
  * Structures a transcription into medical format using GPT
  * @param transcription The raw transcription text
+ * @param userRole The role of the user (doctor, nurse, therapist)
+ * @param customTemplate Optional custom template for structuring
  * @returns The structured text in medical documentation format
  */
-export const structureText = async (transcription: string): Promise<string> => {
+export const structureText = async (
+  transcription: string, 
+  userRole?: string,
+  customTemplate?: string
+): Promise<string> => {
   try {
-    const prompt = `
-      As a medical professional, please structure the following medical transcription into a proper clinical note format with sections for:
+    let prompt = `
+      Please structure the following medical transcription into a proper clinical note format with sections for:
       - Chief Complaint
       - History of Present Illness
       - Past Medical History
@@ -76,14 +82,20 @@ export const structureText = async (transcription: string): Promise<string> => {
       - Assessment
       - Plan
       
-      If a section has no relevant information in the transcription, you can write "Not mentioned". Here's the transcription:
+      If a section has no relevant information in the transcription, you can write "Not mentioned".
+      
+      Here's the transcription:
       
       ${transcription}
     `;
     
     // Call the OpenAI Chat function to structure the text
     const { data, error } = await supabase.functions.invoke('openai-chat', {
-      body: { prompt },
+      body: { 
+        prompt,
+        role: userRole,
+        customTemplate
+      },
     });
     
     if (error) {
@@ -99,5 +111,38 @@ export const structureText = async (transcription: string): Promise<string> => {
   } catch (error: any) {
     console.error('Text structuring error:', error);
     throw new Error(`Text structuring failed: ${error.message}`);
+  }
+};
+
+/**
+ * Saves a structured note to the user's account
+ * @param userId The ID of the user
+ * @param title The title of the note
+ * @param content The content of the note (structured text)
+ * @returns The ID of the saved note
+ */
+export const saveStructuredNote = async (
+  userId: string,
+  title: string,
+  content: string
+): Promise<string> => {
+  try {
+    const { data, error } = await supabase
+      .from('notes')
+      .insert([
+        { user_id: userId, title, content, created_at: new Date().toISOString() }
+      ])
+      .select('id')
+      .single();
+      
+    if (error) {
+      console.error('Error saving structured note:', error);
+      throw new Error(`Error saving note: ${error.message}`);
+    }
+    
+    return data.id;
+  } catch (error: any) {
+    console.error('Save note error:', error);
+    throw new Error(`Failed to save note: ${error.message}`);
   }
 };

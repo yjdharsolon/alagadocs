@@ -5,26 +5,32 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clipboard, CheckCircle2 } from 'lucide-react';
+import { Clipboard, CheckCircle2, Save, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
+import { structureText, saveStructuredNote } from '@/services/transcriptionService';
 
 const StructuredOutputPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
-  const [structuredText, setStructuredText] = useState<{
-    chiefComplaint: string;
-    historyOfPresentIllness: string;
-    assessment: string;
-    plan: string;
-  }>({
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [structuredText, setStructuredText] = useState<string>('');
+  const [sections, setSections] = useState<{[key: string]: string}>({
     chiefComplaint: '',
     historyOfPresentIllness: '',
+    pastMedicalHistory: '',
+    medications: '',
+    allergies: '',
+    physicalExamination: '',
     assessment: '',
     plan: ''
   });
   
   const transcription = location.state?.transcription;
+  const userRole = location.state?.userRole || localStorage.getItem('userRole') || 'doctor';
   
   useEffect(() => {
     if (!transcription) {
@@ -33,38 +39,79 @@ const StructuredOutputPage = () => {
       return;
     }
     
-    // In a real implementation, we would call the GPT API to structure the text
-    // For now, we'll create a simple structured version
-    structureText(transcription);
+    // Call the GPT API to structure the text
+    generateStructuredText();
   }, [transcription]);
   
-  const structureText = (text: string) => {
-    // This is a simplified example; in a real implementation,
-    // we would use GPT-4 to properly structure the text
-    setStructuredText({
-      chiefComplaint: 'Frequent headaches',
-      historyOfPresentIllness: 'Patient reports frequent headaches occurring 3-4 times per week, usually in the afternoon. Pain is described as throbbing and located primarily in the frontal region. Patient has tried over-the-counter pain relievers with minimal relief.',
-      assessment: 'Possible migraine or tension headache. No significant medical history that would suggest secondary causes.',
-      plan: 'Recommended further evaluation and possible migraine prophylaxis. Consider amitriptyline 10mg daily. Follow up in 2 weeks.'
-    });
+  const generateStructuredText = async () => {
+    try {
+      setLoading(true);
+      const result = await structureText(transcription, userRole);
+      setStructuredText(result);
+      
+      // Parse the structured text into sections
+      parseStructuredText(result);
+      
+      toast.success('Text structured successfully!');
+    } catch (error: any) {
+      console.error('Error structuring text:', error);
+      toast.error(error.message || 'Error structuring text');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const parseStructuredText = (text: string) => {
+    // Basic parsing of headers and content
+    const parsedSections: {[key: string]: string} = {
+      chiefComplaint: '',
+      historyOfPresentIllness: '',
+      pastMedicalHistory: '',
+      medications: '',
+      allergies: '',
+      physicalExamination: '',
+      assessment: '',
+      plan: ''
+    };
+    
+    // Simple regex-based parsing for each section
+    // Chief Complaint
+    const ccMatch = text.match(/chief complaint:?([^#]+)/i);
+    if (ccMatch) parsedSections.chiefComplaint = ccMatch[1].trim();
+    
+    // History of Present Illness
+    const hpiMatch = text.match(/history of present illness:?([^#]+)/i);
+    if (hpiMatch) parsedSections.historyOfPresentIllness = hpiMatch[1].trim();
+    
+    // Past Medical History
+    const pmhMatch = text.match(/past medical history:?([^#]+)/i);
+    if (pmhMatch) parsedSections.pastMedicalHistory = pmhMatch[1].trim();
+    
+    // Medications
+    const medMatch = text.match(/medications:?([^#]+)/i);
+    if (medMatch) parsedSections.medications = medMatch[1].trim();
+    
+    // Allergies
+    const allergyMatch = text.match(/allergies:?([^#]+)/i);
+    if (allergyMatch) parsedSections.allergies = allergyMatch[1].trim();
+    
+    // Physical Examination
+    const peMatch = text.match(/physical examination:?([^#]+)/i);
+    if (peMatch) parsedSections.physicalExamination = peMatch[1].trim();
+    
+    // Assessment
+    const assessMatch = text.match(/assessment:?([^#]+)/i);
+    if (assessMatch) parsedSections.assessment = assessMatch[1].trim();
+    
+    // Plan
+    const planMatch = text.match(/plan:?([^#]+)/i);
+    if (planMatch) parsedSections.plan = planMatch[1].trim();
+    
+    setSections(parsedSections);
   };
   
   const copyToClipboard = () => {
-    const fullText = `
-CHIEF COMPLAINT:
-${structuredText.chiefComplaint}
-
-HISTORY OF PRESENT ILLNESS:
-${structuredText.historyOfPresentIllness}
-
-ASSESSMENT:
-${structuredText.assessment}
-
-PLAN:
-${structuredText.plan}
-    `.trim();
-    
-    navigator.clipboard.writeText(fullText)
+    navigator.clipboard.writeText(structuredText)
       .then(() => {
         setCopied(true);
         toast.success('Copied to clipboard!');
@@ -75,14 +122,48 @@ ${structuredText.plan}
       });
   };
   
+  const handleSaveNote = async () => {
+    if (!user) {
+      toast.error('You must be logged in to save notes');
+      return;
+    }
+    
+    try {
+      setSaving(true);
+      // Generate a title from the chief complaint or first line
+      const title = sections.chiefComplaint || 'Medical Note';
+      
+      await saveStructuredNote(user.id, title, structuredText);
+      toast.success('Note saved successfully!');
+    } catch (error: any) {
+      console.error('Error saving note:', error);
+      toast.error(error.message || 'Error saving note');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
   const handleEdit = () => {
     navigate('/edit-transcript', { 
       state: { 
-        structuredText: structuredText,
-        transcription: transcription
+        structuredText,
+        transcription,
+        userRole
       } 
     });
   };
+  
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-12 px-4 flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <h2 className="text-xl font-semibold">Structuring your medical note...</h2>
+          <p className="text-gray-500 mt-2">This may take a few moments</p>
+        </div>
+      </Layout>
+    );
+  }
   
   return (
     <Layout>
@@ -95,104 +176,173 @@ ${structuredText.plan}
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-4 mb-4">
                 <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="cc">Chief Complaint</TabsTrigger>
-                <TabsTrigger value="hpi">HPI</TabsTrigger>
+                <TabsTrigger value="cc-hpi">CC & HPI</TabsTrigger>
                 <TabsTrigger value="assessment">Assessment</TabsTrigger>
                 <TabsTrigger value="plan">Plan</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="all" className="space-y-6 mt-4">
-                <section>
-                  <h3 className="text-lg font-bold mb-2">CHIEF COMPLAINT:</h3>
-                  <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
-                    {structuredText.chiefComplaint}
-                  </p>
-                </section>
+              <TabsContent value="all" className="space-y-6">
+                {sections.chiefComplaint && (
+                  <section>
+                    <h3 className="text-lg font-bold mb-2">CHIEF COMPLAINT:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.chiefComplaint}
+                    </p>
+                  </section>
+                )}
                 
-                <section>
-                  <h3 className="text-lg font-bold mb-2">HISTORY OF PRESENT ILLNESS:</h3>
-                  <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
-                    {structuredText.historyOfPresentIllness}
-                  </p>
-                </section>
+                {sections.historyOfPresentIllness && (
+                  <section>
+                    <h3 className="text-lg font-bold mb-2">HISTORY OF PRESENT ILLNESS:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.historyOfPresentIllness}
+                    </p>
+                  </section>
+                )}
                 
-                <section>
-                  <h3 className="text-lg font-bold mb-2">ASSESSMENT:</h3>
-                  <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
-                    {structuredText.assessment}
-                  </p>
-                </section>
+                {sections.pastMedicalHistory && (
+                  <section>
+                    <h3 className="text-lg font-bold mb-2">PAST MEDICAL HISTORY:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.pastMedicalHistory}
+                    </p>
+                  </section>
+                )}
                 
-                <section>
-                  <h3 className="text-lg font-bold mb-2">PLAN:</h3>
-                  <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
-                    {structuredText.plan}
-                  </p>
-                </section>
+                {sections.medications && (
+                  <section>
+                    <h3 className="text-lg font-bold mb-2">MEDICATIONS:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.medications}
+                    </p>
+                  </section>
+                )}
+                
+                {sections.allergies && (
+                  <section>
+                    <h3 className="text-lg font-bold mb-2">ALLERGIES:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.allergies}
+                    </p>
+                  </section>
+                )}
+                
+                {sections.physicalExamination && (
+                  <section>
+                    <h3 className="text-lg font-bold mb-2">PHYSICAL EXAMINATION:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.physicalExamination}
+                    </p>
+                  </section>
+                )}
+                
+                {sections.assessment && (
+                  <section>
+                    <h3 className="text-lg font-bold mb-2">ASSESSMENT:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.assessment}
+                    </p>
+                  </section>
+                )}
+                
+                {sections.plan && (
+                  <section>
+                    <h3 className="text-lg font-bold mb-2">PLAN:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.plan}
+                    </p>
+                  </section>
+                )}
               </TabsContent>
               
-              <TabsContent value="cc">
-                <section className="mt-4">
-                  <h3 className="text-lg font-bold mb-2">CHIEF COMPLAINT:</h3>
-                  <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
-                    {structuredText.chiefComplaint}
-                  </p>
-                </section>
-              </TabsContent>
-              
-              <TabsContent value="hpi">
-                <section className="mt-4">
-                  <h3 className="text-lg font-bold mb-2">HISTORY OF PRESENT ILLNESS:</h3>
-                  <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
-                    {structuredText.historyOfPresentIllness}
-                  </p>
-                </section>
+              <TabsContent value="cc-hpi">
+                {sections.chiefComplaint && (
+                  <section className="mb-4">
+                    <h3 className="text-lg font-bold mb-2">CHIEF COMPLAINT:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.chiefComplaint}
+                    </p>
+                  </section>
+                )}
+                
+                {sections.historyOfPresentIllness && (
+                  <section>
+                    <h3 className="text-lg font-bold mb-2">HISTORY OF PRESENT ILLNESS:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.historyOfPresentIllness}
+                    </p>
+                  </section>
+                )}
               </TabsContent>
               
               <TabsContent value="assessment">
-                <section className="mt-4">
-                  <h3 className="text-lg font-bold mb-2">ASSESSMENT:</h3>
-                  <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
-                    {structuredText.assessment}
-                  </p>
-                </section>
+                {sections.assessment && (
+                  <section>
+                    <h3 className="text-lg font-bold mb-2">ASSESSMENT:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.assessment}
+                    </p>
+                  </section>
+                )}
               </TabsContent>
               
               <TabsContent value="plan">
-                <section className="mt-4">
-                  <h3 className="text-lg font-bold mb-2">PLAN:</h3>
-                  <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
-                    {structuredText.plan}
-                  </p>
-                </section>
+                {sections.plan && (
+                  <section>
+                    <h3 className="text-lg font-bold mb-2">PLAN:</h3>
+                    <p className="whitespace-pre-wrap p-3 bg-gray-50 rounded-md border">
+                      {sections.plan}
+                    </p>
+                  </section>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          <CardFooter className="flex justify-between flex-wrap gap-2">
             <Button 
               variant="outline" 
               onClick={handleEdit}
             >
               Edit
             </Button>
-            <Button
-              onClick={copyToClipboard}
-              className="flex items-center gap-2"
-            >
-              {copied ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Clipboard className="h-4 w-4" />
-                  Copy to EMR
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handleSaveNote}
+                disabled={saving || !user}
+                className="flex items-center gap-2"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Save Note
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={copyToClipboard}
+                className="flex items-center gap-2"
+              >
+                {copied ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Clipboard className="h-4 w-4" />
+                    Copy to EMR
+                  </>
+                )}
+              </Button>
+            </div>
           </CardFooter>
         </Card>
       </div>

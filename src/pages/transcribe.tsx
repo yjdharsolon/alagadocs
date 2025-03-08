@@ -17,6 +17,7 @@ const TranscribePage = () => {
   const [isStructuring, setIsStructuring] = useState<boolean>(false);
   
   const audioPath = location.state?.audioPath;
+  const userRole = location.state?.userRole || localStorage.getItem('userRole') || 'doctor';
   
   useEffect(() => {
     if (!audioPath) {
@@ -33,7 +34,7 @@ const TranscribePage = () => {
     try {
       setIsTranscribing(true);
       
-      // Call the actual transcription service instead of using a timeout
+      // Call the actual transcription service
       const result = await transcribeAudio(audioPath);
       setTranscription(result);
       toast.success('Audio transcribed successfully!');
@@ -50,7 +51,8 @@ const TranscribePage = () => {
     
     navigate('/structured-output', { 
       state: { 
-        transcription: transcription 
+        transcription: transcription,
+        userRole: userRole
       } 
     });
   };
@@ -58,7 +60,8 @@ const TranscribePage = () => {
   const handleEdit = () => {
     navigate('/edit-transcript', { 
       state: { 
-        transcription: transcription 
+        transcription: transcription,
+        userRole: userRole
       } 
     });
   };
@@ -83,7 +86,7 @@ const TranscribePage = () => {
               <Textarea 
                 value={transcription} 
                 onChange={(e) => setTranscription(e.target.value)}
-                className="min-h-[300px] font-medium resize-none"
+                className="min-h-[300px] font-medium"
                 placeholder="Transcription will appear here..."
               />
             )}

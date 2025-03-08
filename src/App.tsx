@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -15,8 +14,14 @@ import StructuredOutputPage from './pages/structured-output';
 import EditTranscriptPage from './pages/edit-transcript';
 import { AuthProvider } from './hooks/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useEffect } from 'react';
+import { initializeApp } from './services/setupService';
 
 function App() {
+  useEffect(() => {
+    initializeApp();
+  }, []);
+
   return (
     <AuthProvider>
       <Routes>

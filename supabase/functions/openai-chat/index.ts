@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt } = await req.json()
+    const { prompt, role, customTemplate } = await req.json()
     
     if (!prompt) {
       throw new Error('No prompt provided')
@@ -24,6 +24,31 @@ serve(async (req) => {
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openaiApiKey) {
       throw new Error('OpenAI API key not found')
+    }
+
+    // Create a system message based on the user's role
+    let systemMessage = 'You are a helpful medical assistant that structures transcriptions into clinical notes.';
+    
+    // Role-specific prompts
+    if (role) {
+      switch (role) {
+        case 'doctor':
+          systemMessage = 'You are an experienced physician assistant. Format this transcription into a detailed clinical note using standard medical terminology and structure.';
+          break;
+        case 'nurse':
+          systemMessage = 'You are an experienced nursing assistant. Format this transcription into a nursing note with focus on patient care, vitals, and interventions.';
+          break;
+        case 'therapist':
+          systemMessage = 'You are an experienced therapy assistant. Format this transcription into a therapy note with focus on exercises, progress, and treatment plans.';
+          break;
+        default:
+          systemMessage = 'You are a helpful medical assistant that structures transcriptions into clinical notes.';
+      }
+    }
+
+    // Allow for custom templates if provided
+    if (customTemplate) {
+      systemMessage = customTemplate;
     }
 
     console.log('Sending request to OpenAI API...')
@@ -38,11 +63,11 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are a helpful assistant.' },
+          { role: 'system', content: systemMessage },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 500,
-        temperature: 0.7,
+        max_tokens: 1000,
+        temperature: 0.5,
       }),
     })
 
