@@ -3,10 +3,11 @@ import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import DocumentTabs from './DocumentTabs';
 import ActionButtons from './ActionButtons';
+import { MedicalSections } from './types';
 
 interface DocumentCardProps {
   user: any;
-  sections: {[key: string]: string};
+  sections: MedicalSections;
   structuredText: string;
   handleEdit: () => void;
 }

@@ -8,6 +8,7 @@ import { structureText } from '@/services/transcriptionService';
 import { parseStructuredText } from '@/utils/textParser';
 import LoadingState from '@/components/structured-output/LoadingState';
 import DocumentCard from '@/components/structured-output/DocumentCard';
+import { MedicalSections } from '@/components/structured-output/types';
 
 const StructuredOutputPage = () => {
   const location = useLocation();
@@ -15,7 +16,7 @@ const StructuredOutputPage = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [structuredText, setStructuredText] = useState<string>('');
-  const [sections, setSections] = useState<{[key: string]: string}>({
+  const [sections, setSections] = useState<MedicalSections>({
     chiefComplaint: '',
     historyOfPresentIllness: '',
     pastMedicalHistory: '',

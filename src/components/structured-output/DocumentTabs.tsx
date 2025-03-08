@@ -2,18 +2,10 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SectionContent from './SectionContent';
+import { MedicalSections } from './types';
 
 interface DocumentTabsProps {
-  sections: {
-    chiefComplaint: string;
-    historyOfPresentIllness: string;
-    pastMedicalHistory: string;
-    medications: string;
-    allergies: string;
-    physicalExamination: string;
-    assessment: string;
-    plan: string;
-  };
+  sections: MedicalSections;
 }
 
 const DocumentTabs = ({ sections }: DocumentTabsProps) => {

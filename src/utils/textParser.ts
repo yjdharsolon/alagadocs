@@ -1,12 +1,14 @@
 
+import { MedicalSections } from '@/components/structured-output/types';
+
 /**
  * Parses structured text into sections using regex patterns
  * @param text The structured text to parse
  * @returns Object containing parsed sections
  */
-export const parseStructuredText = (text: string) => {
+export const parseStructuredText = (text: string): MedicalSections => {
   // Basic parsing of headers and content
-  const parsedSections: {[key: string]: string} = {
+  const parsedSections: MedicalSections = {
     chiefComplaint: '',
     historyOfPresentIllness: '',
     pastMedicalHistory: '',

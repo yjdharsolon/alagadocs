@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Clipboard, CheckCircle2, Save, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { saveStructuredNote } from '@/services/transcriptionService';
+import { MedicalSections } from './types';
 
 interface ActionButtonsProps {
   user: any;
-  sections: {[key: string]: string};
+  sections: MedicalSections;
   structuredText: string;
   handleEdit: () => void;
 }
