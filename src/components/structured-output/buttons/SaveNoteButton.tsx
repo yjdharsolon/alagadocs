@@ -1,64 +1,38 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Loader2 } from 'lucide-react';
+import { Save } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { saveStructuredNote } from '@/services/transcriptionService';
-import { MedicalSections } from '../types';
+import { useAuth } from '@/hooks/useAuth';
+import { saveStructuredNote } from '@/services/noteService';
 
 interface SaveNoteButtonProps {
-  user?: any;
-  sections?: MedicalSections;
-  structuredText?: string;
+  title: string;
+  content: string;
+  onSaveSuccess: () => void;
 }
 
-const SaveNoteButton = ({ user, sections, structuredText }: SaveNoteButtonProps) => {
-  const [saving, setSaving] = useState(false);
-  
+const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({ title, content, onSaveSuccess }) => {
+  const { user } = useAuth();
+
   const handleSaveNote = async () => {
-    if (!user || !sections || !structuredText) {
-      toast.error('Missing required data to save note');
+    if (!user) {
+      toast.error('Please sign in to save notes.');
       return;
     }
-    
+
     try {
-      setSaving(true);
-      // Generate a title from the chief complaint or first line
-      const title = sections.chiefComplaint.substring(0, 50) || 'Medical Note';
-      
-      // Convert the structured text to a string if it's not already
-      const contentString = typeof structuredText === 'string' 
-        ? structuredText 
-        : JSON.stringify(structuredText);
-      
-      await saveStructuredNote(user.id, title, contentString);
+      await saveStructuredNote(user.id, title, content);
       toast.success('Note saved successfully!');
+      onSaveSuccess();
     } catch (error: any) {
-      console.error('Error saving note:', error);
-      toast.error(error.message || 'Error saving note');
-    } finally {
-      setSaving(false);
+      toast.error(`Failed to save note: ${error.message}`);
     }
   };
-  
+
   return (
-    <Button
-      variant="outline"
-      onClick={handleSaveNote}
-      disabled={saving || !user || !sections || !structuredText}
-      className="flex items-center gap-1"
-    >
-      {saving ? (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Saving...
-        </>
-      ) : (
-        <>
-          <Save className="h-4 w-4" />
-          Save Note
-        </>
-      )}
+    <Button onClick={handleSaveNote} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+      <Save className="mr-2 h-4 w-4" />
+      Save Note
     </Button>
   );
 };

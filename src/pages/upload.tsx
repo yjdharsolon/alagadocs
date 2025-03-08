@@ -5,7 +5,7 @@ import Layout from '@/components/Layout';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileAudio, Mic, Upload, Loader2 } from 'lucide-react';
-import { uploadAudio } from '@/services/transcriptionService';
+import { uploadAudio } from '@/services/audioService';
 import toast from 'react-hot-toast';
 
 export default function AudioUploadPage() {
