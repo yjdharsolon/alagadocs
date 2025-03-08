@@ -1,126 +1,111 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { updateTranscriptionText } from '@/services/audioService';
 
+// This structure matches the state from the transcribe page
 interface TranscriptionState {
-  transcriptionText: string;
-  transcriptionId: string;
+  transcriptionData: {
+    text: string;
+    duration?: number;
+    language?: string;
+  };
   audioUrl: string;
-  isSaving: boolean;
+  transcriptionId: string;
 }
 
-interface LocationState {
-  transcriptionText?: string;
-  transcriptionData?: { text: string };
-  transcriptionId?: string;
-  audioUrl?: string;
-}
-
-export function useTranscriptionEdit(locationState: LocationState | null) {
+export const useTranscriptionEdit = (locationState: any) => {
+  const [transcriptionText, setTranscriptionText] = useState('');
+  const [audioUrl, setAudioUrl] = useState('');
+  const [transcriptionId, setTranscriptionId] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [state, setState] = useState<TranscriptionState>({
-    transcriptionText: '',
-    transcriptionId: '',
-    audioUrl: '',
-    isSaving: false
-  });
-  
+
+  // Initialize state from the location state
   useEffect(() => {
     if (!locationState) {
-      toast.error('No transcription to edit. Please transcribe audio first.');
       navigate('/upload');
       return;
     }
+
+    const { transcriptionData, audioUrl, transcriptionId } = locationState as TranscriptionState;
     
-    // Different ways the data might come in
-    const textFromState = locationState.transcriptionText || 
-                          (locationState.transcriptionData && locationState.transcriptionData.text) || 
-                          '';
-    const audioUrlFromState = locationState.audioUrl || '';
-    const transcriptionIdFromState = locationState.transcriptionId || '';
-    
-    if (!textFromState) {
-      toast.error('No transcription text found. Please transcribe audio first.');
+    if (!transcriptionData || !transcriptionData.text) {
       navigate('/upload');
       return;
     }
-    
-    setState(prev => ({
-      ...prev,
-      transcriptionText: textFromState,
-      audioUrl: audioUrlFromState,
-      transcriptionId: transcriptionIdFromState
-    }));
+
+    setTranscriptionText(transcriptionData.text);
+    setAudioUrl(audioUrl || '');
+    setTranscriptionId(transcriptionId || '');
   }, [locationState, navigate]);
-  
-  const setTranscriptionText = (text: string) => {
-    setState(prev => ({ ...prev, transcriptionText: text }));
-  };
-  
-  const handleSave = async () => {
-    if (!user) {
-      toast.error('You must be logged in to save changes.');
-      return;
+
+  // Reset success message after 3 seconds
+  useEffect(() => {
+    let timer: number;
+    if (saveSuccess) {
+      timer = window.setTimeout(() => {
+        setSaveSuccess(false);
+      }, 3000);
     }
-    
-    setState(prev => ({ ...prev, isSaving: true }));
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [saveSuccess]);
+
+  const handleSave = async () => {
     try {
-      // Update the transcription in the database if we have a transcription ID
-      if (state.transcriptionId) {
-        // Update existing transcription
-        const { error } = await supabase
-          .from('transcriptions')
-          .update({ text: state.transcriptionText, updated_at: new Date().toISOString() })
-          .eq('id', state.transcriptionId);
-          
-        if (error) throw error;
-      } else if (state.transcriptionText && state.audioUrl) {
-        // Create a new transcription if we don't have an ID but have text and audio URL
-        const { data, error } = await supabase
-          .from('transcriptions')
-          .insert({ 
-            text: state.transcriptionText, 
-            audio_url: state.audioUrl,
-            user_id: user.id
-          })
-          .select('id')
-          .single();
-          
-        if (error) throw error;
-        if (data) {
-          setState(prev => ({ ...prev, transcriptionId: data.id }));
-        }
+      setIsSaving(true);
+      setError(null);
+      setSaveSuccess(false);
+      
+      if (!transcriptionId) {
+        throw new Error('No transcription ID available');
       }
       
+      await updateTranscriptionText(transcriptionId, transcriptionText);
+      
       toast.success('Transcription saved successfully');
-    } catch (error: any) {
-      console.error('Error saving transcription:', error);
-      toast.error(`Failed to save transcription: ${error.message}`);
+      setSaveSuccess(true);
+    } catch (err) {
+      console.error('Error saving transcription:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save changes');
+      toast.error('Failed to save changes');
     } finally {
-      setState(prev => ({ ...prev, isSaving: false }));
+      setIsSaving(false);
     }
   };
-  
+
   const handleContinueToStructured = () => {
-    navigate('/structured-output', { 
-      state: { 
-        transcriptionData: { text: state.transcriptionText },
-        transcriptionId: state.transcriptionId, 
-        audioUrl: state.audioUrl 
-      } 
+    navigate('/structured-output', {
+      state: {
+        transcriptionData: {
+          text: transcriptionText,
+          // Pass through any other transcriptionData properties
+          ...(locationState?.transcriptionData?.duration && { 
+            duration: locationState.transcriptionData.duration 
+          }),
+          ...(locationState?.transcriptionData?.language && { 
+            language: locationState.transcriptionData.language 
+          })
+        },
+        audioUrl,
+        transcriptionId
+      }
     });
   };
-  
+
   return {
-    transcriptionText: state.transcriptionText,
-    audioUrl: state.audioUrl,
-    isSaving: state.isSaving,
+    transcriptionText,
+    audioUrl,
+    isSaving,
+    error,
+    saveSuccess,
     setTranscriptionText,
     handleSave,
     handleContinueToStructured
   };
-}
+};

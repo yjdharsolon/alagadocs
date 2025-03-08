@@ -3,27 +3,34 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileAudio, Mic, Loader2 } from 'lucide-react';
+import { FileAudio, Mic, Loader2, AlertCircle } from 'lucide-react';
 import { uploadAudio, transcribeAudio } from '@/services/audioService';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { FileUploader } from './FileUploader';
 import { AudioRecorder } from './AudioRecorder';
 import { useAuth } from '@/hooks/useAuth';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const UploadForm: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState<'idle' | 'uploading' | 'transcribing'>('idle');
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
+    setError(null);
   };
   
   const handleRecordingComplete = (recordedFile: File) => {
     setFile(recordedFile);
     setIsRecording(false);
+    setError(null);
   };
   
   const handleSubmit = async () => {
@@ -34,6 +41,9 @@ export const UploadForm: React.FC = () => {
 
     try {
       setIsUploading(true);
+      setCurrentStep('uploading');
+      setUploadProgress(0);
+      setError(null);
       
       // Check if user is logged in
       if (!user) {
@@ -42,11 +52,25 @@ export const UploadForm: React.FC = () => {
         return;
       }
       
+      // Simulated progress updates for better UX
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev < 80) return prev + 5;
+          return prev;
+        });
+      }, 500);
+      
       // Upload the audio file to Supabase storage
       const audioUrl = await uploadAudio(file);
       
+      clearInterval(progressInterval);
+      setUploadProgress(90);
+      setCurrentStep('transcribing');
+      
       // Transcribe the audio
       const transcriptionData = await transcribeAudio(audioUrl);
+      
+      setUploadProgress(100);
       
       // After successful transcription, navigate to the transcribe page with the data
       toast.success('Transcription completed successfully');
@@ -62,14 +86,33 @@ export const UploadForm: React.FC = () => {
       
     } catch (error) {
       console.error('Error uploading audio:', error);
+      setError(error instanceof Error ? error.message : 'Error uploading audio. Please try again.');
       toast.error('Error uploading audio. Please try again.');
     } finally {
       setIsUploading(false);
+      setCurrentStep('idle');
+    }
+  };
+  
+  const getStepLabel = () => {
+    switch (currentStep) {
+      case 'uploading': return 'Uploading Audio...';
+      case 'transcribing': return 'Transcribing Audio...';
+      default: return 'Continue to Transcription';
     }
   };
   
   return (
     <div className="max-w-2xl mx-auto">
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {error}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -101,6 +144,16 @@ export const UploadForm: React.FC = () => {
         </CardContent>
       </Card>
       
+      {isUploading && (
+        <div className="mb-6 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>{currentStep === 'uploading' ? 'Uploading' : 'Transcribing'}</span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <Progress value={uploadProgress} className="h-2" />
+        </div>
+      )}
+      
       <CardFooter className="px-0 flex justify-end">
         <Button 
           size="lg" 
@@ -110,7 +163,7 @@ export const UploadForm: React.FC = () => {
           {isUploading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Uploading and Transcribing...
+              {getStepLabel()}
             </>
           ) : (
             'Continue to Transcription'
