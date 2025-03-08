@@ -1,79 +1,110 @@
 
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import Index from './pages/Index';
-import NotFound from './pages/NotFound';
-import AskAIPage from './pages/ask-ai';
-import Login from './pages/login';
-import Signup from './pages/signup';
-import PasswordResetPage from './pages/password-reset';
-import UpdatePasswordPage from './pages/update-password';
-import Profile from './pages/profile';
-import RoleSelection from './pages/role-selection';
-import AudioUploadPage from './pages/upload';
-import TranscribePage from './pages/transcribe';
-import StructuredOutputPage from './pages/structured-output';
-import EditTranscriptPage from './pages/edit-transcript';
-import AuthCallback from './pages/auth/callback';
-import { AuthProvider } from './hooks/useAuth';
-import ProtectedRoute from './components/ProtectedRoute';
-import { useEffect } from 'react';
-import { initializeApp } from './services/setupService';
+import { AuthProvider } from '@/hooks/useAuth';
+import ProtectedRoute from '@/components/ProtectedRoute';
+
+// Pages
+import Index from '@/pages/Index';
+import NotFound from '@/pages/NotFound';
+import Login from '@/pages/login';
+import Signup from '@/pages/signup';
+import RoleSelection from '@/pages/role-selection';
+import Upload from '@/pages/upload';
+import Transcribe from '@/pages/transcribe';
+import StructuredOutput from '@/pages/structured-output';
+import EditTranscript from '@/pages/edit-transcript';
+import PasswordReset from '@/pages/password-reset';
+import UpdatePassword from '@/pages/update-password';
+import Profile from '@/pages/profile';
+import AskAI from '@/pages/ask-ai';
+import AuthCallback from '@/pages/auth/callback';
+
+import './App.css';
 
 function App() {
-  useEffect(() => {
-    initializeApp();
-  }, []);
-
   return (
-    <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/password-reset" element={<PasswordResetPage />} />
-        <Route path="/update-password" element={<UpdatePasswordPage />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        } />
-        <Route path="/role-selection" element={
-          <ProtectedRoute>
-            <RoleSelection />
-          </ProtectedRoute>
-        } />
-        <Route path="/ask-ai" element={
-          <ProtectedRoute>
-            <AskAIPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/upload" element={
-          <ProtectedRoute>
-            <AudioUploadPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/transcribe" element={
-          <ProtectedRoute>
-            <TranscribePage />
-          </ProtectedRoute>
-        } />
-        <Route path="/structured-output" element={
-          <ProtectedRoute>
-            <StructuredOutputPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/edit-transcript" element={
-          <ProtectedRoute>
-            <EditTranscriptPage />
-          </ProtectedRoute>
-        } />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <Toaster />
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/password-reset" element={<PasswordReset />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
+          
+          {/* Protected Routes */}
+          <Route
+            path="/role-selection"
+            element={
+              <ProtectedRoute>
+                <RoleSelection />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/upload"
+            element={
+              <ProtectedRoute>
+                <Upload />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/transcribe"
+            element={
+              <ProtectedRoute>
+                <Transcribe />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/structured-output"
+            element={
+              <ProtectedRoute>
+                <StructuredOutput />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/edit-transcript"
+            element={
+              <ProtectedRoute>
+                <EditTranscript />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/ask-ai"
+            element={
+              <ProtectedRoute>
+                <AskAI />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* 404 Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        
+        <Toaster position="top-right" />
+      </AuthProvider>
+    </Router>
   );
 }
 

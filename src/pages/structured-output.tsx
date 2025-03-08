@@ -1,164 +1,152 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { structureText } from '@/services/transcriptionService';
 import { useAuth } from '@/hooks/useAuth';
-import toast from 'react-hot-toast';
-import DocumentCard from '@/components/structured-output/DocumentCard';
+import { structureText, saveStructuredText, getStructuredText } from '@/services/structuredTextService';
 import DocumentTabs from '@/components/structured-output/DocumentTabs';
-import ActionButtons from '@/components/structured-output/ActionButtons';
 import LoadingState from '@/components/structured-output/LoadingState';
-import { MedicalSections } from '@/components/structured-output/types';
+import ActionButtons from '@/components/structured-output/ActionButtons';
+import { StructuredNote } from '@/components/structured-output/types';
+import toast from 'react-hot-toast';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
-// Define a proper interface for MedicalSection items that will be used in this component
-interface MedicalSection {
-  id: string;
-  title: string;
-  content: string;
-}
-
-export default function StructuredOutputPage() {
+export default function StructuredOutput() {
+  const { user, getUserRole } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [transcriptionText, setTranscriptionText] = useState<string>('');
-  const [audioUrl, setAudioUrl] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [sections, setSections] = useState<MedicalSection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [structuredData, setStructuredData] = useState<StructuredNote | null>(null);
+  const [processingText, setProcessingText] = useState(false);
+  
+  // Get the transcription data from the location state
+  const transcriptionData = location.state?.transcriptionData;
+  const transcriptionId = location.state?.transcriptionId;
+  const audioUrl = location.state?.audioUrl;
   
   useEffect(() => {
-    const textFromState = location.state?.transcriptionText;
-    const audioUrlFromState = location.state?.audioUrl;
-    
-    if (!textFromState) {
-      toast.error('No transcription to structure. Please transcribe audio first.');
-      navigate('/upload');
-      return;
-    }
-    
-    setTranscriptionText(textFromState);
-    if (audioUrlFromState) setAudioUrl(audioUrlFromState);
-    
-    // Start structuring process
-    structureTranscription(textFromState);
-  }, [location.state, navigate]);
-  
-  const structureTranscription = async (text: string) => {
-    try {
-      setIsLoading(true);
+    const processTranscription = async () => {
+      if (!transcriptionData || !transcriptionId || !user) {
+        setLoading(false);
+        return;
+      }
       
-      // Get the user's selected role from localStorage or use a default
-      const userRole = localStorage.getItem('userRole') || 'doctor';
-      
-      // Get structured text from the service
-      const structuredText = await structureText(text, userRole);
-      
-      // Parse the structured text into sections
-      const parsedSections = parseStructuredText(structuredText);
-      setSections(parsedSections);
-      
-    } catch (error) {
-      console.error('Error structuring text:', error);
-      toast.error('Error structuring text. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Helper function to parse the structured text into sections
-  const parseStructuredText = (text: string): MedicalSection[] => {
-    // This is a simple parser that assumes each section starts with a heading
-    // A more robust parser would be needed for production
-    const lines = text.split('\n').filter(line => line.trim() !== '');
-    const sections: MedicalSection[] = [];
-    let currentSection: MedicalSection | null = null;
-    
-    for (const line of lines) {
-      // If line is a heading (assuming headings are in all caps or start with #)
-      if (line.toUpperCase() === line || line.startsWith('#')) {
-        // If we've been building a section, push it
-        if (currentSection) {
-          sections.push(currentSection);
+      try {
+        // First check if we already have structured data for this transcription
+        const existingData = await getStructuredText(transcriptionId);
+        
+        if (existingData?.content) {
+          setStructuredData(existingData.content);
+          setLoading(false);
+          return;
         }
         
-        // Start a new section
-        const title = line.replace(/^#\s*/, '').trim();
-        currentSection = {
-          id: title.toLowerCase().replace(/\s+/g, '-'),
-          title,
-          content: ''
-        };
-      } else if (currentSection) {
-        // Add content to the current section
-        currentSection.content += (currentSection.content ? '\n' : '') + line;
+        // If not, process the transcription text
+        setProcessingText(true);
+        const userRole = await getUserRole();
+        const structuredResult = await structureText(transcriptionData.text, userRole);
+        
+        if (structuredResult) {
+          setStructuredData(structuredResult);
+          
+          // Save the structured data
+          await saveStructuredText(user.id, transcriptionId, structuredResult);
+          toast.success('Medical notes structured successfully');
+        }
+      } catch (error) {
+        console.error('Error processing transcription:', error);
+        toast.error('Failed to structure the transcription. Please try again.');
+      } finally {
+        setProcessingText(false);
+        setLoading(false);
       }
-    }
+    };
     
-    // Don't forget the last section
-    if (currentSection) {
-      sections.push(currentSection);
-    }
-    
-    return sections;
+    processTranscription();
+  }, [transcriptionData, transcriptionId, user, getUserRole]);
+  
+  // If no transcription data is available, redirect to upload page
+  if (!loading && (!transcriptionData || !transcriptionId)) {
+    toast.error('No transcription data found. Please upload an audio file first.');
+    navigate('/upload');
+    return null;
+  }
+  
+  const handleBackToTranscription = () => {
+    navigate('/transcribe', { 
+      state: { 
+        transcriptionData,
+        transcriptionId,
+        audioUrl
+      } 
+    });
   };
   
-  const handleSaveDocument = () => {
-    // Here we would save the document to the database
-    toast.success('Document saved successfully');
-  };
-  
-  const handleCopyDocument = () => {
-    // Create a formatted string from all sections
-    const formattedText = sections
-      .map(section => `${section.title}\n${section.content}\n`)
-      .join('\n');
+  const handleCopyToClipboard = () => {
+    if (!structuredData) return;
     
-    navigator.clipboard.writeText(formattedText)
-      .then(() => toast.success('Document copied to clipboard'))
-      .catch(() => toast.error('Failed to copy document'));
-  };
-  
-  const handleEditSection = (sectionId: string, newContent: string) => {
-    setSections(prevSections => 
-      prevSections.map(section => 
-        section.id === sectionId ? { ...section, content: newContent } : section
-      )
-    );
+    // Format the structured data for clipboard
+    let formattedText = '';
+    Object.entries(structuredData).forEach(([key, value]) => {
+      if (value && typeof value === 'string' && value.trim() !== '') {
+        const sectionTitle = key.split('_').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        
+        formattedText += `${sectionTitle}:\n${value}\n\n`;
+      }
+    });
+    
+    navigator.clipboard.writeText(formattedText.trim())
+      .then(() => toast.success('Copied to clipboard'))
+      .catch(() => toast.error('Failed to copy to clipboard'));
   };
   
   return (
     <Layout>
-      <div className="container mx-auto py-10 px-4">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">Structured Medical Document</h1>
-          <p className="text-muted-foreground mb-6">
-            Your transcription has been formatted into a professional medical document
-          </p>
+      <div className="container mx-auto py-6 px-4">
+        <div className="mb-6 flex items-center justify-between">
+          <Button 
+            variant="outline" 
+            onClick={handleBackToTranscription}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Transcription
+          </Button>
           
-          {isLoading ? (
-            <LoadingState />
-          ) : (
-            <div className="grid gap-6">
-              <DocumentCard 
-                user={user}
-                sections={sections as unknown as MedicalSections}
-                structuredText={transcriptionText}
-                handleEdit={() => {}}
-              />
-              
-              <DocumentTabs 
-                sections={sections as unknown as MedicalSections}
-              />
-              
-              <ActionButtons 
-                user={user}
-                sections={sections as unknown as MedicalSections}
-                structuredText={transcriptionText}
-                handleEdit={() => {}}
-              />
-            </div>
-          )}
+          <h1 className="text-2xl font-bold">Structured Medical Notes</h1>
+          
+          <div className="w-[100px]"></div> {/* Empty div for flex alignment */}
         </div>
+        
+        {loading || processingText ? (
+          <LoadingState message={processingText ? "Structuring your medical notes..." : "Loading..."} />
+        ) : structuredData ? (
+          <>
+            <DocumentTabs structuredData={structuredData} />
+            <ActionButtons 
+              onCopy={handleCopyToClipboard}
+              onEdit={() => navigate('/edit-transcript', { 
+                state: { 
+                  structuredData,
+                  transcriptionId,
+                  audioUrl
+                } 
+              })}
+            />
+          </>
+        ) : (
+          <div className="text-center p-10">
+            <p className="text-lg text-gray-600 mb-4">
+              No structured data available. There was an error processing your transcription.
+            </p>
+            <Button onClick={() => navigate('/upload')}>
+              Upload New Audio
+            </Button>
+          </div>
+        )}
       </div>
     </Layout>
   );
