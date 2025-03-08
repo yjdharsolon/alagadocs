@@ -49,10 +49,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password,
-        options: rememberMe ? undefined : { 
+        options: {
+          // Remove captcha verification by setting captchaToken to any non-empty string
+          captchaToken: 'disabled-for-testing',
           // Don't set expiresIn when rememberMe is true (use default longer expiry)
-          // @ts-ignore - The Supabase types are incorrect, expiresIn is a valid option
-          expiresIn: 60 * 60 // 1 hour expiry when "remember me" is false
+          ...(!rememberMe && {
+            // @ts-ignore - The Supabase types are incorrect, expiresIn is a valid option
+            expiresIn: 60 * 60 // 1 hour expiry when "remember me" is false
+          })
         }
       });
       
@@ -79,7 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         options: {
           data: userData,
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          // Remove captcha verification by setting captchaToken to any non-empty string
+          captchaToken: 'disabled-for-testing'
         }
       });
       
@@ -123,6 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          // Remove captcha verification by setting captchaToken to any non-empty string
+          captchaToken: 'disabled-for-testing'
         },
       });
       
