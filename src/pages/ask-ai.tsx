@@ -3,7 +3,7 @@ import React from 'react';
 import Layout from '@/components/Layout';
 import AskAI from '@/components/AskAI';
 import { Card } from '@/components/ui/card';
-import { BrainCog, FileText, MessageCircle, Sparkles } from 'lucide-react';
+import { BrainCog, FileText, MessageCircle, Sparkles, User, ShieldCheck } from 'lucide-react';
 
 const AskAIPage = () => {
   return (
@@ -42,16 +42,29 @@ const AskAIPage = () => {
         
         <AskAI />
         
-        <div className="mt-8 p-4 bg-muted rounded-lg max-w-2xl mx-auto">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <h3 className="font-medium">Pro Tip</h3>
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div className="p-4 bg-muted rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h3 className="font-medium">Pro Tip</h3>
+            </div>
+            <p className="text-sm">
+              For best results when structuring medical text, include key information like chief complaint, 
+              history of present illness, and examination findings. The AI will organize your text into 
+              standard medical note sections based on your role.
+            </p>
           </div>
-          <p className="text-sm">
-            For best results when structuring medical text, include key information like chief complaint, 
-            history of present illness, and examination findings. The AI will organize your text into 
-            standard medical note sections based on your role.
-          </p>
+          
+          <div className="p-4 bg-muted rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              <h3 className="font-medium">Privacy Note</h3>
+            </div>
+            <p className="text-sm">
+              Your medical text is securely processed. We recommend removing patient identifiers before 
+              submitting text for structuring. Saved notes are encrypted and only accessible by you.
+            </p>
+          </div>
         </div>
       </div>
     </Layout>
