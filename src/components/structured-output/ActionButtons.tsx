@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { MedicalSections } from './types';
-import ButtonGroup from './buttons/ButtonGroup';
+import { ButtonGroup } from './buttons/ButtonGroup';
 
 interface ActionButtonsProps {
   onCopy: () => void;

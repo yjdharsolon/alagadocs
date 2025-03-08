@@ -6,13 +6,24 @@ import toast from 'react-hot-toast';
 
 interface AudioRecorderProps {
   onRecordingComplete: (file: File) => void;
+  isRecording?: boolean;
+  setIsRecording?: (isRecording: boolean) => void;
 }
 
-export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete }) => {
-  const [isRecording, setIsRecording] = useState(false);
+export const AudioRecorder: React.FC<AudioRecorderProps> = ({ 
+  onRecordingComplete,
+  isRecording: externalIsRecording,
+  setIsRecording: externalSetIsRecording
+}) => {
+  // Use internal state if external state is not provided
+  const [internalIsRecording, setInternalIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  
+  // Determine which state to use
+  const isRecording = externalIsRecording !== undefined ? externalIsRecording : internalIsRecording;
+  const setIsRecording = externalSetIsRecording || setInternalIsRecording;
 
   // Timer for recording duration
   useEffect(() => {
