@@ -25,7 +25,13 @@ export default function AudioUploadPage() {
       try {
         setIsLoading(true);
         // Call the function to ensure storage bucket exists
-        await supabase.functions.invoke('create-storage-bucket');
+        const { error: bucketError } = await supabase.functions.invoke('ensure-transcription-bucket');
+        
+        if (bucketError) {
+          console.error('Error initializing storage bucket:', bucketError);
+          setError('Error initializing storage. Uploads may not work properly.');
+        }
+        
         setIsLoading(false);
       } catch (err) {
         console.error('Error initializing storage bucket:', err);
@@ -52,7 +58,13 @@ export default function AudioUploadPage() {
           </Alert>
         )}
         
-        <UploadForm />
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <UploadForm />
+        )}
       </div>
     </Layout>
   );

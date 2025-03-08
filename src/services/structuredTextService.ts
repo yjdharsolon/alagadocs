@@ -1,135 +1,157 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import toast from 'react-hot-toast';
-import { TextTemplate, TextTemplateResponse } from '@/components/structured-output/types';
+import { MedicalSections } from '@/components/structured-output/types';
 
 /**
- * Maps database response to TextTemplate interface
+ * Structures transcribed text into medical note sections
+ * @param text The transcribed text to structure
+ * @param role The medical professional role (e.g., Doctor, Nurse)
+ * @param template Optional custom template with sections
+ * @returns The structured medical note sections
  */
-const mapToTextTemplate = (template: TextTemplateResponse): TextTemplate => {
+export const structureText = async (
+  text: string, 
+  role: string = 'Doctor',
+  template?: { sections: string[] }
+): Promise<MedicalSections> => {
+  try {
+    console.log('Structuring text with role:', role);
+    
+    const { data, error } = await supabase.functions.invoke('structure-medical-text', {
+      body: { 
+        text,
+        role,
+        template
+      }
+    });
+    
+    if (error) {
+      console.error('Error structuring text:', error);
+      throw new Error(`Error structuring text: ${error.message}`);
+    }
+    
+    // If the response is already a MedicalSections object
+    if (data.chiefComplaint !== undefined) {
+      return data as MedicalSections;
+    }
+    
+    // If the response is in the content field
+    if (data.content) {
+      try {
+        // Try to parse the content as JSON
+        return JSON.parse(data.content) as MedicalSections;
+      } catch (e) {
+        // Fallback structure if it's not parseable JSON
+        return createFallbackStructure(data.content);
+      }
+    }
+    
+    return data as MedicalSections;
+  } catch (error) {
+    console.error('Error in structureText:', error);
+    throw error;
+  }
+};
+
+/**
+ * Creates a fallback structure when the response cannot be parsed
+ * @param text The raw text to include
+ * @returns A basic medical sections object with the text in assessment
+ */
+const createFallbackStructure = (text: string): MedicalSections => {
   return {
-    id: template.id,
-    title: template.title,
-    description: template.description || undefined,
-    sections: template.sections as string[],
-    isDefault: template.is_default
+    chiefComplaint: '',
+    historyOfPresentIllness: '',
+    pastMedicalHistory: '',
+    medications: '',
+    allergies: '',
+    physicalExamination: '',
+    assessment: text, // Place all text in assessment
+    plan: ''
   };
 };
 
 /**
- * Processes raw transcription text into structured medical notes
+ * Saves a structured note to the database
+ * @param note The structured note to save
+ * @param userId The user ID to associate with the note
+ * @param audioUrl Optional URL to the source audio file
+ * @returns The ID of the saved note
  */
-export const structureText = async (
-  transcriptionText: string, 
-  userRole: string | null = 'Doctor',
-  template?: TextTemplate
-): Promise<any> => {
-  try {
-    const body: any = { 
-      text: transcriptionText, 
-      role: userRole 
-    };
-    
-    if (template) {
-      body.template = {
-        sections: template.sections
-      };
-    }
-    
-    const { data, error } = await supabase.functions.invoke('openai-structure-text', {
-      body
-    });
-
-    if (error) {
-      console.error('Error structuring text:', error);
-      toast.error('Failed to structure the text. Please try again.');
-      throw error;
-    }
-
-    return data;
-  } catch (error: any) {
-    console.error('Error structuring text:', error);
-    toast.error(error.message || 'Failed to structure the text. Please try again.');
-    throw error;
-  }
-};
-
-/**
- * Saves structured text to the database
- */
-export const saveStructuredText = async (
+export const saveStructuredNote = async (
+  note: MedicalSections,
   userId: string,
-  transcriptionId: string,
-  structuredText: any
-): Promise<void> => {
+  audioUrl?: string
+): Promise<string> => {
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('structured_notes')
       .insert({
         user_id: userId,
-        transcription_id: transcriptionId,
-        content: structuredText,
-        created_at: new Date().toISOString()
-      });
-
+        audio_url: audioUrl,
+        chief_complaint: note.chiefComplaint,
+        history_of_present_illness: note.historyOfPresentIllness,
+        past_medical_history: note.pastMedicalHistory,
+        medications: note.medications,
+        allergies: note.allergies,
+        physical_examination: note.physicalExamination,
+        assessment: note.assessment,
+        plan: note.plan
+      })
+      .select('id')
+      .single();
+      
     if (error) {
-      console.error('Error saving structured text:', error);
-      throw error;
+      console.error('Error saving structured note:', error);
+      throw new Error(`Error saving note: ${error.message}`);
     }
-  } catch (error: any) {
-    console.error('Error saving structured text:', error);
-    toast.error(error.message || 'Failed to save structured text.');
+    
+    return data.id;
+  } catch (error) {
+    console.error('Error in saveStructuredNote:', error);
     throw error;
   }
 };
 
 /**
- * Gets structured text for a transcription
+ * Retrieves a structured note from the database
+ * @param noteId The ID of the note to retrieve
+ * @returns The structured note
  */
-export const getStructuredText = async (transcriptionId: string): Promise<any> => {
+export const getStructuredNote = async (noteId: string): Promise<{
+  note: MedicalSections;
+  audioUrl?: string;
+}> => {
   try {
     const { data, error } = await supabase
       .from('structured_notes')
       .select('*')
-      .eq('transcription_id', transcriptionId)
+      .eq('id', noteId)
       .single();
-
+      
     if (error) {
-      console.error('Error fetching structured text:', error);
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error fetching structured text:', error);
-    return null;
-  }
-};
-
-/**
- * Gets the default template for a user
- */
-export const getDefaultTemplate = async (userId: string): Promise<TextTemplate | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('text_templates')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_default', true)
-      .single();
-    
-    if (error) {
-      // If no default template exists, don't treat it as an error
-      if (error.code === 'PGRST116') {
-        return null;
-      }
-      console.error('Error fetching default template:', error);
-      throw error;
+      console.error('Error fetching structured note:', error);
+      throw new Error(`Error fetching note: ${error.message}`);
     }
     
-    return mapToTextTemplate(data as TextTemplateResponse);
+    // Map database fields to MedicalSections interface
+    const note: MedicalSections = {
+      chiefComplaint: data.chief_complaint,
+      historyOfPresentIllness: data.history_of_present_illness,
+      pastMedicalHistory: data.past_medical_history,
+      medications: data.medications,
+      allergies: data.allergies,
+      physicalExamination: data.physical_examination,
+      assessment: data.assessment,
+      plan: data.plan
+    };
+    
+    return {
+      note,
+      audioUrl: data.audio_url
+    };
   } catch (error) {
-    console.error('Error fetching default template:', error);
-    return null;
+    console.error('Error in getStructuredNote:', error);
+    throw error;
   }
 };
