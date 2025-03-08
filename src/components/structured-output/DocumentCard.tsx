@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import DocumentTabs from './DocumentTabs';
 import ActionButtons from './ActionButtons';
 import { MedicalSections } from './types';
@@ -14,14 +14,17 @@ interface DocumentCardProps {
 
 const DocumentCard = ({ user, sections, structuredText, handleEdit }: DocumentCardProps) => {
   return (
-    <Card className="w-full max-w-3xl mx-auto mb-6">
-      <CardHeader>
-        <CardTitle>Formatted Medical Documentation</CardTitle>
+    <Card className="w-full max-w-3xl mx-auto mb-6 shadow-lg">
+      <CardHeader className="bg-primary/5">
+        <CardTitle className="text-primary">Formatted Medical Documentation</CardTitle>
+        <CardDescription>
+          Structured notes based on medical transcription
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <DocumentTabs sections={sections} />
       </CardContent>
-      <CardFooter>
+      <CardFooter className="border-t pt-4 flex justify-between">
         <ActionButtons 
           user={user}
           sections={sections}

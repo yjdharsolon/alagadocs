@@ -9,6 +9,8 @@ import { parseStructuredText } from '@/utils/textParser';
 import LoadingState from '@/components/structured-output/LoadingState';
 import DocumentCard from '@/components/structured-output/DocumentCard';
 import { MedicalSections } from '@/components/structured-output/types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 const StructuredOutputPage = () => {
   const location = useLocation();
@@ -82,6 +84,14 @@ const StructuredOutputPage = () => {
     <Layout>
       <div className="container mx-auto py-12 px-4">
         <h1 className="text-3xl font-bold mb-6 text-center">Structured Medical Notes</h1>
+        
+        <Alert className="mb-6 max-w-3xl mx-auto">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Role-based formatting</AlertTitle>
+          <AlertDescription>
+            Notes are formatted based on your selected role: <strong>{userRole}</strong>
+          </AlertDescription>
+        </Alert>
         
         <DocumentCard 
           user={user}

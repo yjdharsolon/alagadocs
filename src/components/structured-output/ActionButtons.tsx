@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Clipboard, CheckCircle2, Save, Loader2 } from 'lucide-react';
+import { Clipboard, CheckCircle2, Save, Loader2, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { saveStructuredNote } from '@/services/transcriptionService';
 import { MedicalSections } from './types';
@@ -18,7 +18,27 @@ const ActionButtons = ({ user, sections, structuredText, handleEdit }: ActionBut
   const [saving, setSaving] = React.useState(false);
   
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(structuredText)
+    // Format the text nicely for clipboard
+    const formattedText = [
+      'CHIEF COMPLAINT:',
+      sections.chiefComplaint,
+      '\nHISTORY OF PRESENT ILLNESS:',
+      sections.historyOfPresentIllness,
+      '\nPAST MEDICAL HISTORY:',
+      sections.pastMedicalHistory,
+      '\nMEDICATIONS:',
+      sections.medications,
+      '\nALLERGIES:',
+      sections.allergies,
+      '\nPHYSICAL EXAMINATION:',
+      sections.physicalExamination,
+      '\nASSESSMENT:',
+      sections.assessment,
+      '\nPLAN:',
+      sections.plan
+    ].join('\n');
+    
+    navigator.clipboard.writeText(formattedText)
       .then(() => {
         setCopied(true);
         toast.success('Copied to clipboard!');
@@ -38,7 +58,7 @@ const ActionButtons = ({ user, sections, structuredText, handleEdit }: ActionBut
     try {
       setSaving(true);
       // Generate a title from the chief complaint or first line
-      const title = sections.chiefComplaint || 'Medical Note';
+      const title = sections.chiefComplaint.substring(0, 50) || 'Medical Note';
       
       await saveStructuredNote(user.id, title, structuredText);
       toast.success('Note saved successfully!');
@@ -51,11 +71,13 @@ const ActionButtons = ({ user, sections, structuredText, handleEdit }: ActionBut
   };
   
   return (
-    <div className="flex justify-between flex-wrap gap-2">
+    <div className="flex justify-between w-full flex-wrap gap-2">
       <Button 
         variant="outline" 
         onClick={handleEdit}
+        className="flex items-center gap-1"
       >
+        <Pencil className="h-4 w-4" />
         Edit
       </Button>
       <div className="flex gap-2">
@@ -63,7 +85,7 @@ const ActionButtons = ({ user, sections, structuredText, handleEdit }: ActionBut
           variant="outline"
           onClick={handleSaveNote}
           disabled={saving || !user}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1"
         >
           {saving ? (
             <>
@@ -79,7 +101,7 @@ const ActionButtons = ({ user, sections, structuredText, handleEdit }: ActionBut
         </Button>
         <Button
           onClick={copyToClipboard}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1"
         >
           {copied ? (
             <>

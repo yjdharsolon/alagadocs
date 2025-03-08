@@ -11,9 +11,10 @@ interface DocumentTabsProps {
 const DocumentTabs = ({ sections }: DocumentTabsProps) => {
   return (
     <Tabs defaultValue="all" className="w-full">
-      <TabsList className="grid w-full grid-cols-4 mb-4">
-        <TabsTrigger value="all">All</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-5 mb-6">
+        <TabsTrigger value="all">All Sections</TabsTrigger>
         <TabsTrigger value="cc-hpi">CC & HPI</TabsTrigger>
+        <TabsTrigger value="medical-info">Medical Info</TabsTrigger>
         <TabsTrigger value="assessment">Assessment</TabsTrigger>
         <TabsTrigger value="plan">Plan</TabsTrigger>
       </TabsList>
@@ -32,6 +33,13 @@ const DocumentTabs = ({ sections }: DocumentTabsProps) => {
       <TabsContent value="cc-hpi">
         <SectionContent title="CHIEF COMPLAINT" content={sections.chiefComplaint} />
         <SectionContent title="HISTORY OF PRESENT ILLNESS" content={sections.historyOfPresentIllness} />
+      </TabsContent>
+      
+      <TabsContent value="medical-info">
+        <SectionContent title="PAST MEDICAL HISTORY" content={sections.pastMedicalHistory} />
+        <SectionContent title="MEDICATIONS" content={sections.medications} />
+        <SectionContent title="ALLERGIES" content={sections.allergies} />
+        <SectionContent title="PHYSICAL EXAMINATION" content={sections.physicalExamination} />
       </TabsContent>
       
       <TabsContent value="assessment">
