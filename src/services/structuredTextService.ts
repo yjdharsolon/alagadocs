@@ -72,33 +72,27 @@ const createFallbackStructure = (text: string): MedicalSections => {
 };
 
 /**
- * Saves a structured note to the database
- * @param note The structured note to save
- * @param userId The user ID to associate with the note
- * @param audioUrl Optional URL to the source audio file
- * @returns The ID of the saved note
+ * Saves structured text to the database
+ * @param userId The user ID associated with the note
+ * @param transcriptionId The ID of the source transcription
+ * @param content The structured note content
+ * @returns The saved note data
  */
 export const saveStructuredNote = async (
-  note: MedicalSections,
   userId: string,
-  audioUrl?: string
-): Promise<string> => {
+  transcriptionId: string,
+  content: MedicalSections
+): Promise<any> => {
   try {
+    // Insert into structured_notes table with correct fields
     const { data, error } = await supabase
       .from('structured_notes')
       .insert({
         user_id: userId,
-        audio_url: audioUrl,
-        chief_complaint: note.chiefComplaint,
-        history_of_present_illness: note.historyOfPresentIllness,
-        past_medical_history: note.pastMedicalHistory,
-        medications: note.medications,
-        allergies: note.allergies,
-        physical_examination: note.physicalExamination,
-        assessment: note.assessment,
-        plan: note.plan
+        transcription_id: transcriptionId,
+        content: content // Store the entire MedicalSections object as JSON in the content field
       })
-      .select('id')
+      .select()
       .single();
       
     if (error) {
@@ -106,7 +100,7 @@ export const saveStructuredNote = async (
       throw new Error(`Error saving note: ${error.message}`);
     }
     
-    return data.id;
+    return data;
   } catch (error) {
     console.error('Error in saveStructuredNote:', error);
     throw error;
@@ -115,41 +109,23 @@ export const saveStructuredNote = async (
 
 /**
  * Retrieves a structured note from the database
- * @param noteId The ID of the note to retrieve
- * @returns The structured note
+ * @param transcriptionId The ID of the related transcription
+ * @returns The structured note data
  */
-export const getStructuredNote = async (noteId: string): Promise<{
-  note: MedicalSections;
-  audioUrl?: string;
-}> => {
+export const getStructuredNote = async (transcriptionId: string): Promise<any> => {
   try {
     const { data, error } = await supabase
       .from('structured_notes')
       .select('*')
-      .eq('id', noteId)
-      .single();
+      .eq('transcription_id', transcriptionId)
+      .maybeSingle();
       
     if (error) {
       console.error('Error fetching structured note:', error);
       throw new Error(`Error fetching note: ${error.message}`);
     }
     
-    // Map database fields to MedicalSections interface
-    const note: MedicalSections = {
-      chiefComplaint: data.chief_complaint,
-      historyOfPresentIllness: data.history_of_present_illness,
-      pastMedicalHistory: data.past_medical_history,
-      medications: data.medications,
-      allergies: data.allergies,
-      physicalExamination: data.physical_examination,
-      assessment: data.assessment,
-      plan: data.plan
-    };
-    
-    return {
-      note,
-      audioUrl: data.audio_url
-    };
+    return data;
   } catch (error) {
     console.error('Error in getStructuredNote:', error);
     throw error;

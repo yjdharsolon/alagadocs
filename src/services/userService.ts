@@ -2,59 +2,9 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Updates user profile information
+ * Fetches the user's profile from the database
  * @param userId The ID of the user
- * @param profileData The profile data to update
- * @returns The updated profile data
- */
-export const updateUserProfile = async (userId: string, profileData: {
-  full_name?: string;
-  medical_role?: string;
-  specialization?: string;
-  preferences?: Record<string, any>;
-}) => {
-  try {
-    // Update auth metadata (name)
-    if (profileData.full_name) {
-      const { error: authError } = await supabase.auth.updateUser({
-        data: { full_name: profileData.full_name }
-      });
-      
-      if (authError) {
-        console.error('Error updating user metadata:', authError);
-        throw new Error(`Error updating user metadata: ${authError.message}`);
-      }
-    }
-    
-    // Update profile record in profiles table
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({
-        medical_role: profileData.medical_role,
-        specialization: profileData.specialization,
-        preferences: profileData.preferences,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId)
-      .select()
-      .single();
-      
-    if (error) {
-      console.error('Error updating profile:', error);
-      throw new Error(`Error updating profile: ${error.message}`);
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('Error in updateUserProfile:', error);
-    throw error;
-  }
-};
-
-/**
- * Gets a user's profile
- * @param userId The ID of the user
- * @returns The user's profile data
+ * @returns The user profile data
  */
 export const getUserProfile = async (userId: string) => {
   try {
@@ -62,11 +12,11 @@ export const getUserProfile = async (userId: string) => {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
-      
+      .maybeSingle();
+    
     if (error) {
-      console.error('Error fetching profile:', error);
-      throw new Error(`Error fetching profile: ${error.message}`);
+      console.error('Error fetching user profile:', error);
+      throw error;
     }
     
     return data;
@@ -77,48 +27,132 @@ export const getUserProfile = async (userId: string) => {
 };
 
 /**
- * Sets user preferences
+ * Updates the user's profile in the database
  * @param userId The ID of the user
- * @param preferences The preferences to set
- * @returns Success status
+ * @param profileData The profile data to update
+ * @returns The updated profile data
  */
-export const setUserPreferences = async (userId: string, preferences: Record<string, any>) => {
+export const updateUserProfile = async (userId: string, profileData: any) => {
   try {
-    // Get existing profile
-    const { data: profile, error: fetchError } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
-      .select('preferences')
+      .update(profileData)
       .eq('id', userId)
+      .select()
       .single();
-      
-    if (fetchError) {
-      console.error('Error fetching profile for preferences update:', fetchError);
-      throw new Error(`Error fetching profile: ${fetchError.message}`);
-    }
     
-    // Merge existing preferences with new ones
-    const updatedPreferences = {
-      ...(profile?.preferences || {}),
-      ...preferences
-    };
-    
-    // Update the preferences
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        preferences: updatedPreferences,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId);
-      
     if (error) {
-      console.error('Error updating preferences:', error);
-      throw new Error(`Error updating preferences: ${error.message}`);
+      console.error('Error updating user profile:', error);
+      throw error;
     }
     
-    return true;
+    return data;
   } catch (error) {
-    console.error('Error in setUserPreferences:', error);
+    console.error('Error in updateUserProfile:', error);
+    throw error;
+  }
+};
+
+/**
+ * Gets the user's role from the database
+ * @param userId The ID of the user
+ * @returns The user's role
+ */
+export const getUserRole = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching user role:', error);
+      throw error;
+    }
+    
+    return data?.role || null;
+  } catch (error) {
+    console.error('Error in getUserRole:', error);
+    throw error;
+  }
+};
+
+/**
+ * Updates the user's role in the database
+ * @param userId The ID of the user
+ * @param role The role to set
+ * @returns The result of the operation
+ */
+export const updateUserRole = async (userId: string, role: string) => {
+  try {
+    // First check if a role entry already exists
+    const { data: existingRole } = await supabase
+      .from('user_roles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    let result;
+    
+    if (existingRole) {
+      // Update existing role
+      const { data, error } = await supabase
+        .from('user_roles')
+        .update({ role, updated_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating user role:', error);
+        throw error;
+      }
+      
+      result = data;
+    } else {
+      // Insert new role
+      const { data, error } = await supabase
+        .from('user_roles')
+        .insert({ user_id: userId, role })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error inserting user role:', error);
+        throw error;
+      }
+      
+      result = data;
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error in updateUserRole:', error);
+    throw error;
+  }
+};
+
+/**
+ * Gets the user's profile settings 
+ * (future enhancement - no preferences column exists yet)
+ */
+export const getUserSettings = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name, profession')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching user settings:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error in getUserSettings:', error);
     throw error;
   }
 };

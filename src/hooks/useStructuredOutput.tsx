@@ -5,9 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { 
   structureText, 
-  saveStructuredText, 
-  getStructuredText,
-  getDefaultTemplate 
+  saveStructuredNote, 
+  getStructuredNote
 } from '@/services/structuredTextService';
 import { getUserTemplates } from '@/services/templateService';
 import { StructuredNote, TextTemplate } from '@/components/structured-output/types';
@@ -39,8 +38,8 @@ export const useStructuredOutput = ({
           const userTemplates = await getUserTemplates(user.id);
           setTemplates(userTemplates);
           
-          // Check if a default template exists
-          const defaultTemplate = await getDefaultTemplate(user.id);
+          // Find default template if exists
+          const defaultTemplate = userTemplates.find(t => t.isDefault);
           if (defaultTemplate) {
             setSelectedTemplateId(defaultTemplate.id);
           }
@@ -61,7 +60,7 @@ export const useStructuredOutput = ({
       }
       
       try {
-        const existingData = await getStructuredText(transcriptionId);
+        const existingData = await getStructuredNote(transcriptionId);
         
         if (existingData?.content) {
           setStructuredData(existingData.content);
@@ -87,7 +86,7 @@ export const useStructuredOutput = ({
         if (structuredResult) {
           setStructuredData(structuredResult);
           
-          await saveStructuredText(user.id, transcriptionId, structuredResult);
+          await saveStructuredNote(user.id, transcriptionId, structuredResult);
           toast.success('Medical notes structured successfully');
         }
       } catch (error) {
