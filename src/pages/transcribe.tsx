@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { transcribeAudio } from '@/services/transcriptionService';
 
 const TranscribePage = () => {
   const location = useLocation();
@@ -26,40 +26,33 @@ const TranscribePage = () => {
     }
     
     // Start the transcription process automatically
-    transcribeAudio();
+    startTranscription();
   }, [audioPath]);
   
-  const transcribeAudio = async () => {
+  const startTranscription = async () => {
     try {
       setIsTranscribing(true);
       
-      // Simulating transcription with a timeout for now
-      // In a real implementation, we would call the transcription API here
-      setTimeout(() => {
-        const sampleTranscription = "This is a sample transcription. Patient reports frequent headaches occurring 3-4 times per week, usually in the afternoon. Pain is described as throbbing and located primarily in the frontal region. Patient has tried over-the-counter pain relievers with minimal relief. No significant medical history. Recommended further evaluation and possible migraine prophylaxis.";
-        setTranscription(sampleTranscription);
-        setIsTranscribing(false);
-        toast.success('Audio transcribed successfully!');
-      }, 3000);
-      
-    } catch (error) {
+      // Call the actual transcription service instead of using a timeout
+      const result = await transcribeAudio(audioPath);
+      setTranscription(result);
+      toast.success('Audio transcribed successfully!');
+    } catch (error: any) {
       console.error('Error transcribing audio:', error);
+      toast.error(error.message || 'Error transcribing audio');
+    } finally {
       setIsTranscribing(false);
-      toast.error('Error transcribing audio');
     }
   };
   
   const handleStructureText = () => {
     setIsStructuring(true);
     
-    // Simulating text structuring with a timeout for now
-    setTimeout(() => {
-      navigate('/structured-output', { 
-        state: { 
-          transcription: transcription 
-        } 
-      });
-    }, 2000);
+    navigate('/structured-output', { 
+      state: { 
+        transcription: transcription 
+      } 
+    });
   };
   
   const handleEdit = () => {
