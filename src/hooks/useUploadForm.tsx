@@ -12,10 +12,13 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState<'idle' | 'uploading' | 'transcribing' | 'verifying'>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const navigate = useNavigate();
   
-  // Verify authentication status on mount
+  // Verify authentication status on mount - but only once
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
       if (!user) {
         toast.error('Please log in to upload audio');
@@ -23,31 +26,70 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
         return;
       }
       
-      // Verify user session is valid
       try {
+        // Only check if session exists, don't refresh it here
         const { data, error } = await supabase.auth.getSession();
-        if (error || !data.session) {
-          toast.error('Session expired. Please log in again.');
-          navigate('/login');
+        
+        if (error) {
+          console.error('Error fetching session:', error);
+          if (isMounted) {
+            setError('Authentication error. Please log in again.');
+            toast.error('Session error. Please log in again.');
+            // Navigate with a slight delay to allow toast to be seen
+            setTimeout(() => handleLogoutAndLogin(), 1500);
+          }
           return;
         }
         
-        // Refresh the session token
-        const { error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError) {
-          console.error('Error refreshing token:', refreshError);
-          toast.error('Authentication error. Please log in again.');
-          handleLogoutAndLogin();
+        if (!data.session) {
+          console.error('No valid session found');
+          if (isMounted) {
+            setError('No active session. Please log in again.');
+            toast.error('No active session. Please log in again.');
+            setTimeout(() => handleLogoutAndLogin(), 1500);
+          }
           return;
         }
         
-        console.log('Auth session verified and refreshed successfully');
+        // Check token expiration - only refresh if it's close to expiring
+        const expiresAt = data.session.expires_at;
+        const currentTime = Math.floor(Date.now() / 1000);
+        const timeToExpire = expiresAt - currentTime;
+        
+        // Only refresh if token is about to expire within 10 minutes
+        if (timeToExpire < 600) {
+          console.log('Token expiring soon, refreshing');
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) {
+            console.error('Error refreshing token:', refreshError);
+            if (isMounted) {
+              setError('Authentication error. Please log in again.');
+              toast.error('Session refresh failed. Please log in again.');
+              setTimeout(() => handleLogoutAndLogin(), 1500);
+            }
+            return;
+          }
+          console.log('Auth session refreshed successfully');
+        } else {
+          console.log('Auth session verified successfully, refresh not needed');
+        }
+        
+        if (isMounted) {
+          setSessionChecked(true);
+        }
       } catch (err) {
         console.error('Error checking auth session:', err);
+        if (isMounted) {
+          setError('Error verifying authentication. Please try again.');
+        }
       }
     };
     
     checkAuth();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [user, navigate]);
   
   const handleFileSelect = (selectedFile: File) => {
@@ -93,16 +135,24 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
       setUploadProgress(5);
       setError(null);
       
-      // Verify session before proceeding
+      // Get session but don't force a refresh
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
         throw new Error('Authentication error. Please log in again.');
       }
       
-      // Refresh token before proceeding
-      const { error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError) {
-        throw new Error('Authentication error. Please refresh your session.');
+      // Only refresh if the token is about to expire
+      const expiresAt = sessionData.session.expires_at;
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeToExpire = expiresAt - currentTime;
+      
+      // Refresh only if less than 10 minutes left
+      if (timeToExpire < 600) {
+        console.log('Token about to expire, refreshing before upload');
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          throw new Error('Authentication error. Please refresh your session.');
+        }
       }
       
       setCurrentStep('uploading');
@@ -192,6 +242,7 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
     uploadProgress,
     currentStep,
     error,
+    sessionChecked,
     handleFileSelect,
     handleRecordingComplete,
     handleLogoutAndLogin,

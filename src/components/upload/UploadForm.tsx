@@ -21,12 +21,23 @@ export const UploadForm: React.FC = () => {
     uploadProgress,
     currentStep,
     error,
+    sessionChecked,
     handleFileSelect,
     handleRecordingComplete,
     handleLogoutAndLogin,
     handleSubmit,
     getStepLabel
   } = useUploadForm(user, signOut);
+  
+  // Show loading state while session is being checked
+  if (!sessionChecked) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+        <p className="text-muted-foreground">Verifying authentication...</p>
+      </div>
+    );
+  }
   
   return (
     <div className="max-w-2xl mx-auto">

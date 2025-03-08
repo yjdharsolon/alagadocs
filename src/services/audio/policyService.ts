@@ -8,6 +8,15 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const getPoliciesForTable = async (tableName: string) => {
   try {
+    // Get the current session first
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !sessionData.session) {
+      console.error('Authentication error in getPoliciesForTable:', sessionError);
+      return null;
+    }
+    
+    // Call the edge function to check policies
     const { data, error } = await supabase.functions.invoke('check-rls-policies', {
       body: { tableName }
     });

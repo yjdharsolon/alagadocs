@@ -22,6 +22,21 @@ export default function AudioUploadPage() {
       setIsLoading(true);
       setError(null);
       
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      
+      // Get the current session without refreshing
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        console.error('No valid session:', sessionError);
+        setError('Authentication error. Please log in again.');
+        setTimeout(() => navigate('/login'), 1500);
+        return;
+      }
+      
       // Call the function to ensure storage bucket exists
       const { error: bucketError } = await supabase.functions.invoke('ensure-transcription-bucket');
       
