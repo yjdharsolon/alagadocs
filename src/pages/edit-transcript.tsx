@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,8 +36,8 @@ export default function EditTranscriptPage() {
     
     // Different ways the data might come in
     const textFromState = stateData.transcriptionText || 
-                         (stateData.transcriptionData && stateData.transcriptionData.text) || 
-                         '';
+                          (stateData.transcriptionData && stateData.transcriptionData.text) || 
+                          '';
     const audioUrlFromState = stateData.audioUrl || '';
     const transcriptionIdFromState = stateData.transcriptionId || '';
     
@@ -108,8 +109,8 @@ export default function EditTranscriptPage() {
   };
   
   const handleSave = async () => {
-    if (!user || !transcriptionId) {
-      toast.error('Unable to save changes. User or transcription ID missing.');
+    if (!user) {
+      toast.error('You must be logged in to save changes.');
       return;
     }
     
@@ -117,18 +118,33 @@ export default function EditTranscriptPage() {
     try {
       // Update the transcription in the database if we have a transcription ID
       if (transcriptionId) {
+        // Update existing transcription
         const { error } = await supabase
           .from('transcriptions')
-          .update({ text: transcriptionText })
+          .update({ text: transcriptionText, updated_at: new Date().toISOString() })
           .eq('id', transcriptionId);
           
         if (error) throw error;
+      } else if (transcriptionText && audioUrl) {
+        // Create a new transcription if we don't have an ID but have text and audio URL
+        const { data, error } = await supabase
+          .from('transcriptions')
+          .insert({ 
+            text: transcriptionText, 
+            audio_url: audioUrl,
+            user_id: user.id
+          })
+          .select('id')
+          .single();
+          
+        if (error) throw error;
+        if (data) setTranscriptionId(data.id);
       }
       
       toast.success('Transcription saved successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving transcription:', error);
-      toast.error('Failed to save transcription');
+      toast.error(`Failed to save transcription: ${error.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -220,7 +236,7 @@ export default function EditTranscriptPage() {
                 <Button 
                   variant="outline" 
                   onClick={handleSave}
-                  disabled={isSaving || !transcriptionId}
+                  disabled={isSaving || !transcriptionText.trim()}
                 >
                   <Save className="mr-2 h-4 w-4" />
                   {isSaving ? 'Saving...' : 'Save Changes'}
