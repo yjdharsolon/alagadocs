@@ -130,7 +130,11 @@ export const saveStructuredNote = async (
     const { data, error } = await supabase
       .from('notes')
       .insert([
-        { user_id: userId, title, content, created_at: new Date().toISOString() }
+        { 
+          user_id: userId, 
+          title, 
+          content
+        }
       ])
       .select('id')
       .single();
