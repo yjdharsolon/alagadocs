@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,90 +12,65 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
-    // Get the supabase client using environment variables
-    const supabaseAdmin = createClient(
+    // Create a Supabase client with the Admin key
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        }
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    
-    // Check if the transcriptions bucket already exists
-    const { data: buckets, error: bucketsError } = await supabaseAdmin
+
+    // Check if 'transcriptions' bucket exists
+    const { data: existingBuckets, error: listError } = await supabase
       .storage
       .listBuckets();
 
-    if (bucketsError) {
-      throw new Error(`Error listing buckets: ${bucketsError.message}`);
+    if (listError) {
+      throw new Error(`Error listing buckets: ${listError.message}`);
     }
-    
-    const bucketName = 'transcriptions';
-    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-    
+
+    const bucketExists = existingBuckets.some(b => b.name === 'transcriptions');
+
     if (!bucketExists) {
-      // Create a new bucket for transcriptions
-      const { error } = await supabaseAdmin
+      // Create the bucket
+      const { error: createError } = await supabase
         .storage
-        .createBucket(bucketName, {
-          public: false, // Not publicly accessible
-          fileSizeLimit: 52428800, // 50MB limit
-          allowedMimeTypes: [
-            'audio/mpeg',
-            'audio/mp3',
-            'audio/wav',
-            'audio/webm',
-            'audio/ogg',
-            'audio/m4a'
-          ]
+        .createBucket('transcriptions', {
+          public: true,
+          fileSizeLimit: 52428800, // 50MB in bytes
         });
 
-      if (error) {
-        throw new Error(`Error creating bucket: ${error.message}`);
+      if (createError) {
+        throw new Error(`Error creating bucket: ${createError.message}`);
       }
-    
-      // Set up bucket policy to allow only authenticated users to access their own files
-      const { error: policyError } = await supabaseAdmin
-        .storage
-        .from(bucketName)
-        .createPolicy('Authenticated users only', {
-          name: 'authenticated-users-only',
-          definition: { role: 'authenticated' },
-          allowedOperations: ['SELECT', 'INSERT', 'UPDATE', 'DELETE']
-        });
-    
-      if (policyError) {
-        throw new Error(`Error creating bucket policy: ${policyError.message}`);
-      }
-      
-      return new Response(
-        JSON.stringify({ message: `Successfully created '${bucketName}' bucket` }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200
-        }
-      );
-    } else {
-      return new Response(
-        JSON.stringify({ message: `Bucket '${bucketName}' already exists` }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200
-        }
-      );
+
+      // Add bucket policies
+      await supabase.rpc('create_storage_policy', { 
+        bucket_name: 'transcriptions',
+        policy_name: 'Allow public read access',
+        definition: `bucket_id = 'transcriptions'`,
+        action: 'SELECT'
+      });
+
+      await supabase.rpc('create_storage_policy', { 
+        bucket_name: 'transcriptions',
+        policy_name: 'Allow authenticated uploads',
+        definition: `bucket_id = 'transcriptions' AND auth.role() = 'authenticated'`,
+        action: 'INSERT'
+      });
     }
+
+    return new Response(
+      JSON.stringify({ success: true, message: 'Storage bucket setup complete' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
-    console.error('Error in create-bucket function:', error);
+    console.error('Error in create-storage-bucket function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

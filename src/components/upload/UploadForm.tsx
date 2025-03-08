@@ -4,16 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileAudio, Mic, Loader2 } from 'lucide-react';
-import { uploadAudio } from '@/services/audioService';
+import { uploadAudio, transcribeAudio } from '@/services/audioService';
 import toast from 'react-hot-toast';
 import { FileUploader } from './FileUploader';
 import { AudioRecorder } from './AudioRecorder';
+import { useAuth } from '@/hooks/useAuth';
 
 export const UploadForm: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
@@ -29,18 +31,34 @@ export const UploadForm: React.FC = () => {
       toast.error('Please upload or record an audio file first');
       return;
     }
-    
+
     try {
       setIsUploading(true);
+      
+      // Check if user is logged in
+      if (!user) {
+        toast.error('Please log in to upload audio');
+        navigate('/login');
+        return;
+      }
       
       // Upload the audio file to Supabase storage
       const audioUrl = await uploadAudio(file);
       
-      // After successful upload, navigate to the transcribe page with the audio URL
-      toast.success('Audio uploaded successfully');
+      // Transcribe the audio
+      const transcriptionData = await transcribeAudio(audioUrl);
       
-      // Navigate to transcribe page with the audio URL
-      navigate('/transcribe', { state: { audioUrl } });
+      // After successful transcription, navigate to the transcribe page with the data
+      toast.success('Transcription completed successfully');
+      
+      // Navigate to transcribe page with the transcription data
+      navigate('/transcribe', { 
+        state: { 
+          transcriptionData,
+          audioUrl,
+          transcriptionId: Date.now().toString() // Temporary ID for demo
+        } 
+      });
       
     } catch (error) {
       console.error('Error uploading audio:', error);
@@ -92,7 +110,7 @@ export const UploadForm: React.FC = () => {
           {isUploading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Uploading...
+              Uploading and Transcribing...
             </>
           ) : (
             'Continue to Transcription'
