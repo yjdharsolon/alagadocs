@@ -2,12 +2,15 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 
-const LoadingState = () => {
+interface LoadingStateProps {
+  message: string;
+}
+
+const LoadingState = ({ message }: LoadingStateProps) => {
   return (
-    <div className="container mx-auto py-12 px-4 flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center justify-center py-12">
       <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-      <h2 className="text-xl font-semibold">Structuring your medical note...</h2>
-      <p className="text-gray-500 mt-2">This may take a few moments</p>
+      <p className="text-lg text-center text-muted-foreground">{message}</p>
     </div>
   );
 };

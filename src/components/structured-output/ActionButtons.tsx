@@ -40,6 +40,13 @@ const ActionButtons = ({ onCopy, onEdit, user, sections, structuredText }: Actio
     }
   };
   
+  const handleCopy = () => {
+    setCopied(true);
+    onCopy();
+    // Reset copied state after a delay
+    setTimeout(() => setCopied(false), 2000);
+  };
+  
   const exportAsPDF = () => {
     if (!sections) {
       toast.error('No data to export');
@@ -149,7 +156,7 @@ ${sections.plan}
         </Button>
         
         <Button
-          onClick={onCopy}
+          onClick={handleCopy}
           className="flex items-center gap-1"
         >
           {copied ? (

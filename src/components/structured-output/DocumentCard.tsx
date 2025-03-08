@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import DocumentTabs from './DocumentTabs';
 import ActionButtons from './ActionButtons';
 import { MedicalSections } from './types';
+import toast from 'react-hot-toast';
 
 interface DocumentCardProps {
   user: any;
@@ -32,6 +32,26 @@ const DocumentCard = ({
       })
     : '';
 
+  const handleCopy = () => {
+    // Format the structured data for clipboard
+    let formattedText = '';
+    Object.entries(sections).forEach(([key, value]) => {
+      if (value && typeof value === 'string' && value.trim() !== '') {
+        const sectionTitle = key.replace(/([A-Z])/g, ' $1')
+          .replace(/^./, str => str.toUpperCase())
+          .trim();
+        
+        formattedText += `${sectionTitle}:\n${value}\n\n`;
+      }
+    });
+    
+    navigator.clipboard.writeText(formattedText.trim())
+      .then(() => {
+        toast.success('Copied to clipboard');
+      })
+      .catch(() => toast.error('Failed to copy to clipboard'));
+  };
+
   return (
     <Card className="w-full max-w-3xl mx-auto mb-6 shadow-lg">
       <CardHeader className="bg-primary/5">
@@ -46,14 +66,15 @@ const DocumentCard = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
-        <DocumentTabs sections={sections} />
+        <DocumentTabs structuredData={sections} />
       </CardContent>
       <CardFooter className="border-t pt-4 flex justify-between">
         <ActionButtons 
           user={user}
           sections={sections}
           structuredText={structuredText}
-          handleEdit={handleEdit}
+          onEdit={handleEdit}
+          onCopy={handleCopy}
         />
       </CardFooter>
     </Card>
