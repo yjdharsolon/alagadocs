@@ -3,6 +3,7 @@ import React from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface ErrorAlertProps {
   error: string;
@@ -10,7 +11,20 @@ interface ErrorAlertProps {
 }
 
 export const ErrorAlert: React.FC<ErrorAlertProps> = ({ error, onLogoutAndLogin }) => {
-  const isPermissionError = error.includes('Permission error');
+  // Check if the error is related to permissions or authentication
+  const isPermissionError = error.toLowerCase().includes('permission error') || 
+                           error.toLowerCase().includes('row-level security policy') || 
+                           error.toLowerCase().includes('authentication error');
+  
+  const handleLogout = async () => {
+    try {
+      await onLogoutAndLogin();
+      toast.success('Successfully logged out. Please log in again.');
+    } catch (err) {
+      console.error('Error during logout:', err);
+      toast.error('Error during logout. Please try again.');
+    }
+  };
   
   return (
     <Alert variant="destructive" className="mb-6">
@@ -21,7 +35,7 @@ export const ErrorAlert: React.FC<ErrorAlertProps> = ({ error, onLogoutAndLogin 
           <Button 
             variant="secondary" 
             size="sm" 
-            onClick={onLogoutAndLogin}
+            onClick={handleLogout}
             className="mt-2 sm:mt-0"
           >
             Logout and Login Again
