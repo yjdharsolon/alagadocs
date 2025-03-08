@@ -1,241 +1,184 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, ListChecks, ClipboardCheck, Edit, Book } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertCircle } from 'lucide-react';
 import WorkflowDiagram from './WorkflowDiagram';
 
 const StructuredOutputDocumentation = () => {
   return (
     <div className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            Structured Medical Notes
-          </CardTitle>
-          <CardDescription>
-            Convert your transcriptions into organized, professional medical documentation
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-4">
-            Structured Output is a core feature of AlagaDocs that transforms your audio transcriptions 
-            into well-organized medical notes, automatically formatted according to medical 
-            documentation standards.
-          </p>
-
-          <h3 className="text-lg font-medium mt-6 mb-3">Key Benefits</h3>
-          <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-            <li>Automatic organization of transcribed text into professional medical sections</li>
-            <li>Customizable templates to match your documentation preferences</li>
-            <li>Easy editing and refinement of the structured content</li>
-            <li>Simple export options for integration with EMR systems</li>
-            <li>Time-saving through elimination of manual formatting</li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ListChecks className="h-5 w-5 text-primary" />
-            How It Works
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <WorkflowDiagram />
-          
-          <div className="mt-8 space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm">1</span>
-                Audio Transcription
-              </h3>
-              <p className="text-muted-foreground pl-8">
-                Upload or record your audio file and get it transcribed into text using our AI-powered transcription engine.
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm">2</span>
-                AI-Powered Structuring
-              </h3>
-              <p className="text-muted-foreground pl-8">
-                Our advanced AI analyzes the transcription and intelligently categorizes the content into standard medical sections.
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm">3</span>
-                Review & Edit
-              </h3>
-              <p className="text-muted-foreground pl-8">
-                Review the structured output and make any necessary edits or refinements to ensure accuracy.
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm">4</span>
-                Export & Integration
-              </h3>
-              <p className="text-muted-foreground pl-8">
-                Copy the structured notes to your clipboard or export them for seamless integration with your existing EMR system.
-              </p>
-            </div>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Structured Output</h2>
+        <p className="text-muted-foreground">
+          AlagaDocs transforms your audio recordings into structured medical notes that are ready for your EMR system.
+          The structured output feature organizes transcribed content into standard medical sections following clinical documentation practices.
+        </p>
+        
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-medium text-blue-800">Why use structured notes?</h3>
+            <p className="text-blue-700 text-sm mt-1">
+              Structured notes save time by organizing information in a standard format, making it easier to review patient information, 
+              share with colleagues, and import into EMR systems. This improves both efficiency and documentation quality.
+            </p>
           </div>
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue="sections">
+        </div>
+      </div>
+      
+      <div className="space-y-4">
+        <h3 className="text-xl font-bold">How It Works</h3>
+        <p className="text-muted-foreground">
+          Our AI-powered system processes your dictation and intelligently organizes it into standard medical sections.
+        </p>
+        
+        <WorkflowDiagram />
+      </div>
+      
+      <Tabs defaultValue="sections" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="sections">Standard Sections</TabsTrigger>
           <TabsTrigger value="templates">Using Templates</TabsTrigger>
-          <TabsTrigger value="export">Export Options</TabsTrigger>
+          <TabsTrigger value="export">Exporting Notes</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="sections">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Book className="h-5 w-5 text-primary" />
-                Standard Medical Sections
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4 text-muted-foreground">
-                By default, AlagaDocs structures your transcriptions into these standard medical note sections:
-              </p>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium">Chief Complaint</h4>
-                  <p className="text-sm text-muted-foreground">The primary reason for the patient's visit in their own words.</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium">History of Present Illness</h4>
-                  <p className="text-sm text-muted-foreground">A chronological description of the development of the patient's illness.</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium">Past Medical History</h4>
-                  <p className="text-sm text-muted-foreground">Previous significant medical conditions, surgeries, and treatments.</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium">Medications</h4>
-                  <p className="text-sm text-muted-foreground">Current medications, dosages, and frequencies.</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium">Allergies</h4>
-                  <p className="text-sm text-muted-foreground">Known allergies and adverse reactions.</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium">Physical Examination</h4>
-                  <p className="text-sm text-muted-foreground">Findings from the physical examination of the patient.</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium">Assessment</h4>
-                  <p className="text-sm text-muted-foreground">Diagnosis or clinical impression based on the evaluation.</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium">Plan</h4>
-                  <p className="text-sm text-muted-foreground">Treatment recommendations, follow-up instructions, and referrals.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="sections" className="space-y-4 pt-4">
+          <h3 className="text-lg font-bold">Standard Medical Sections</h3>
+          <p>AlagaDocs organizes your transcription into these standard medical sections:</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Chief Complaint</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">The patient's primary reason for the visit, in their own words when possible.</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">History of Present Illness</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Chronological description of the development of the patient's illness.</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Past Medical History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Previous diseases, surgeries, treatments, and health conditions.</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Medications</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Current medications, dosages, and relevant medication history.</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Assessment</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Clinical impressions, diagnoses, or differential diagnoses.</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Plan</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Treatment plans, additional testing, procedures, and follow-up instructions.</p>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         
-        <TabsContent value="templates">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ClipboardCheck className="h-5 w-5 text-primary" />
-                Using Custom Templates
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4 text-muted-foreground">
-                AlagaDocs allows you to create and use custom templates to structure your medical notes according to your specific needs.
+        <TabsContent value="templates" className="space-y-4 pt-4">
+          <h3 className="text-lg font-bold">Using Templates</h3>
+          <p className="mb-4">
+            Templates allow you to customize how your notes are structured based on your specialty or workflow preferences.
+          </p>
+          
+          <div className="space-y-4">
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium">Creating Templates</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Create custom templates with specialized sections for your clinical specialty. 
+                You can add, remove, or reorder sections to match your documentation workflow.
               </p>
-              
-              <h3 className="text-lg font-medium mt-6 mb-3">Working with Templates</h3>
-              <ol className="list-decimal pl-5 space-y-3 text-muted-foreground">
-                <li>
-                  <strong>Create a Template:</strong> Navigate to the Templates page from your dashboard and create a new template with your preferred sections.
-                </li>
-                <li>
-                  <strong>Set a Default Template:</strong> Mark any template as your default to automatically apply it to all new transcriptions.
-                </li>
-                <li>
-                  <strong>Apply to Transcriptions:</strong> When viewing a transcription, select from your saved templates to restructure the content accordingly.
-                </li>
-                <li>
-                  <strong>Modify Templates:</strong> Update your templates at any time to accommodate changing documentation requirements.
-                </li>
-              </ol>
-              
-              <p className="mt-4 text-muted-foreground">
-                Templates are particularly useful for different specialties or documentation scenarios, enabling consistent formatting across all your medical notes.
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium">Setting a Default Template</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Mark any template as your default, and it will be automatically applied to all new dictations.
+                This streamlines your workflow for consistent documentation.
               </p>
-            </CardContent>
-          </Card>
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium">Applying Templates</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                When editing a transcription, select any saved template from the dropdown menu to
+                instantly reorganize your notes according to the template's structure.
+              </p>
+            </div>
+          </div>
         </TabsContent>
         
-        <TabsContent value="export">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5 text-primary" />
-                Export & Integration Options
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4 text-muted-foreground">
-                Once your medical notes are structured, AlagaDocs offers several options for exporting and using your documentation:
+        <TabsContent value="export" className="space-y-4 pt-4">
+          <h3 className="text-lg font-bold">Exporting Notes</h3>
+          <p className="mb-4">AlagaDocs offers multiple ways to export your structured notes:</p>
+          
+          <div className="space-y-4">
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium">Copy to Clipboard</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Quickly copy formatted notes to paste directly into your EMR system. The notes maintain their
+                section structure for clean integration.
               </p>
-              
-              <div className="space-y-4 mt-4">
-                <div>
-                  <h4 className="font-medium">Copy to Clipboard</h4>
-                  <p className="text-sm text-muted-foreground">Quickly copy the formatted text to paste directly into your EMR system.</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium">Export as PDF</h4>
-                  <p className="text-sm text-muted-foreground">Save your notes as a PDF document for printing or electronic storage.</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium">Save to Your Account</h4>
-                  <p className="text-sm text-muted-foreground">Store structured notes in your AlagaDocs account for future reference.</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium">Edit Before Export</h4>
-                  <p className="text-sm text-muted-foreground">Make final adjustments to any section before exporting your documentation.</p>
-                </div>
-              </div>
-              
-              <div className="bg-muted p-4 rounded-md mt-6">
-                <h4 className="font-medium mb-2">Pro Tip</h4>
-                <p className="text-sm text-muted-foreground">
-                  For the most efficient workflow, use keyboard shortcuts: Ctrl+C (or Cmd+C) to copy after selecting the copy button, and then Ctrl+V (or Cmd+V) to paste directly into your EMR system.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium">Export as PDF</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Download notes as a professionally formatted PDF document for your records
+                or to share with colleagues through secure channels.
+              </p>
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium">Save to Account</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Store notes in your AlagaDocs account for future reference, creating a
+                searchable archive of your clinical documentation.
+              </p>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
+      
+      <div className="pt-6 border-t">
+        <h3 className="text-lg font-bold mb-4">Tips for Better Results</h3>
+        <ul className="space-y-2 list-disc pl-5">
+          <li>Speak clearly and at a moderate pace when recording your dictation</li>
+          <li>Mention section headings in your dictation to help the AI properly categorize content</li>
+          <li>Review and edit the transcription before structuring for optimal results</li>
+          <li>Create specialty-specific templates for more accurate section organization</li>
+          <li>Use the edit function to make manual adjustments to the structured output</li>
+        </ul>
+      </div>
     </div>
   );
 };
