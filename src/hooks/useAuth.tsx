@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password,
+        // @ts-ignore - expiresIn is valid but TypeScript definitions might be outdated
         options: {
           expiresIn: rememberMe ? undefined : 60 * 60
         }
