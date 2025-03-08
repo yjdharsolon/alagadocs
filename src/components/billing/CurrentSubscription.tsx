@@ -6,20 +6,38 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, Check, AlertTriangle } from 'lucide-react';
 import { Subscription, BillingPlan } from '@/hooks/useBilling';
 import { formatDate } from '@/utils/formatters';
+import { useNavigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type CurrentSubscriptionProps = {
   subscription: Subscription | null;
   plans: BillingPlan[];
   onUpgrade: () => void;
+  onCancel?: () => void;
   isLoading: boolean;
+  isProcessing?: boolean;
 };
 
 const CurrentSubscription = ({ 
   subscription, 
   plans, 
   onUpgrade,
-  isLoading 
+  onCancel,
+  isLoading,
+  isProcessing = false
 }: CurrentSubscriptionProps) => {
+  const [showCancelDialog, setShowCancelDialog] = React.useState(false);
+  const navigate = useNavigate();
+
   if (isLoading) {
     return (
       <Card className="w-full mb-8">
@@ -82,64 +100,99 @@ const CurrentSubscription = ({
     }
   };
 
+  const handleCancelClick = () => {
+    setShowCancelDialog(true);
+  };
+
+  const handleConfirmCancel = () => {
+    setShowCancelDialog(false);
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
   return (
-    <Card className="w-full mb-8">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="text-lg">Current Subscription</CardTitle>
-            <CardDescription>Your active plan and details</CardDescription>
+    <>
+      <Card className="w-full mb-8">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-lg">Current Subscription</CardTitle>
+              <CardDescription>Your active plan and details</CardDescription>
+            </div>
+            {getStatusBadge(subscription.status)}
           </div>
-          {getStatusBadge(subscription.status)}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex justify-between items-center pb-4 border-b">
-          <div>
-            <h3 className="font-medium text-lg">{currentPlan.name} Plan</h3>
-            <p className="text-sm text-muted-foreground">
-              ${currentPlan.price}/{currentPlan.currency} per month
-            </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between items-center pb-4 border-b">
+            <div>
+              <h3 className="font-medium text-lg">{currentPlan.name} Plan</h3>
+              <p className="text-sm text-muted-foreground">
+                ${currentPlan.price}/{currentPlan.currency} per month
+              </p>
+            </div>
+            {currentPlan.isPopular && (
+              <Badge variant="secondary">Popular Choice</Badge>
+            )}
           </div>
-          {currentPlan.isPopular && (
-            <Badge variant="secondary">Popular Choice</Badge>
-          )}
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex items-center text-sm text-muted-foreground gap-2">
-            <Clock className="h-4 w-4" />
-            <span>Subscribed since {formatDate(subscription.createdAt)}</span>
+          
+          <div className="space-y-2">
+            <div className="flex items-center text-sm text-muted-foreground gap-2">
+              <Clock className="h-4 w-4" />
+              <span>Subscribed since {formatDate(subscription.createdAt)}</span>
+            </div>
+            <div className="flex items-center text-sm text-muted-foreground gap-2">
+              <Clock className="h-4 w-4" />
+              <span>Last updated on {formatDate(subscription.updatedAt)}</span>
+            </div>
           </div>
-          <div className="flex items-center text-sm text-muted-foreground gap-2">
-            <Clock className="h-4 w-4" />
-            <span>Last updated on {formatDate(subscription.updatedAt)}</span>
+          
+          <div className="pt-2">
+            <h4 className="font-medium mb-2">Plan Features:</h4>
+            <ul className="space-y-1">
+              {currentPlan.features.map((feature, index) => (
+                <li key={index} className="flex items-start gap-2 text-sm">
+                  <Check className="h-4 w-4 text-green-500 mt-0.5" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-        
-        <div className="pt-2">
-          <h4 className="font-medium mb-2">Plan Features:</h4>
-          <ul className="space-y-1">
-            {currentPlan.features.map((feature, index) => (
-              <li key={index} className="flex items-start gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500 mt-0.5" />
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </CardContent>
-      <CardFooter className="flex gap-3">
-        <Button onClick={onUpgrade} className="flex-1">
-          Upgrade Plan
-        </Button>
-        {subscription.status === 'active' && (
-          <Button variant="outline" className="flex-1">
-            Cancel Subscription
+        </CardContent>
+        <CardFooter className="flex gap-3">
+          <Button onClick={onUpgrade} className="flex-1">
+            Upgrade Plan
           </Button>
-        )}
-      </CardFooter>
-    </Card>
+          {subscription.status === 'active' && onCancel && (
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={handleCancelClick}
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Processing..." : "Cancel Subscription"}
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your current billing cycle.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCancel} className="bg-red-500 hover:bg-red-600">
+              Yes, Cancel Subscription
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

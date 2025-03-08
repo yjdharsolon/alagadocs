@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { processBillingTransaction, getUserSubscription, updateUserSubscription } from '@/services/billingService';
+import { processBillingTransaction, getUserSubscription, updateUserSubscription, cancelUserSubscription } from '@/services/billingService';
 import toast from 'react-hot-toast';
 
 export type PaymentMethod = 'card' | 'gcash' | 'paymaya' | 'bank_transfer';
@@ -178,6 +178,47 @@ export function useBilling() {
     }
   };
 
+  const cancelSubscription = async () => {
+    if (!user) {
+      toast.error('You must be logged in to cancel your subscription');
+      return;
+    }
+
+    if (!currentSubscription || currentSubscription.status !== 'active') {
+      toast.error('No active subscription to cancel');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const canceled = await cancelUserSubscription(user.id);
+      
+      if (canceled) {
+        toast.success('Subscription canceled successfully!');
+        
+        // Update local subscription state
+        const updatedSubscription = await getUserSubscription(user.id);
+        if (updatedSubscription) {
+          setCurrentSubscription({
+            id: updatedSubscription.id,
+            planId: updatedSubscription.plan_id,
+            status: updatedSubscription.status as SubscriptionStatus,
+            createdAt: updatedSubscription.created_at,
+            updatedAt: updatedSubscription.updated_at
+          });
+        }
+      } else {
+        toast.error('Failed to cancel subscription. Please contact support.');
+      }
+    } catch (error) {
+      console.error('Subscription cancellation error:', error);
+      toast.error('Failed to cancel subscription. Please try again later.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return {
     isProcessing,
     isLoading,
@@ -187,6 +228,7 @@ export function useBilling() {
     currentSubscription,
     handlePlanSelection,
     handlePaymentMethodChange,
-    processPayment
+    processPayment,
+    cancelSubscription
   };
 }

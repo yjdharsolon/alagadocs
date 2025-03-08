@@ -12,6 +12,8 @@ export default function SubscriptionPage() {
     isLoading,
     currentSubscription,
     billingPlans,
+    cancelSubscription,
+    isProcessing
   } = useBilling();
   
   const navigate = useNavigate();
@@ -24,28 +26,29 @@ export default function SubscriptionPage() {
     <ProtectedRoute>
       <Layout>
         <div className="container mx-auto py-10 px-4">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold">Subscription Management</h1>
-              <p className="text-muted-foreground">
-                View and manage your current subscription plan
+          <div className="max-w-3xl mx-auto space-y-6">
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl font-bold">Your Subscription</h1>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Manage your current subscription and billing details
               </p>
             </div>
-
-            <CurrentSubscription
+            
+            <CurrentSubscription 
               subscription={currentSubscription}
               plans={billingPlans}
               onUpgrade={handleUpgrade}
+              onCancel={cancelSubscription}
               isLoading={isLoading}
+              isProcessing={isProcessing}
             />
-
-            <div className="flex flex-col items-center mt-8 space-y-4 pt-6 border-t">
-              <p className="text-sm text-muted-foreground text-center max-w-md">
-                Need help with your subscription or have billing questions?
-                Our support team is here to help.
-              </p>
-              <Button variant="outline" className="w-full max-w-xs">
-                Contact Support
+            
+            <div className="text-center">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/billing')}
+              >
+                View All Plans
               </Button>
             </div>
           </div>

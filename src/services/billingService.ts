@@ -122,3 +122,25 @@ export const updateUserSubscription = async (userId: string, planId: string) => 
     return false;
   }
 };
+
+/**
+ * Cancel user's subscription
+ * @param userId The ID of the user
+ * @returns Success or failure of the cancellation
+ */
+export const cancelUserSubscription = async (userId: string) => {
+  try {
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({ 
+        status: 'canceled',
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId);
+      
+    return !error;
+  } catch (error) {
+    console.error('Subscription cancellation error:', error);
+    return false;
+  }
+};

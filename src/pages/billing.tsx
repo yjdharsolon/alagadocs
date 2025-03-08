@@ -23,7 +23,8 @@ export default function BillingPage() {
     currentSubscription,
     handlePlanSelection,
     handlePaymentMethodChange,
-    processPayment
+    processPayment,
+    cancelSubscription
   } = useBilling();
 
   return (
@@ -44,7 +45,9 @@ export default function BillingPage() {
                 subscription={currentSubscription}
                 plans={billingPlans}
                 onUpgrade={() => {}}
+                onCancel={cancelSubscription}
                 isLoading={isLoading}
+                isProcessing={isProcessing}
               />
             )}
 
