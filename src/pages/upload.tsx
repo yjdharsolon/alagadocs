@@ -133,15 +133,22 @@ const UploadPage = () => {
       const fileExt = audioFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
-      const { error } = await supabase.storage
+      // Track upload progress
+      let lastLoaded = 0;
+      const uploadProgressCallback = (progress: { loaded: number; total: number }) => {
+        const percent = Math.round((progress.loaded / progress.total) * 100);
+        if (percent > lastLoaded) {
+          lastLoaded = percent;
+          setUploadProgress(percent);
+        }
+      };
+      
+      // Upload to Supabase Storage
+      const { error, data } = await supabase.storage
         .from('audio_uploads')
         .upload(fileName, audioFile, {
           cacheControl: '3600',
-          upsert: true,
-          onUploadProgress: (progress) => {
-            const percent = Math.round((progress.loaded / progress.total) * 100);
-            setUploadProgress(percent);
-          },
+          upsert: true
         });
       
       if (error) {
