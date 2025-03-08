@@ -1,16 +1,16 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import toast from 'react-hot-toast';
 
-/**
- * Initializes the application by setting up required resources
- */
-export const initializeApp = async (): Promise<void> => {
+export const initializeApp = async () => {
   try {
-    // Create the transcriptions storage bucket if it doesn't exist
-    await supabase.functions.invoke('create-bucket');
-    console.log('Storage setup completed');
+    // Initialize the storage bucket
+    const { error } = await supabase.functions.invoke('create-storage-bucket');
+    
+    if (error) {
+      console.error('Error initializing storage:', error);
+    }
   } catch (error) {
-    console.error('Error initializing app:', error);
-    // Don't throw here, as the app can still function even if this fails
+    console.error('Setup service error:', error);
   }
 };

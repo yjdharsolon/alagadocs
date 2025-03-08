@@ -1,87 +1,127 @@
 
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileAudio, Play, Pause, SkipBack, SkipForward, Edit, FileText } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-// Mocked transcription result for now
-// In the actual implementation, this would come from the AI transcription service
-const mockTranscription = `
-Patient presents with complaints of persistent headaches lasting for the past 3 weeks. The headaches are described as throbbing in nature, primarily located in the frontal and temporal regions. Pain is rated as 7 out of 10 on the pain scale. Patient reports that headaches are worse in the morning and are sometimes accompanied by nausea. No vomiting reported. Patient has tried over-the-counter pain medications with minimal relief. No history of migraines. Patient mentions increased stress at work recently. Vital signs are within normal limits. Neurological examination shows no abnormalities. Recommended an MRI to rule out any structural issues and prescribed sumatriptan 50mg for acute episodes. Follow-up in 2 weeks.
-`;
+import { transcribeAudio } from '@/services/transcriptionService';
+import toast from 'react-hot-toast';
 
 export default function TranscribePage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [audioUrl, setAudioUrl] = useState<string>('');
   const [transcriptionText, setTranscriptionText] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioDuration, setAudioDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const navigate = useNavigate();
-
-  // Simulate loading the transcription
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  
+  // Set up audio URL and start transcription
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setTranscriptionText(mockTranscription);
-      setIsLoading(false);
-      setAudioDuration(120); // Mock 2 minutes of audio
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Simulate audio playback for demo
-  useEffect(() => {
-    let interval: number | null = null;
+    const audioUrlFromState = location.state?.audioUrl;
     
-    if (isPlaying && currentTime < audioDuration) {
-      interval = window.setInterval(() => {
-        setCurrentTime(prev => {
-          if (prev >= audioDuration) {
-            setIsPlaying(false);
-            return audioDuration;
-          }
-          return prev + 1;
-        });
-      }, 1000);
+    if (!audioUrlFromState) {
+      toast.error('No audio file to transcribe. Please upload one first.');
+      navigate('/upload');
+      return;
     }
     
+    setAudioUrl(audioUrlFromState);
+    
+    // Create audio element for playback
+    const audio = new Audio(audioUrlFromState);
+    setAudioElement(audio);
+    
+    // Set up audio element event listeners
+    audio.addEventListener('loadedmetadata', () => {
+      setAudioDuration(Math.floor(audio.duration));
+    });
+    
+    audio.addEventListener('timeupdate', () => {
+      setCurrentTime(Math.floor(audio.currentTime));
+    });
+    
+    audio.addEventListener('ended', () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+      audio.currentTime = 0;
+    });
+    
+    // Start transcription process
+    startTranscription(audioUrlFromState);
+    
     return () => {
-      if (interval !== null) {
-        clearInterval(interval);
+      // Clean up audio element
+      if (audio) {
+        audio.pause();
+        audio.src = '';
       }
     };
-  }, [isPlaying, currentTime, audioDuration]);
-
+  }, [location.state, navigate]);
+  
+  const startTranscription = async (url: string) => {
+    try {
+      setIsLoading(true);
+      const text = await transcribeAudio(url);
+      setTranscriptionText(text);
+    } catch (error) {
+      console.error('Transcription error:', error);
+      toast.error('Error transcribing audio. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   const togglePlayPause = () => {
+    if (!audioElement) return;
+    
+    if (isPlaying) {
+      audioElement.pause();
+    } else {
+      audioElement.play().catch(error => {
+        console.error('Error playing audio:', error);
+        toast.error('Error playing audio. Please try again.');
+      });
+    }
+    
     setIsPlaying(!isPlaying);
   };
-
+  
   const skipBackward = () => {
-    setCurrentTime(prev => Math.max(0, prev - 10));
+    if (!audioElement) return;
+    audioElement.currentTime = Math.max(0, audioElement.currentTime - 10);
+    setCurrentTime(Math.floor(audioElement.currentTime));
   };
-
+  
   const skipForward = () => {
-    setCurrentTime(prev => Math.min(audioDuration, prev + 10));
+    if (!audioElement) return;
+    audioElement.currentTime = Math.min(audioDuration, audioElement.currentTime + 10);
+    setCurrentTime(Math.floor(audioElement.currentTime));
   };
-
+  
   const handleStructuredOutput = () => {
-    navigate('/structured-output');
+    navigate('/structured-output', { 
+      state: { transcriptionText, audioUrl } 
+    });
   };
-
+  
   const handleEdit = () => {
-    navigate('/edit-transcript');
+    navigate('/edit-transcript', { 
+      state: { transcriptionText, audioUrl } 
+    });
   };
-
+  
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-
+  
   return (
     <Layout>
       <div className="container mx-auto py-10 px-4">
@@ -178,7 +218,7 @@ export default function TranscribePage() {
             {!isLoading && (
               <Alert>
                 <AlertDescription>
-                  This is a preview of the basic transcription. In the next step, you can convert this into a structured medical document.
+                  This is the raw transcription. In the next step, you can convert this into a structured medical document or edit it as needed.
                 </AlertDescription>
               </Alert>
             )}

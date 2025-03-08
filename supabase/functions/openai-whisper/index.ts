@@ -1,90 +1,74 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
+// This is already present in the files, but making sure it's here
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { audioUrl } = await req.json()
+    const { audioUrl } = await req.json();
     
     if (!audioUrl) {
-      throw new Error('No audio URL provided')
+      throw new Error('No audio URL provided');
     }
 
-    // Get the OpenAI API key from environment variables
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not found')
-    }
-
-    console.log('Fetching audio file from storage...')
-    
     // Fetch the audio file from the provided URL
-    const audioResponse = await fetch(audioUrl)
+    const audioResponse = await fetch(audioUrl);
+    
     if (!audioResponse.ok) {
-      throw new Error(`Failed to fetch audio file: ${audioResponse.statusText}`)
+      throw new Error(`Failed to fetch audio file: ${audioResponse.statusText}`);
     }
     
-    const audioBlob = await audioResponse.blob()
+    const audioBlob = await audioResponse.blob();
     
-    // Prepare form data for OpenAI API
-    const formData = new FormData()
-    formData.append('file', audioBlob, 'audio.mp3')
-    formData.append('model', 'whisper-1')
-    formData.append('language', 'en')
+    // Create a FormData object to send to the OpenAI API
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'audio.webm');
+    formData.append('model', 'whisper-1');
+    formData.append('language', 'en'); // Set language to English
     
-    console.log('Sending request to OpenAI Whisper API...')
-    
-    // Make request to OpenAI Whisper API
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    // Call the OpenAI Whisper API
+    const openaiResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`
       },
-      body: formData,
-    })
-
-    if (!response.ok) {
-      const error = await response.text()
-      console.error('OpenAI Whisper API error:', error)
-      throw new Error(`OpenAI Whisper API error: ${error}`)
+      body: formData
+    });
+    
+    if (!openaiResponse.ok) {
+      const errorText = await openaiResponse.text();
+      throw new Error(`OpenAI API error: ${errorText}`);
     }
-
-    const data = await response.json()
-    console.log('Received transcription from Whisper API')
+    
+    const transcription = await openaiResponse.json();
     
     return new Response(
       JSON.stringify({
-        transcription: data.text,
+        transcription: transcription.text
       }),
       { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
       }
-    )
+    );
   } catch (error) {
-    console.error('Error in openai-whisper function:', error.message)
-    
+    console.error('Error in whisper function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 500, 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
       }
-    )
+    );
   }
-})
+});
