@@ -5,11 +5,12 @@ import EditButton from './EditButton';
 import ExportButton from './ExportButton';
 import { SaveNoteButton } from './SaveNoteButton';
 import ViewNotesButton from './ViewNotesButton';
+import { MedicalSections } from '../types';
 
 interface ButtonGroupProps {
   onEdit?: () => void;
   user?: any;
-  sections?: any;
+  sections?: MedicalSections;
   structuredText?: string;
 }
 
@@ -21,13 +22,14 @@ export function ButtonGroup({
 }: ButtonGroupProps) {
   return (
     <div className="flex flex-wrap gap-2">
-      {structuredText && <CopyButton structuredText={structuredText} />}
+      {sections && <CopyButton sections={sections} />}
       {onEdit && <EditButton onClick={onEdit} />}
-      {structuredText && <ExportButton structuredText={structuredText} />}
-      {user && sections && structuredText && (
+      {sections && <ExportButton sections={sections} />}
+      {user && sections && (
         <SaveNoteButton 
+          user={user}
           sections={sections}
-          structuredText={structuredText}
+          structuredText={structuredText || ''}
         />
       )}
       <ViewNotesButton />

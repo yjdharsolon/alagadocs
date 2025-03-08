@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { MedicalSections } from '../types';
 import { formatClipboardText } from '../utils/exportUtils';
 
-interface CopyButtonProps {
+export interface CopyButtonProps {
   sections?: MedicalSections;
 }
 

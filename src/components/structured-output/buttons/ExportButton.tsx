@@ -5,7 +5,7 @@ import { FileDown, Loader2 } from 'lucide-react';
 import { MedicalSections } from '../types';
 import { exportAsPDF } from '../utils/exportUtils';
 
-interface ExportButtonProps {
+export interface ExportButtonProps {
   sections?: MedicalSections;
 }
 
