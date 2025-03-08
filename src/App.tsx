@@ -31,10 +31,10 @@ function App() {
   const queryClient = new QueryClient();
   
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <Toaster position="top-center" />
-        <Router>
+    <Router>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <Toaster position="top-center" />
           <Routes>
             <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/login" element={<LoginPage />} />
@@ -53,9 +53,9 @@ function App() {
             <Route path="/ratings" element={<RatingsPage />} />
             <Route path="/billing" element={<BillingPage />} />
           </Routes>
-        </Router>
-      </QueryClientProvider>
-    </AuthProvider>
+        </QueryClientProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

@@ -36,14 +36,14 @@ export default function Login() {
   };
 
   // Skip authentication check for now - we'll redirect if user is already signed in
-  if (user && !loading) {
+  if (user) {
     return <Navigate to="/role-selection" />;
   }
 
   return (
     <Layout>
-      <div className="flex justify-center items-center min-h-screen py-10 px-4">
-        <Card className="w-full max-w-md">
+      <div className="flex justify-center items-center min-h-screen py-10 px-4 bg-background text-foreground">
+        <Card className="w-full max-w-md shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Sign in to AlagaDocs</CardTitle>
             <CardDescription className="text-center">
