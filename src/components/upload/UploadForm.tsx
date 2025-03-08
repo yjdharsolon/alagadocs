@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileAudio, Mic } from 'lucide-react';
+import { FileAudio, Mic, Play } from 'lucide-react';
 import { FileUploader } from './FileUploader';
 import { AudioRecorder } from './audio-recorder';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,9 +9,12 @@ import { ErrorAlert } from './ErrorAlert';
 import { UploadProgress } from './UploadProgress';
 import { SubmitButton } from './SubmitButton';
 import { useUploadForm } from '@/hooks/useUploadForm';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export const UploadForm: React.FC = () => {
   const { user, signOut } = useAuth();
+  const [simulationInProgress, setSimulationInProgress] = useState(false);
   
   const {
     file,
@@ -28,6 +31,35 @@ export const UploadForm: React.FC = () => {
     handleSubmit,
     getStepLabel
   } = useUploadForm(user, signOut);
+  
+  // Function to simulate audio recording
+  const simulateRecording = () => {
+    setSimulationInProgress(true);
+    toast.info("Simulating audio recording...");
+    
+    // Create a mock audio file after a short delay
+    setTimeout(() => {
+      // Create a small ArrayBuffer with mock audio data
+      const arrayBuffer = new ArrayBuffer(44100); // 1 second of mock audio at 44.1kHz
+      const mockAudioBlob = new Blob([arrayBuffer], { type: 'audio/webm' });
+      
+      // Create a File object from the Blob
+      const mockFile = new File([mockAudioBlob], 'simulation-recording.webm', { 
+        type: 'audio/webm',
+        lastModified: Date.now() 
+      });
+      
+      // Pass the mock file to the recording complete handler
+      handleRecordingComplete(mockFile);
+      toast.success("Simulated recording completed");
+      
+      // Automatically trigger the upload process after a short delay
+      setTimeout(() => {
+        handleSubmit();
+        setSimulationInProgress(false);
+      }, 1000);
+    }, 2000);
+  };
   
   // Show loading state while session is being checked
   if (!sessionChecked) {
@@ -76,6 +108,23 @@ export const UploadForm: React.FC = () => {
             isRecording={isRecording}
             setIsRecording={setIsRecording}
           />
+          
+          {/* Simulation button */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={simulateRecording}
+              disabled={isUploading || isRecording || simulationInProgress}
+              className="w-full flex items-center justify-center gap-2"
+            >
+              <Play className="h-4 w-4" />
+              Simulate Recording & Upload
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              This will create a mock audio file and attempt the upload process
+            </p>
+          </div>
         </CardContent>
       </Card>
       

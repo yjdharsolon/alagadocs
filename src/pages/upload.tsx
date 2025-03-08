@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import { UploadForm } from '@/components/upload/UploadForm';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -77,6 +77,13 @@ export default function AudioUploadPage() {
         <p className="text-muted-foreground mb-6">
           Upload an audio file or record your voice to transcribe
         </p>
+        
+        <Alert className="mb-6" variant="default">
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Testing Mode: You can use the "Simulate Recording & Upload" button to test the upload process without using your microphone.
+          </AlertDescription>
+        </Alert>
         
         {error && (
           <Alert variant="destructive" className="mb-6">
