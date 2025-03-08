@@ -1,5 +1,3 @@
-
-// Re-export all transcription-related services
-export * from '../audioService';
-export * from '../structuringService';
-export * from '../noteService';
+// Export all services from the transcription directory
+export * from './transcriptionService';
+// Other transcription service exports...

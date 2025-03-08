@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { getPoliciesForTable } from './policyService';
 
 /**
  * Uploads an audio file to Supabase storage
@@ -68,11 +69,10 @@ export const uploadAudio = async (file: File): Promise<string> => {
         
         // Check RLS policies for transcriptions table
         try {
-          const { data: policies, error: policyError } = await supabase
-            .rpc('get_policies_for_table', { table_name: 'transcriptions' });
+          const policies = await getPoliciesForTable('transcriptions');
           
-          if (policyError) {
-            console.error('Error checking RLS policies:', policyError);
+          if (!policies) {
+            console.error('Error checking RLS policies');
           } else {
             console.log('Available policies for transcriptions table:', policies);
           }
