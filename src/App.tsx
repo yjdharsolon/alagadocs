@@ -18,6 +18,7 @@ import PasswordReset from '@/pages/password-reset';
 import UpdatePassword from '@/pages/update-password';
 import Profile from '@/pages/profile';
 import AskAI from '@/pages/ask-ai';
+import Documentation from '@/pages/documentation';
 import AuthCallback from '@/pages/auth/callback';
 
 import './App.css';
@@ -33,6 +34,7 @@ function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/update-password" element={<UpdatePassword />} />
+          <Route path="/documentation" element={<Documentation />} />
           
           {/* Protected Routes */}
           <Route
