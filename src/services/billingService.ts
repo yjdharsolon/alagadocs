@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export type BillingTransaction = {
@@ -210,3 +209,5 @@ export const getUserTransactionHistory = async (userId: string): Promise<Transac
     return [];
   }
 };
+
+export type { TransactionHistory };
