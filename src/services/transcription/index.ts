@@ -1,3 +1,3 @@
 // Export all services from the transcription directory
-export * from './transcriptionService';
+export * from '../audio/transcriptionService';
 // Other transcription service exports...
