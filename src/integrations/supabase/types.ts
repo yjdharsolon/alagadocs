@@ -183,24 +183,33 @@ export type Database = {
       transcriptions: {
         Row: {
           audio_url: string | null
+          completed_at: string | null
           created_at: string
+          error_message: string | null
           id: string
+          status: string | null
           text: string
           updated_at: string
           user_id: string
         }
         Insert: {
           audio_url?: string | null
+          completed_at?: string | null
           created_at?: string
+          error_message?: string | null
           id?: string
+          status?: string | null
           text: string
           updated_at?: string
           user_id: string
         }
         Update: {
           audio_url?: string | null
+          completed_at?: string | null
           created_at?: string
+          error_message?: string | null
           id?: string
+          status?: string | null
           text?: string
           updated_at?: string
           user_id?: string

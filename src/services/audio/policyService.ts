@@ -2,31 +2,24 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Gets the RLS policies for a table
+ * Gets the RLS policies for a table to help diagnose permissions issues
  * @param tableName The name of the table to get policies for
- * @returns A list of policies or null if an error occurs
+ * @returns Information about the policies on the table
  */
-export const getPoliciesForTable = async (tableName: string) => {
+export const getPoliciesForTable = async (tableName: string): Promise<any> => {
   try {
-    // Get the current session first
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !sessionData.session) {
-      console.error('Authentication error in getPoliciesForTable:', sessionError);
-      return null;
-    }
-    
-    // Call the edge function to check policies
-    const { data, error } = await supabase.functions.invoke('check-rls-policies', {
-      body: { tableName }
+    // This requires admin privileges, so it will generally fail for regular users
+    // It's mainly included for debugging during development
+    const { data, error } = await supabase.rpc('get_policies_for_table', {
+      table_name: tableName
     });
     
     if (error) {
-      console.error('Error fetching policies:', error);
+      console.error(`Error getting policies for table ${tableName}:`, error);
       return null;
     }
     
-    return data?.policies || null;
+    return data;
   } catch (error) {
     console.error('Error in getPoliciesForTable:', error);
     return null;
