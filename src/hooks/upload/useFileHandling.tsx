@@ -1,0 +1,27 @@
+
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+export const useFileHandling = () => {
+  const [file, setFile] = useState<File | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const handleFileSelect = (selectedFile: File) => {
+    setFile(selectedFile);
+    toast.success('File selected successfully');
+  };
+  
+  const handleRecordingComplete = (recordedFile: File) => {
+    setFile(recordedFile);
+    setIsRecording(false);
+    toast.success('Recording saved successfully');
+  };
+
+  return {
+    file,
+    isRecording,
+    setIsRecording,
+    handleFileSelect,
+    handleRecordingComplete
+  };
+};

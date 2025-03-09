@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { ErrorAlert } from './ErrorAlert';
 import { UploadProgress } from './UploadProgress';
 import { SubmitButton } from './SubmitButton';
-import { useUploadForm } from '@/hooks/useUploadForm';
+import { useUploadForm } from '@/hooks/upload';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
