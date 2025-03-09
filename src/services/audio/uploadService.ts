@@ -43,7 +43,12 @@ export const uploadAudio = async (file: File): Promise<string> => {
       .from('transcriptions')
       .getPublicUrl(filePath);
     
+    // Force a refresh of the session to ensure we have the latest token
+    console.log('Refreshing session before creating transcription record');
+    await supabase.auth.refreshSession();
+    
     // Create the transcription record first
+    console.log('Inserting transcription record with initial status: pending');
     const { data: insertData, error: transcriptionError } = await supabase
       .from('transcriptions')
       .insert({
