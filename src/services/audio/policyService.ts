@@ -12,7 +12,7 @@ export const getPoliciesForTable = async (tableName: string): Promise<any> => {
     // It's mainly included for debugging during development
     const { data, error } = await supabase.rpc('get_policies_for_table', {
       p_table_name: tableName
-    } as Record<string, string>); // Properly type the parameter object
+    });
     
     if (error) {
       console.error(`Error getting policies for table ${tableName}:`, error);
