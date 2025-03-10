@@ -73,28 +73,75 @@ serve(async (req) => {
     // Add policies to the bucket (public read, authenticated write)
     console.log("Setting up storage policies...");
     
-    // Create policy for public read access
-    const publicReadPolicy = `
+    // Use direct SQL execution for adding more permissive policies
+    const policiesSQL = `
+      -- Drop existing policies for this bucket if any
+      DROP POLICY IF EXISTS "Public Read Access" ON storage.objects;
+      DROP POLICY IF EXISTS "Authenticated Users Can Upload" ON storage.objects;
+      DROP POLICY IF EXISTS "Authenticated Users Can Update Own Files" ON storage.objects;
+      DROP POLICY IF EXISTS "Authenticated Users Can Delete Own Files" ON storage.objects;
+      
+      -- Create public read policy (allow anyone to read)
       CREATE POLICY "Public Read Access"
       ON storage.objects FOR SELECT
       USING (bucket_id = 'transcriptions');
-    `;
-    
-    // Create policy for authenticated users to upload
-    const authUploadPolicy = `
+      
+      -- Create authenticated insert policy (allow any authenticated user to upload)
       CREATE POLICY "Authenticated Users Can Upload"
       ON storage.objects FOR INSERT
       TO authenticated
       WITH CHECK (bucket_id = 'transcriptions');
+      
+      -- Create authenticated update policy (allow any authenticated user to update any file)
+      CREATE POLICY "Authenticated Users Can Update Any Files"
+      ON storage.objects FOR UPDATE
+      TO authenticated
+      USING (bucket_id = 'transcriptions');
+      
+      -- Create authenticated delete policy (allow any authenticated user to delete any file)
+      CREATE POLICY "Authenticated Users Can Delete Any Files"
+      ON storage.objects FOR DELETE
+      TO authenticated
+      USING (bucket_id = 'transcriptions');
     `;
     
     // Execute the SQL
     const { error: policyError } = await supabase.rpc('run_sql_query', {
-      query: publicReadPolicy + authUploadPolicy
+      query: policiesSQL
     });
     
     if (policyError) {
-      console.warn("Error setting policies:", policyError);
+      console.warn("Error setting up policies:", policyError);
+      throw new Error(`Error setting policies: ${policyError.message}`);
+    }
+
+    // Verify bucket is accessible
+    try {
+      const { data: testFile, error: testError } = await supabase
+        .storage
+        .from('transcriptions')
+        .upload('test-file.txt', new Blob(['test content']), {
+          cacheControl: '3600',
+          upsert: true
+        });
+        
+      if (testError) {
+        console.warn("Test upload failed:", testError);
+      } else {
+        console.log("Test upload successful:", testFile);
+        
+        // Try to delete the test file
+        const { error: deleteError } = await supabase
+          .storage
+          .from('transcriptions')
+          .remove(['test-file.txt']);
+          
+        if (deleteError) {
+          console.warn("Error deleting test file:", deleteError);
+        }
+      }
+    } catch (testErr) {
+      console.warn("Error during test upload:", testErr);
     }
 
     return new Response(

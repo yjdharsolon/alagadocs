@@ -59,14 +59,15 @@ export default function AudioUploadPage() {
       setFixingPermissions(true);
       setError(null);
       
-      // Call our new function to fix storage permissions
-      const { error } = await supabase.functions.invoke('fix-storage-permissions');
+      // Call our edge function to fix storage permissions
+      const { data, error } = await supabase.functions.invoke('fix-storage-permissions');
       
       if (error) {
         console.error('Error fixing storage permissions:', error);
         setError('Could not fix permissions. Please try again or contact support.');
         toast.error('Failed to fix permissions');
       } else {
+        console.log('Fix permissions response:', data);
         toast.success('Storage permissions fixed! Please try uploading again.');
       }
     } catch (err) {

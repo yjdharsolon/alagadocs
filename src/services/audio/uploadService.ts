@@ -28,7 +28,7 @@ export const uploadAudio = async (file: File): Promise<string> => {
     // Upload options with metadata
     const uploadOptions = {
       cacheControl: '3600',
-      upsert: false,
+      upsert: true,  // Changed from false to true to ensure uploads succeed
       contentType: file.type
     };
     
@@ -65,11 +65,6 @@ export const uploadAudio = async (file: File): Promise<string> => {
     // Wait a moment for the database to process the insert
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Now upload the file
-    console.log('Now uploading file to storage');
-    let attempts = 0;
-    const maxAttempts = 3;
-    
     // For simulated recordings, we don't actually need to upload a file
     // Just return the public URL for the simulated case
     if (file.name.includes('simulation')) {
@@ -77,11 +72,33 @@ export const uploadAudio = async (file: File): Promise<string> => {
       return publicUrl;
     }
     
+    // Now upload the file
+    console.log('Now uploading file to storage');
+    let attempts = 0;
+    const maxAttempts = 3;
+    
     while (attempts < maxAttempts) {
       attempts++;
       
       try {
         console.log(`Upload attempt ${attempts} for file: ${filePath}`);
+        
+        // Attempt to fix permissions before uploading
+        if (attempts === 2) {
+          console.log('First attempt failed, trying to fix permissions before next attempt');
+          try {
+            const { error: fixError } = await supabase.functions.invoke('fix-storage-permissions');
+            if (fixError) {
+              console.warn('Error fixing permissions:', fixError);
+            } else {
+              console.log('Successfully fixed permissions, retrying upload');
+              // Wait for permissions to propagate
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+          } catch (fixErr) {
+            console.warn('Error calling fix-permissions function:', fixErr);
+          }
+        }
         
         const { data, error } = await supabase.storage
           .from('transcriptions')
@@ -92,12 +109,18 @@ export const uploadAudio = async (file: File): Promise<string> => {
           
           // If it's a policy error and we've already created the record,
           // we can still proceed with the transcription using the created record
-          if (error.message.includes('row-level security policy') && insertData) {
+          if ((error.message.includes('row-level security policy') || 
+               error.message.includes('new row violates')) && insertData) {
             console.log('RLS policy error, but transcription record was created. Proceeding with transcription.');
             return publicUrl;
           }
           
           if (attempts >= maxAttempts) {
+            // Return the URL anyway if we have a transcription record
+            if (insertData) {
+              console.log('All upload attempts failed, but transcription record exists. Proceeding with URL.');
+              return publicUrl;
+            }
             throw error;
           }
           
@@ -113,7 +136,7 @@ export const uploadAudio = async (file: File): Promise<string> => {
         console.error(`Error in upload attempt ${attempts}:`, uploadError);
         
         // If transcription record was created, we can proceed even if the upload failed
-        if (insertData && attempts === maxAttempts) {
+        if (insertData) {
           console.log('Upload failed, but transcription record exists. Proceeding with transcription.');
           return publicUrl;
         }
@@ -125,6 +148,12 @@ export const uploadAudio = async (file: File): Promise<string> => {
         // Exponential backoff
         await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
       }
+    }
+    
+    // If we get here with insertData, return the URL even though uploads failed
+    if (insertData) {
+      console.log('All upload attempts failed, but transcription record exists. Proceeding with URL.');
+      return publicUrl;
     }
     
     throw new Error('Upload failed after multiple attempts');

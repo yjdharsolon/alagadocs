@@ -50,16 +50,125 @@ serve(async (req) => {
       }
 
       console.log("Setting up bucket policies...");
-      // Create storage policy to allow authenticated uploads
-      const { error: policyError } = await supabase
-        .storage
-        .from('transcriptions')
-        .createSignedUploadUrl('policy-check');
-
-      if (policyError && !policyError.message.includes('The resource already exists')) {
-        console.error("Error creating upload policy:", policyError);
+      // Add very permissive policies for the bucket
+      const policiesSQL = `
+        -- Create public read policy (allow anyone to read)
+        CREATE POLICY "Public Read Access"
+        ON storage.objects FOR SELECT
+        USING (bucket_id = 'transcriptions');
+        
+        -- Create authenticated insert policy (allow any authenticated user to upload)
+        CREATE POLICY "Authenticated Users Can Upload"
+        ON storage.objects FOR INSERT
+        TO authenticated
+        WITH CHECK (bucket_id = 'transcriptions');
+        
+        -- Create authenticated update policy (allow any authenticated user to update any file)
+        CREATE POLICY "Authenticated Users Can Update Any Files"
+        ON storage.objects FOR UPDATE
+        TO authenticated
+        USING (bucket_id = 'transcriptions');
+        
+        -- Create authenticated delete policy (allow any authenticated user to delete any file)
+        CREATE POLICY "Authenticated Users Can Delete Any Files"
+        ON storage.objects FOR DELETE
+        TO authenticated
+        USING (bucket_id = 'transcriptions');
+      `;
+      
+      // Execute the SQL
+      const { error: policyError } = await supabase.rpc('run_sql_query', {
+        query: policiesSQL
+      });
+      
+      if (policyError) {
+        console.warn("Error setting up policies:", policyError);
       } else {
         console.log("Storage policies setup successful");
+      }
+      
+      // Test the bucket by uploading a test file
+      const { error: testError } = await supabase
+        .storage
+        .from('transcriptions')
+        .upload('test-file.txt', new Blob(['test content']), {
+          cacheControl: '3600',
+          upsert: true
+        });
+        
+      if (testError) {
+        console.warn("Test upload failed:", testError);
+      } else {
+        console.log("Test upload successful");
+      }
+    } else {
+      // Make sure permissions are set correctly
+      console.log("Bucket already exists, verifying policies...");
+      
+      // Check permissions by testing upload
+      try {
+        const { error: testError } = await supabase
+          .storage
+          .from('transcriptions')
+          .upload('test-file.txt', new Blob(['test content']), {
+            cacheControl: '3600',
+            upsert: true
+          });
+          
+        if (testError) {
+          if (testError.message.includes('row-level security policy') || 
+              testError.message.includes('new row violates')) {
+            console.log("Upload test failed due to RLS policy, fixing policies...");
+            
+            // Fix policies for existing bucket
+            const policiesSQL = `
+              -- Drop existing policies for this bucket if any
+              DROP POLICY IF EXISTS "Public Read Access" ON storage.objects;
+              DROP POLICY IF EXISTS "Authenticated Users Can Upload" ON storage.objects;
+              DROP POLICY IF EXISTS "Authenticated Users Can Update Own Files" ON storage.objects;
+              DROP POLICY IF EXISTS "Authenticated Users Can Delete Own Files" ON storage.objects;
+              
+              -- Create public read policy (allow anyone to read)
+              CREATE POLICY "Public Read Access"
+              ON storage.objects FOR SELECT
+              USING (bucket_id = 'transcriptions');
+              
+              -- Create authenticated insert policy (allow any authenticated user to upload)
+              CREATE POLICY "Authenticated Users Can Upload"
+              ON storage.objects FOR INSERT
+              TO authenticated
+              WITH CHECK (bucket_id = 'transcriptions');
+              
+              -- Create authenticated update policy (allow any authenticated user to update any file)
+              CREATE POLICY "Authenticated Users Can Update Any Files"
+              ON storage.objects FOR UPDATE
+              TO authenticated
+              USING (bucket_id = 'transcriptions');
+              
+              -- Create authenticated delete policy (allow any authenticated user to delete any file)
+              CREATE POLICY "Authenticated Users Can Delete Any Files"
+              ON storage.objects FOR DELETE
+              TO authenticated
+              USING (bucket_id = 'transcriptions');
+            `;
+            
+            const { error: policyError } = await supabase.rpc('run_sql_query', {
+              query: policiesSQL
+            });
+            
+            if (policyError) {
+              console.warn("Error fixing policies:", policyError);
+            } else {
+              console.log("Successfully fixed bucket policies");
+            }
+          } else {
+            console.warn("Test upload failed for other reason:", testError);
+          }
+        } else {
+          console.log("Upload test successful, bucket is properly configured");
+        }
+      } catch (err) {
+        console.warn("Error during test upload:", err);
       }
     }
 
