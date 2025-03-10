@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import { UploadForm } from '@/components/upload/UploadForm';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Info } from 'lucide-react';
+import { AlertCircle, Info, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ export default function AudioUploadPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
+  const [fixingPermissions, setFixingPermissions] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -52,6 +53,30 @@ export default function AudioUploadPage() {
       setIsLoading(false);
     }
   };
+  
+  const fixPermissions = async () => {
+    try {
+      setFixingPermissions(true);
+      setError(null);
+      
+      // Call our new function to fix storage permissions
+      const { error } = await supabase.functions.invoke('fix-storage-permissions');
+      
+      if (error) {
+        console.error('Error fixing storage permissions:', error);
+        setError('Could not fix permissions. Please try again or contact support.');
+        toast.error('Failed to fix permissions');
+      } else {
+        toast.success('Storage permissions fixed! Please try uploading again.');
+      }
+    } catch (err) {
+      console.error('Error fixing permissions:', err);
+      setError('Error fixing permissions. Please try again.');
+      toast.error('Failed to fix permissions');
+    } finally {
+      setFixingPermissions(false);
+    }
+  };
 
   useEffect(() => {
     // Check if user is authenticated
@@ -88,17 +113,28 @@ export default function AudioUploadPage() {
         {error && (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
+            <AlertDescription className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between">
               <span>{error}</span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleRetry}
-                disabled={retrying}
-                className="ml-4"
-              >
-                {retrying ? 'Retrying...' : 'Retry'}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRetry}
+                  disabled={retrying}
+                >
+                  {retrying ? 'Retrying...' : 'Retry'}
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={fixPermissions}
+                  disabled={fixingPermissions}
+                  className="flex items-center gap-1"
+                >
+                  <RefreshCw className={`h-3 w-3 ${fixingPermissions ? 'animate-spin' : ''}`} />
+                  {fixingPermissions ? 'Fixing...' : 'Fix Permissions'}
+                </Button>
+              </div>
             </AlertDescription>
           </Alert>
         )}
@@ -110,6 +146,21 @@ export default function AudioUploadPage() {
           </div>
         ) : (
           <UploadForm />
+        )}
+        
+        {!error && !isLoading && (
+          <div className="mt-4 flex justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fixPermissions}
+              disabled={fixingPermissions}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className={`h-3 w-3 ${fixingPermissions ? 'animate-spin' : ''}`} />
+              {fixingPermissions ? 'Fixing Permissions...' : 'Reset Storage Permissions'}
+            </Button>
+          </div>
         )}
       </div>
     </Layout>
