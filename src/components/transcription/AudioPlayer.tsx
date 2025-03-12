@@ -1,8 +1,11 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Download, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { addCacheBuster } from '@/utils/urlUtils';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -14,23 +17,30 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   
-  useEffect(() => {
-    if (!audioUrl) {
+  const loadAudio = useCallback((url: string) => {
+    if (!url) {
       setIsLoading(false);
       return;
     }
     
     setIsLoading(true);
-    const audio = new Audio(audioUrl);
+    setError(null);
+    
+    console.log(`Loading audio from URL: ${url}`);
+    const audio = new Audio(url);
     setAudioElement(audio);
     
     // Set up audio element event listeners
     audio.addEventListener('loadedmetadata', () => {
       if (isFinite(audio.duration)) {
         setAudioDuration(Math.floor(audio.duration));
+        console.log(`Audio duration: ${audio.duration}`);
       } else {
         setAudioDuration(0);
+        console.log('Audio duration is not a finite number');
       }
       setIsLoading(false);
     });
@@ -46,12 +56,29 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     });
     
     // Add error handling
-    audio.addEventListener('error', () => {
-      console.error('Error loading audio file');
+    audio.addEventListener('error', (e) => {
+      const errorCode = audio.error?.code || 0;
+      const errorMessage = audio.error?.message || 'Unknown error';
+      console.error(`Error loading audio file: ${errorMessage} (code: ${errorCode})`, e);
       setIsLoading(false);
-      setAudioDuration(0);
+      setError(`Cannot load audio (${errorMessage})`);
       toast.error('Error loading audio file');
     });
+    
+    return audio;
+  }, []);
+
+  // Effect to load audio when URL changes
+  useEffect(() => {
+    let audio: HTMLAudioElement | null = null;
+    
+    if (audioUrl) {
+      // Add a cache buster to the URL to avoid caching issues
+      const urlWithCacheBuster = addCacheBuster(audioUrl);
+      audio = loadAudio(urlWithCacheBuster);
+    } else {
+      setIsLoading(false);
+    }
     
     return () => {
       // Clean up audio element
@@ -60,7 +87,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
         audio.src = '';
       }
     };
-  }, [audioUrl]);
+  }, [audioUrl, loadAudio, retryCount]);
   
   const togglePlayPause = useCallback(() => {
     if (!audioElement) return;
@@ -105,6 +132,37 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     
     toast.success('Audio download started');
   }, [audioUrl]);
+
+  const retryLoadingAudio = useCallback(() => {
+    setRetryCount(prev => prev + 1);
+    toast.info('Retrying audio load...');
+  }, []);
+
+  const fixStoragePermissions = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError('Fixing storage permissions...');
+      
+      const { data, error } = await supabase.functions.invoke('fix-storage-permissions');
+      
+      if (error) {
+        console.error('Error fixing storage permissions:', error);
+        setError('Failed to fix permissions. Please try again.');
+        toast.error('Failed to fix permissions');
+      } else {
+        console.log('Storage permissions fixed:', data);
+        toast.success('Storage permissions fixed! Retrying audio...');
+        // Increase retry count to trigger the useEffect to reload the audio
+        setRetryCount(prev => prev + 1);
+      }
+    } catch (err) {
+      console.error('Error fixing permissions:', err);
+      setError('Error fixing permissions. Please try again.');
+      toast.error('Failed to fix permissions');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Add keyboard event listeners
   useEffect(() => {
@@ -154,6 +212,32 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
       <CardContent className="space-y-4">
         {audioUrl ? (
           <>
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-3">
+                <p className="text-sm text-red-800 mb-2">{error}</p>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={retryLoadingAudio}
+                    disabled={isLoading}
+                    className="text-xs"
+                  >
+                    <RefreshCw className="mr-1 h-3 w-3" /> Retry Loading
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={fixStoragePermissions}
+                    disabled={isLoading}
+                    className="text-xs"
+                  >
+                    Fix Permissions
+                  </Button>
+                </div>
+              </div>
+            )}
+            
             <div className="flex justify-center items-center gap-2">
               <Button variant="outline" size="icon" onClick={skipBackward} title="Skip backward 10s (Left arrow)">
                 <SkipBack className="h-4 w-4" />
