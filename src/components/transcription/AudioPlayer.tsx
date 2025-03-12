@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,16 +13,26 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
   const [audioDuration, setAudioDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    if (!audioUrl) return;
+    if (!audioUrl) {
+      setIsLoading(false);
+      return;
+    }
     
+    setIsLoading(true);
     const audio = new Audio(audioUrl);
     setAudioElement(audio);
     
     // Set up audio element event listeners
     audio.addEventListener('loadedmetadata', () => {
-      setAudioDuration(Math.floor(audio.duration));
+      if (isFinite(audio.duration)) {
+        setAudioDuration(Math.floor(audio.duration));
+      } else {
+        setAudioDuration(0);
+      }
+      setIsLoading(false);
     });
     
     audio.addEventListener('timeupdate', () => {
@@ -34,6 +43,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
       setIsPlaying(false);
       setCurrentTime(0);
       audio.currentTime = 0;
+    });
+    
+    // Add error handling
+    audio.addEventListener('error', () => {
+      console.error('Error loading audio file');
+      setIsLoading(false);
+      setAudioDuration(0);
+      toast.error('Error loading audio file');
     });
     
     return () => {
@@ -117,8 +134,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
   }, [togglePlayPause, skipBackward, skipForward]);
   
   const formatTime = (seconds: number) => {
+    if (!isFinite(seconds) || isNaN(seconds)) {
+      return '00:00';
+    }
+    
     const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -148,12 +169,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
               </Button>
             </div>
             <div className="text-center text-sm">
-              {formatTime(currentTime)} / {formatTime(audioDuration)}
+              {isLoading ? "Loading..." : `${formatTime(currentTime)} / ${formatTime(audioDuration)}`}
             </div>
             <div className="w-full bg-slate-200 rounded-full h-2">
               <div 
                 className="bg-primary h-2 rounded-full transition-all" 
-                style={{ width: `${(currentTime / audioDuration) * 100}%` }}
+                style={{ width: `${audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0}%` }}
               ></div>
             </div>
             <div className="text-xs text-muted-foreground text-center">
