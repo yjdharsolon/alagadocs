@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, Pause, SkipBack, SkipForward, Download, RefreshCw } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Download, RefreshCw, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { addCacheBuster } from '@/utils/urlUtils';
+import { getPoliciesForTable } from '@/services/audio/policyService';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -18,6 +19,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [is403Error, setIs403Error] = useState(false);
   
   const loadAudio = useCallback((url: string) => {
     if (!url) {
@@ -27,6 +29,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     
     setIsLoading(true);
     setError(null);
+    setIs403Error(false);
     
     console.log(`Loading audio from URL: ${url}`);
     const audio = new Audio(url);
@@ -59,15 +62,33 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
       console.error(`Error loading audio file: ${errorMessage} (code: ${errorCode})`, e);
       setIsLoading(false);
       
-      if (errorCode === 2) {
-        setError(`Network error loading audio. Please check your connection.`);
-      } else if (errorCode === 3) {
-        setError(`Decoding error. Audio format may not be supported.`);
-      } else if (errorCode === 4) {
-        setError(`Cannot load audio (${errorMessage}). This may be due to permissions.`);
-      } else {
-        setError(`Cannot load audio (${errorMessage})`);
-      }
+      fetch(url, { method: 'HEAD' })
+        .then(response => {
+          if (response.status === 403) {
+            setIs403Error(true);
+            setError(`Permission denied (403 Forbidden). You don't have access to this audio file.`);
+            console.error('403 Forbidden error detected when accessing audio');
+          } else if (errorCode === 2) {
+            setError(`Network error loading audio. Please check your connection.`);
+          } else if (errorCode === 3) {
+            setError(`Decoding error. Audio format may not be supported.`);
+          } else if (errorCode === 4) {
+            setError(`Cannot load audio (${errorMessage}). This may be due to permissions.`);
+          } else {
+            setError(`Cannot load audio (${errorMessage})`);
+          }
+        })
+        .catch(() => {
+          if (errorCode === 2) {
+            setError(`Network error loading audio. Please check your connection.`);
+          } else if (errorCode === 3) {
+            setError(`Decoding error. Audio format may not be supported.`);
+          } else if (errorCode === 4) {
+            setError(`Cannot load audio (${errorMessage}). This may be due to permissions.`);
+          } else {
+            setError(`Cannot load audio (${errorMessage})`);
+          }
+        });
       
       toast.error('Error loading audio file');
     });
@@ -166,6 +187,32 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     }
   }, []);
 
+  const checkStoragePolicies = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError('Checking storage policies...');
+      
+      const policies = await getPoliciesForTable('objects');
+      console.log('Storage policies:', policies);
+      
+      if (policies && policies.length > 0) {
+        setError(`Found ${policies.length} policies. Try fixing permissions again.`);
+      } else {
+        setError('No storage policies found. Please fix permissions.');
+      }
+    } catch (err) {
+      console.error('Error checking policies:', err);
+      setError('Error checking policies. Please try fixing permissions.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const openDirectLink = useCallback(() => {
+    if (!audioUrl) return;
+    window.open(audioUrl, '_blank');
+  }, [audioUrl]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
@@ -213,7 +260,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-3">
                 <p className="text-sm text-red-800 mb-2">{error}</p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -232,21 +279,48 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
                   >
                     Fix Permissions
                   </Button>
+                  {is403Error && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={checkStoragePolicies}
+                        disabled={isLoading}
+                        className="text-xs"
+                      >
+                        Check Policies
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={openDirectLink}
+                        className="text-xs"
+                      >
+                        <ExternalLink className="mr-1 h-3 w-3" /> Open Direct Link
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             )}
             
             <div className="flex justify-center items-center gap-2">
-              <Button variant="outline" size="icon" onClick={skipBackward} title="Skip backward 10s (Left arrow)">
+              <Button variant="outline" size="icon" onClick={skipBackward} title="Skip backward 10s (Left arrow)" disabled={!audioElement || isLoading}>
                 <SkipBack className="h-4 w-4" />
               </Button>
-              <Button size="icon" className="h-10 w-10 rounded-full" onClick={togglePlayPause} title="Play/Pause (Space)">
+              <Button 
+                size="icon" 
+                className="h-10 w-10 rounded-full" 
+                onClick={togglePlayPause} 
+                title="Play/Pause (Space)"
+                disabled={!audioElement || isLoading || !!error}
+              >
                 {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
-              <Button variant="outline" size="icon" onClick={skipForward} title="Skip forward 10s (Right arrow)">
+              <Button variant="outline" size="icon" onClick={skipForward} title="Skip forward 10s (Right arrow)" disabled={!audioElement || isLoading}>
                 <SkipForward className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" onClick={downloadAudio} title="Download audio">
+              <Button variant="outline" size="icon" onClick={downloadAudio} title="Download audio" disabled={isLoading || is403Error}>
                 <Download className="h-4 w-4" />
               </Button>
             </div>
