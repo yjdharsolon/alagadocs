@@ -1,0 +1,25 @@
+
+# netlify.toml
+# Configuration file for Netlify deployment
+
+[build]
+  # Directory to publish (the output from your build process)
+  publish = "dist"
+  # Build command
+  command = "npm run build"
+
+# Handle client-side routing by serving the index.html for all routes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  
+# Set cache headers for assets
+[[headers]]
+  # Define which paths this specific [[headers]] block will cover
+  for = "/assets/*"
+    [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Environment variable settings can be added here
+# Or you can set them in the Netlify dashboard
