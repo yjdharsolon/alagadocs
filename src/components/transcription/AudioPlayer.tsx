@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, Pause, SkipBack, SkipForward, Download, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner'; // Using sonner toast instead of react-hot-toast
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { addCacheBuster } from '@/utils/urlUtils';
 
@@ -33,7 +32,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     const audio = new Audio(url);
     setAudioElement(audio);
     
-    // Set up audio element event listeners
     audio.addEventListener('loadedmetadata', () => {
       if (isFinite(audio.duration)) {
         setAudioDuration(Math.floor(audio.duration));
@@ -55,25 +53,32 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
       audio.currentTime = 0;
     });
     
-    // Add error handling
     audio.addEventListener('error', (e) => {
       const errorCode = audio.error?.code || 0;
       const errorMessage = audio.error?.message || 'Unknown error';
       console.error(`Error loading audio file: ${errorMessage} (code: ${errorCode})`, e);
       setIsLoading(false);
-      setError(`Cannot load audio (${errorMessage})`);
+      
+      if (errorCode === 2) {
+        setError(`Network error loading audio. Please check your connection.`);
+      } else if (errorCode === 3) {
+        setError(`Decoding error. Audio format may not be supported.`);
+      } else if (errorCode === 4) {
+        setError(`Cannot load audio (${errorMessage}). This may be due to permissions.`);
+      } else {
+        setError(`Cannot load audio (${errorMessage})`);
+      }
+      
       toast.error('Error loading audio file');
     });
     
     return audio;
   }, []);
 
-  // Effect to load audio when URL changes
   useEffect(() => {
     let audio: HTMLAudioElement | null = null;
     
     if (audioUrl) {
-      // Add a cache buster to the URL to avoid caching issues
       const urlWithCacheBuster = addCacheBuster(audioUrl);
       audio = loadAudio(urlWithCacheBuster);
     } else {
@@ -81,7 +86,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     }
     
     return () => {
-      // Clean up audio element
       if (audio) {
         audio.pause();
         audio.src = '';
@@ -122,10 +126,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
       return;
     }
     
-    // Create an anchor element and trigger download
     const a = document.createElement('a');
     a.href = audioUrl;
-    a.download = 'transcription_audio.mp3'; // Default name
+    a.download = 'transcription_audio.mp3';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -135,7 +138,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
 
   const retryLoadingAudio = useCallback(() => {
     setRetryCount(prev => prev + 1);
-    toast("Retrying audio load..."); // Changed from toast.info to toast
+    toast("Retrying audio load...");
   }, []);
 
   const fixStoragePermissions = useCallback(async () => {
@@ -152,7 +155,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
       } else {
         console.log('Storage permissions fixed:', data);
         toast.success('Storage permissions fixed! Retrying audio...');
-        // Increase retry count to trigger the useEffect to reload the audio
         setRetryCount(prev => prev + 1);
       }
     } catch (err) {
@@ -164,21 +166,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     }
   }, []);
 
-  // Add keyboard event listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Space bar toggles play/pause
       if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
-        e.preventDefault(); // Prevent scrolling with space
+        e.preventDefault();
         togglePlayPause();
       }
       
-      // Left arrow skips backward
       if (e.code === 'ArrowLeft' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
         skipBackward();
       }
       
-      // Right arrow skips forward
       if (e.code === 'ArrowRight' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
         skipForward();
       }
