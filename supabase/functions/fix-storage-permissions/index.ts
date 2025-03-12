@@ -1,5 +1,4 @@
 
-// This edge function will help fix storage permissions when needed
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -14,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    // Create a Supabase client with the admin role
+    // Create a Supabase client with the Admin key
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -32,9 +31,22 @@ serve(async (req) => {
       throw new Error('Missing Authorization header');
     }
 
+    // Get user ID from auth token
+    console.log('Verifying user authentication...');
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (userError || !user) {
+      console.error('Invalid auth token:', userError);
+      throw new Error('Invalid auth token');
+    }
+
+    console.log(`Authenticated user: ${user.id}`);
+
     // Ensure the transcriptions bucket exists and is public
     console.log('Creating or updating transcriptions bucket...');
-    const { data: bucketData, error: bucketError } = await supabaseAdmin
+    const { error: bucketError } = await supabaseAdmin
       .storage
       .createBucket('transcriptions', {
         public: true,
@@ -59,55 +71,28 @@ serve(async (req) => {
         });
     }
 
-    // Get user ID from auth token
-    console.log('Verifying user authentication...');
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (userError || !user) {
-      console.error('Invalid auth token:', userError);
-      throw new Error('Invalid auth token');
-    }
-
-    console.log(`Authenticated user: ${user.id}`);
-
-    // Ensure storage permissions are set correctly
-    console.log('Ensuring storage policies are set correctly...');
-    const { error: policyError } = await supabaseAdmin
-      .rpc('ensure_storage_policies', {
-        bucket_id: 'transcriptions',
-        user_id: user.id
-      });
-
-    if (policyError) {
-      console.error('Error ensuring storage policies:', policyError);
-      throw policyError;
-    }
-
-    // Add a delay to allow policies to propagate
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Test bucket access by uploading a small test file
+    // Test bucket access
     console.log('Testing bucket access...');
-    const testFileContent = new Blob(['test content']);
-    const testFilePath = `test-permissions-${Date.now()}.txt`;
+    const testContent = new Uint8Array([1, 2, 3, 4]);
+    const testFilePath = `test-${Date.now()}.bin`;
     
-    const { error: testUploadError } = await supabaseAdmin
+    const { error: uploadError } = await supabaseAdmin
       .storage
       .from('transcriptions')
-      .upload(testFilePath, testFileContent, {
-        cacheControl: '3600',
-        upsert: true
-      });
-      
-    if (testUploadError) {
-      console.error('Test upload failed:', testUploadError);
-    } else {
-      console.log('Test upload successful!');
-      // Clean up the test file
-      await supabaseAdmin.storage.from('transcriptions').remove([testFilePath]);
+      .upload(testFilePath, testContent);
+
+    if (uploadError) {
+      console.error('Test upload failed:', uploadError);
+      throw new Error(`Storage permission test failed: ${uploadError.message}`);
     }
+
+    // Clean up test file
+    await supabaseAdmin
+      .storage
+      .from('transcriptions')
+      .remove([testFilePath]);
+
+    console.log('Storage permissions verified successfully');
 
     return new Response(
       JSON.stringify({ 
