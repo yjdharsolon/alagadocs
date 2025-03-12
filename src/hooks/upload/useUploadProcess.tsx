@@ -33,11 +33,13 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
     // Check if user is logged in
     if (!user) {
       toast.error('Please log in to upload audio');
-      navigate('/login');
+      // Use navigate instead of window.location to prevent full page reload
+      navigate('/login', { replace: true });
       return null;
     }
 
     try {
+      console.log('Starting upload process...');
       setIsUploading(true);
       setError(null);
       
@@ -72,16 +74,20 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       // For the unified flow, return the data including duration
       const transcriptionId = Date.now().toString(); // Temporary ID for demo
       
-      return {
+      const result = {
         transcriptionData,
         audioUrl,
         transcriptionId,
         duration: transcriptionData.duration || null // Include duration in the returned data
       };
       
+      console.log('Returning transcription result:', result);
+      return result;
     } catch (error) {
+      console.error('Error in upload process:', error);
       return handleUploadError(error);
     } finally {
+      console.log('Upload process completed, resetting state');
       setIsUploading(false);
       resetProgress();
     }

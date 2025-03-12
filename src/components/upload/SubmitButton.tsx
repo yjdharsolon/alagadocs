@@ -18,15 +18,21 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   onSubmit,
   getStepLabel
 }) => {
+  const handleClick = (e: React.MouseEvent) => {
+    // Prevent any default behavior that might cause page refresh
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Call the submit handler
+    onSubmit();
+  };
+
   return (
     <Button 
       size="lg" 
-      onClick={(e) => {
-        e.preventDefault(); // Prevent form submission
-        onSubmit();
-      }}
+      onClick={handleClick}
       disabled={!hasFile || isUploading || isRecording}
-      type="button" // Change from 'submit' to 'button'
+      type="button" // Ensure it's a button, not a submit type
     >
       {isUploading ? (
         <>

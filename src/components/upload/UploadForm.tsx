@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { ErrorAlert } from './ErrorAlert';
 import { UploadProgress } from './UploadProgress';
 import { SubmitButton } from './SubmitButton';
-import { useUploadForm } from '@/hooks/upload';
+import { useUploadForm } from '@/hooks/useUploadForm';
 import { toast } from 'sonner';
 import { FileInputCard } from './FileInputCard';
 import { RecordingCard } from './RecordingCard';
@@ -40,11 +40,12 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   // Wrap the handleSubmit function to intercept the result
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) {
-      e.preventDefault(); // Prevent form submission
+      e.preventDefault(); // Ensure form submission is prevented
     }
     
     try {
       console.log("Submit button clicked, handling submission...");
+      // Prevent default submission behavior
       const result = await originalHandleSubmit();
       
       // If we have an onTranscriptionComplete callback and result data
@@ -57,14 +58,16 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
         );
       } else if (result && !onTranscriptionComplete) {
         // If no callback provided but transcription was successful, navigate programmatically
-        console.log('No callback provided, but transcription completed successfully');
+        console.log('No callback provided, but transcription completed successfully. Navigating to edit-transcript...');
+        
+        // Use replace: true to avoid adding to history stack and prevent back-button issues
         navigate('/edit-transcript', { 
           state: { 
             transcriptionData: result.transcriptionData,
             audioUrl: result.audioUrl || '',
             transcriptionId: result.transcriptionId || ''
           },
-          replace: true // Use replace to avoid adding to history stack
+          replace: true 
         });
       } else if (!result) {
         console.error('Transcription failed or returned no results');
@@ -98,7 +101,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       
       // Automatically trigger the upload process after a short delay
       setTimeout(() => {
-        handleSubmit();
+        handleSubmit(); // Call without event to avoid any potential default behaviors
         setSimulationInProgress(false);
       }, 1000);
     }, 2000);
@@ -118,36 +121,39 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
         />
       )}
       
-      <FileInputCard 
-        file={file} 
-        onFileSelect={handleFileSelect} 
-      />
-      
-      <RecordingCard 
-        onRecordingComplete={handleRecordingComplete} 
-        isRecording={isRecording}
-        setIsRecording={setIsRecording}
-        onSimulate={simulateRecording}
-        isUploading={isUploading}
-        isSimulating={simulationInProgress}
-      />
-      
-      {isUploading && (
-        <UploadProgress 
-          uploadProgress={uploadProgress} 
-          currentStep={currentStep} 
+      {/* Use div instead of form to avoid form submission behavior */}
+      <div className="space-y-6">
+        <FileInputCard 
+          file={file} 
+          onFileSelect={handleFileSelect} 
         />
-      )}
-      
-      <CardFooter className="px-0 flex justify-end">
-        <SubmitButton
-          isUploading={isUploading}
+        
+        <RecordingCard 
+          onRecordingComplete={handleRecordingComplete} 
           isRecording={isRecording}
-          hasFile={!!file}
-          onSubmit={handleSubmit}
-          getStepLabel={getStepLabel}
+          setIsRecording={setIsRecording}
+          onSimulate={simulateRecording}
+          isUploading={isUploading}
+          isSimulating={simulationInProgress}
         />
-      </CardFooter>
+        
+        {isUploading && (
+          <UploadProgress 
+            uploadProgress={uploadProgress} 
+            currentStep={currentStep} 
+          />
+        )}
+        
+        <CardFooter className="px-0 flex justify-end">
+          <SubmitButton
+            isUploading={isUploading}
+            isRecording={isRecording}
+            hasFile={!!file}
+            onSubmit={handleSubmit}
+            getStepLabel={getStepLabel}
+          />
+        </CardFooter>
+      </div>
     </div>
   );
 };
