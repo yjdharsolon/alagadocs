@@ -1,16 +1,15 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileAudio, Mic, Play } from 'lucide-react';
-import { FileUploader } from './FileUploader';
-import { AudioRecorder } from './audio-recorder';
+import { CardFooter } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { ErrorAlert } from './ErrorAlert';
 import { UploadProgress } from './UploadProgress';
 import { SubmitButton } from './SubmitButton';
 import { useUploadForm } from '@/hooks/upload';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { FileInputCard } from './FileInputCard';
+import { RecordingCard } from './RecordingCard';
+import { AuthenticationCheck } from './AuthenticationCheck';
 
 interface UploadFormProps {
   onTranscriptionComplete?: (transcriptionData: any, audioUrl: string, transcriptionId: string) => void;
@@ -90,14 +89,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
     }, 2000);
   };
   
-  // Show loading state while session is being checked
+  // Render loading state during authentication check
   if (!sessionChecked) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-        <p className="text-muted-foreground">Verifying authentication...</p>
-      </div>
-    );
+    return <AuthenticationCheck isLoading={true} />;
   }
   
   return (
@@ -109,53 +103,19 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
         />
       )}
       
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileAudio className="h-5 w-5" />
-            Audio File
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <FileUploader 
-            file={file} 
-            onFileSelect={handleFileSelect} 
-          />
-        </CardContent>
-      </Card>
+      <FileInputCard 
+        file={file} 
+        onFileSelect={handleFileSelect} 
+      />
       
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mic className="h-5 w-5" />
-            Voice Recording
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AudioRecorder 
-            onRecordingComplete={handleRecordingComplete} 
-            isRecording={isRecording}
-            setIsRecording={setIsRecording}
-          />
-          
-          {/* Simulation button */}
-          <div className="mt-4 pt-4 border-t border-border">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={simulateRecording}
-              disabled={isUploading || isRecording || simulationInProgress}
-              className="w-full flex items-center justify-center gap-2"
-            >
-              <Play className="h-4 w-4" />
-              Simulate Recording & Upload
-            </Button>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              This will create a mock audio file and attempt the upload process
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <RecordingCard 
+        onRecordingComplete={handleRecordingComplete} 
+        isRecording={isRecording}
+        setIsRecording={setIsRecording}
+        onSimulate={simulateRecording}
+        isUploading={isUploading}
+        isSimulating={simulationInProgress}
+      />
       
       {isUploading && (
         <UploadProgress 
