@@ -24,11 +24,18 @@ const EditStep: React.FC<EditStepProps> = ({
   saveError,
   saveSuccess
 }) => {
+  // Validate audioUrl is a proper URL
+  const isValidUrl = audioUrl && typeof audioUrl === 'string' && audioUrl.trim() !== '';
+  
   useEffect(() => {
     // Log when component mounts to verify it's being rendered
     console.log("EditStep rendered with text:", transcriptionText?.substring(0, 50));
     console.log("Audio URL:", audioUrl);
-  }, [transcriptionText, audioUrl]);
+    
+    if (!isValidUrl) {
+      console.warn("Warning: Invalid or empty audio URL provided to EditStep");
+    }
+  }, [transcriptionText, audioUrl, isValidUrl]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

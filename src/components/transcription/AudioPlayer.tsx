@@ -19,6 +19,9 @@ interface AudioPlayerProps {
 const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
   const { retryCount, retryLoadingAudio, fixStoragePermissions, checkStoragePolicies } = usePermissionFixer();
   
+  // Validate URL format before passing to hooks
+  const sanitizedUrl = audioUrl && audioUrl.trim() !== '' ? audioUrl.trim() : null;
+  
   const { 
     audioElement, 
     isLoading, 
@@ -28,7 +31,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     currentTime, 
     setCurrentTime 
   } = useAudioLoader({ 
-    audioUrl: audioUrl || null, 
+    audioUrl: sanitizedUrl, 
     retryCount 
   });
   
@@ -41,13 +44,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     openDirectLink 
   } = useAudioControls({ 
     audioElement, 
-    audioUrl: audioUrl || '', 
+    audioUrl: sanitizedUrl || '', 
     audioDuration, 
     setCurrentTime 
   });
 
   // Verify we have a valid URL
-  const hasValidUrl = audioUrl && audioUrl.trim().length > 0;
+  const hasValidUrl = sanitizedUrl !== null;
 
   return (
     <Card>

@@ -27,9 +27,21 @@ export const useAudioLoader = ({ audioUrl, retryCount }: UseAudioLoaderProps): U
   const [currentTime, setCurrentTime] = useState(0);
 
   const loadAudio = useCallback((url: string) => {
-    if (!url) {
+    // Check for empty or invalid URLs
+    if (!url || url.trim() === '') {
+      console.error('Attempted to load audio with empty URL');
       setIsLoading(false);
       setError("No audio URL provided");
+      return null;
+    }
+    
+    try {
+      // Validate URL by attempting to create a URL object
+      new URL(url);
+    } catch (e) {
+      console.error('Invalid URL format:', url, e);
+      setIsLoading(false);
+      setError(`Invalid audio URL format: ${url}`);
       return null;
     }
     
@@ -44,9 +56,11 @@ export const useAudioLoader = ({ audioUrl, retryCount }: UseAudioLoaderProps): U
     setIs403Error(false);
     
     console.log(`Loading audio from URL: ${urlWithCacheBuster}`);
-    const audio = new Audio(urlWithCacheBuster);
-    setAudioElement(audio);
     
+    // Create audio element with validated URL
+    const audio = new Audio();
+    
+    // Set up event listeners before setting src to catch any immediate errors
     audio.addEventListener('loadedmetadata', () => {
       if (isFinite(audio.duration)) {
         setAudioDuration(Math.floor(audio.duration));
@@ -104,13 +118,17 @@ export const useAudioLoader = ({ audioUrl, retryCount }: UseAudioLoaderProps): U
       toast.error('Error loading audio file');
     });
     
+    // Only set src after event listeners are in place
+    audio.src = urlWithCacheBuster;
+    setAudioElement(audio);
+    
     return audio;
   }, []);
 
   useEffect(() => {
     let audio: HTMLAudioElement | null = null;
     
-    if (audioUrl) {
+    if (audioUrl && audioUrl.trim() !== '') {
       audio = loadAudio(audioUrl);
     } else {
       setIsLoading(false);
