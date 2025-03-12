@@ -14,14 +14,14 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
   const handleSubmit = async (file: File | null, user: any) => {
     if (!file) {
       toast.error('Please upload or record an audio file first');
-      return;
+      return null;
     }
 
     // Check if user is logged in
     if (!user) {
       toast.error('Please log in to upload audio');
       navigate('/login');
-      return;
+      return null;
     }
 
     try {
@@ -85,17 +85,16 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       console.log('Transcription completed successfully');
       setUploadProgress(100);
       
-      // After successful transcription, navigate to the transcribe page with the data
       toast.success('Transcription completed successfully');
       
-      // Navigate to transcribe page with the transcription data
-      navigate('/transcribe', { 
-        state: { 
-          transcriptionData,
-          audioUrl,
-          transcriptionId: Date.now().toString() // Temporary ID for demo
-        } 
-      });
+      // For the unified flow, return the data instead of navigating
+      const transcriptionId = Date.now().toString(); // Temporary ID for demo
+      
+      return {
+        transcriptionData,
+        audioUrl,
+        transcriptionId
+      };
       
     } catch (error) {
       console.error('Error uploading audio:', error);
@@ -107,7 +106,7 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
         setTimeout(() => {
           navigate('/login');
         }, 1500);
-        return;
+        return null;
       }
       
       // Handle RLS policy errors
@@ -116,11 +115,12 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
           error.message.includes('Permission error'))) {
         setError('Permission error. Please try logging out and logging back in.');
         toast.error('Permission error detected. This is often fixed by logging out and back in again.');
-        return;
+        return null;
       }
       
       setError(error instanceof Error ? error.message : 'Error uploading audio. Please try again.');
       toast.error('Error uploading audio. Please try again.');
+      return null;
     } finally {
       setIsUploading(false);
       setCurrentStep('idle');

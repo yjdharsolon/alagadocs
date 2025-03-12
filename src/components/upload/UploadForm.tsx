@@ -12,7 +12,11 @@ import { useUploadForm } from '@/hooks/upload';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-export const UploadForm: React.FC = () => {
+interface UploadFormProps {
+  onTranscriptionComplete?: (transcriptionData: any, audioUrl: string, transcriptionId: string) => void;
+}
+
+export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete }) => {
   const { user, signOut } = useAuth();
   const [simulationInProgress, setSimulationInProgress] = useState(false);
   
@@ -28,9 +32,27 @@ export const UploadForm: React.FC = () => {
     handleFileSelect,
     handleRecordingComplete,
     handleLogoutAndLogin,
-    handleSubmit,
+    handleSubmit: originalHandleSubmit,
     getStepLabel
   } = useUploadForm(user, signOut);
+
+  // Wrap the handleSubmit function to intercept the result
+  const handleSubmit = async () => {
+    try {
+      const result = await originalHandleSubmit();
+      
+      // If we have an onTranscriptionComplete callback and result data
+      if (onTranscriptionComplete && result && result.transcriptionData) {
+        onTranscriptionComplete(
+          result.transcriptionData,
+          result.audioUrl || '',
+          result.transcriptionId || ''
+        );
+      }
+    } catch (error) {
+      console.error('Error in handleSubmit:', error);
+    }
+  };
   
   // Function to simulate audio recording
   const simulateRecording = () => {

@@ -26,6 +26,7 @@ import CopyToEMRPage from './pages/copy-to-emr';
 import CustomizeTemplatePage from './pages/customize-template';
 import RatingsPage from './pages/ratings';
 import BillingPage from './pages/billing';
+import UnifiedTranscriptionPage from './pages/unified-transcription';
 
 function App() {
   const queryClient = new QueryClient();
@@ -41,9 +42,15 @@ function App() {
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/role-selection" element={<RoleSelectionPage />} />
+            
+            {/* Original separate pages */}
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/transcribe" element={<TranscriptionPage />} />
             <Route path="/edit-transcript" element={<EditTranscriptPage />} />
+            
+            {/* New unified transcription page */}
+            <Route path="/unified-transcription" element={<UnifiedTranscriptionPage />} />
+            
             <Route path="/ask-ai" element={<AskAIPage />} />
             <Route path="/templates" element={<TemplatesPage />} />
             
