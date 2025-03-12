@@ -1,6 +1,9 @@
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import { useRecordingTimer } from './utils/useRecordingTimer';
+import { useMediaResources } from './utils/useMediaResources';
+import { useAudioPreview } from './utils/useAudioPreview';
 
 interface UseAudioRecordingProps {
   onRecordingComplete: (file: File) => void;
@@ -15,67 +18,33 @@ export const useAudioRecording = ({
   setIsRecording,
   setIsPlayingPreview
 }: UseAudioRecordingProps) => {
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [audioPreview, setAudioPreview] = useState<string | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const maxRecordingTime = 300; // 5 minutes maximum
+  const {
+    mediaRecorderRef,
+    audioChunksRef,
+    audioPreviewRef,
+    streamRef,
+    cleanupMediaResources
+  } = useMediaResources();
 
-  // Cleanup function for media resources
-  const cleanupMediaResources = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current = null;
-    }
-    
-    audioChunksRef.current = [];
-  };
+  const {
+    recordingTime,
+    maxRecordingTime,
+    formatTime,
+    setRecordingTime
+  } = useRecordingTimer({
+    isRecording,
+    setIsRecording,
+    mediaRecorderRef
+  });
 
-  // Timer for recording duration
-  useEffect(() => {
-    let interval: number | null = null;
-    
-    if (isRecording) {
-      interval = window.setInterval(() => {
-        setRecordingTime(prev => {
-          // Stop recording if max time is reached
-          if (prev >= maxRecordingTime) {
-            if (mediaRecorderRef.current && isRecording) {
-              mediaRecorderRef.current.stop();
-              setIsRecording(false);
-              toast.info('Maximum recording time reached (5 minutes)');
-            }
-            clearInterval(interval!);
-            return prev;
-          }
-          return prev + 1;
-        });
-      }, 1000);
-    } else if (!isRecording && interval) {
-      clearInterval(interval);
-    }
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isRecording, setIsRecording, maxRecordingTime]);
-
-  // Cleanup when component unmounts
-  useEffect(() => {
-    return () => {
-      cleanupMediaResources();
-      
-      if (audioPreview) {
-        URL.revokeObjectURL(audioPreview);
-      }
-    };
-  }, []);
+  const {
+    audioPreview,
+    setAudioPreview,
+    isPlayingPreview: localIsPlayingPreview,
+    setIsPlayingPreview: setLocalIsPlayingPreview,
+    resetAudioPreview,
+    togglePlayPreview
+  } = useAudioPreview();
 
   const startRecording = async () => {
     try {
@@ -164,46 +133,22 @@ export const useAudioRecording = ({
       }
     }
   };
-  
-  const resetRecording = () => {
-    if (audioPreview) {
-      URL.revokeObjectURL(audioPreview);
-      setAudioPreview(null);
-      setRecordingTime(0);
-      toast.info('Recording cleared');
-    }
-  };
-  
-  const togglePlayPreview = () => {
-    if (audioPreviewRef.current) {
-      if (audioPreviewRef.current.paused) {
-        audioPreviewRef.current.play().catch(err => {
-          console.error('Error playing audio:', err);
-          toast.error('Could not play the recording');
-        });
-        setIsPlayingPreview(true);
-      } else {
-        audioPreviewRef.current.pause();
-        setIsPlayingPreview(false);
-      }
-    }
-  };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  // Update external isPlayingPreview state when local state changes
+  const handleTogglePlayPreview = () => {
+    togglePlayPreview(audioPreviewRef);
+    setIsPlayingPreview(localIsPlayingPreview);
   };
 
   return {
     startRecording,
     stopRecording,
-    resetRecording,
+    resetRecording: resetAudioPreview,
     audioPreview,
     recordingTime,
     maxRecordingTime,
     formatTime,
     audioPreviewRef,
-    togglePlayPreview
+    togglePlayPreview: handleTogglePlayPreview
   };
 };
