@@ -26,17 +26,16 @@ export const getPoliciesForTable = async (tableName: string): Promise<PolicyInfo
       p_table_name: tableName
     };
 
-    const { data, error } = await supabase.rpc<PolicyInfo[], GetPoliciesParams>(
-      'get_policies_for_table', 
-      params
-    );
+    // Fix: properly specify the generic types for the rpc method
+    const { data, error } = await supabase.rpc('get_policies_for_table', params);
     
     if (error) {
       console.error(`Error getting policies for table ${tableName}:`, error);
       return null;
     }
     
-    return data;
+    // Ensure we're casting the data to the correct type
+    return data as PolicyInfo[];
   } catch (error) {
     console.error('Error in getPoliciesForTable:', error);
     return null;
