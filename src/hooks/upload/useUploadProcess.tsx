@@ -87,13 +87,14 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       
       toast.success('Transcription completed successfully');
       
-      // For the unified flow, return the data instead of navigating
+      // For the unified flow, return the data including duration
       const transcriptionId = Date.now().toString(); // Temporary ID for demo
       
       return {
         transcriptionData,
         audioUrl,
-        transcriptionId
+        transcriptionId,
+        duration: transcriptionData.duration || null // Include duration in the returned data
       };
       
     } catch (error) {

@@ -185,6 +185,7 @@ export type Database = {
           audio_url: string | null
           completed_at: string | null
           created_at: string
+          duration: number | null
           error_message: string | null
           id: string
           status: string | null
@@ -196,6 +197,7 @@ export type Database = {
           audio_url?: string | null
           completed_at?: string | null
           created_at?: string
+          duration?: number | null
           error_message?: string | null
           id?: string
           status?: string | null
@@ -207,6 +209,7 @@ export type Database = {
           audio_url?: string | null
           completed_at?: string | null
           created_at?: string
+          duration?: number | null
           error_message?: string | null
           id?: string
           status?: string | null

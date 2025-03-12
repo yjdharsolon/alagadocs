@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { TranscriptionResult } from './types';
 
@@ -110,14 +109,13 @@ export const transcribeAudio = async (audioUrl: string): Promise<TranscriptionRe
     
     console.log('Transcription successful, updating record');
     
-    // Update the transcription record with the transcribed text
+    // Update the transcription record with the transcribed text and duration
     const { error: updateError } = await supabase
       .from('transcriptions')
       .update({ 
         text: transcriptionResult.text,
         status: 'completed',
-        // Add additional metadata if available
-        ...(transcriptionResult.duration && { duration: transcriptionResult.duration }),
+        duration: transcriptionResult.duration,
         ...(transcriptionResult.language && { language: transcriptionResult.language }),
         completed_at: new Date().toISOString()
       })
