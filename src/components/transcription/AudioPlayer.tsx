@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, Pause, SkipBack, SkipForward, Download, RefreshCw } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner'; // Using sonner toast instead of react-hot-toast
 import { supabase } from '@/integrations/supabase/client';
 import { addCacheBuster } from '@/utils/urlUtils';
 
@@ -135,7 +135,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
 
   const retryLoadingAudio = useCallback(() => {
     setRetryCount(prev => prev + 1);
-    toast.info('Retrying audio load...');
+    toast("Retrying audio load..."); // Changed from toast.info to toast
   }, []);
 
   const fixStoragePermissions = useCallback(async () => {
