@@ -14,17 +14,34 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting openai-whisper function...');
+    
+    // Check for required environment variables
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      console.error('OpenAI API key not configured');
+      throw new Error('Server configuration error: OpenAI API key not configured');
+    }
+
     // Get the authorization header from the request
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('No Authorization header provided');
       throw new Error('Missing Authorization header');
     }
 
     // Get the audio URL from the request body
-    const { audioUrl } = await req.json();
-    
-    if (!audioUrl) {
-      throw new Error('No audio URL provided');
+    let audioUrl;
+    try {
+      const requestData = await req.json();
+      audioUrl = requestData.audioUrl;
+      
+      if (!audioUrl) {
+        throw new Error('No audio URL provided');
+      }
+    } catch (parseError) {
+      console.error('Error parsing request:', parseError);
+      throw new Error('Invalid request format. Expected JSON with audioUrl field.');
     }
 
     // Check if this is a simulation request
@@ -59,11 +76,16 @@ serve(async (req) => {
     while (retries > 0) {
       try {
         console.log(`Attempt to fetch audio file: ${6-retries}/5, URL: ${audioUrl}`);
-        audioResponse = await fetch(audioUrl, {
+        
+        // Add cache-busting query parameter to URL
+        const cacheBuster = `?t=${Date.now()}`;
+        const fetchUrl = audioUrl.includes('?') ? `${audioUrl}&cb=${Date.now()}` : `${audioUrl}${cacheBuster}`;
+        
+        audioResponse = await fetch(fetchUrl, {
           headers: {
-            // Add cache-busting query parameter
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
           }
         });
         
@@ -71,7 +93,15 @@ serve(async (req) => {
           console.log('Successfully fetched audio file');
           break;
         } else {
-          console.error(`Fetch attempt failed with status: ${audioResponse.status}`);
+          console.error(`Fetch attempt failed with status: ${audioResponse.status}, statusText: ${audioResponse.statusText}`);
+          
+          // Try to get more details about the error
+          try {
+            const errorText = await audioResponse.text();
+            console.error('Error response:', errorText);
+          } catch (e) {
+            console.error('Could not read error response text');
+          }
         }
       } catch (err) {
         console.error(`Fetch attempt failed, ${retries - 1} retries left:`, err);
@@ -86,7 +116,7 @@ serve(async (req) => {
     }
 
     if (!audioResponse?.ok) {
-      throw new Error(`Failed to fetch audio file after multiple retries. Status: ${audioResponse?.status || 'unknown'}`);
+      throw new Error(`Failed to fetch audio file after multiple retries. Status: ${audioResponse?.status || 'unknown'}, Status Text: ${audioResponse?.statusText || 'unknown'}`);
     }
     
     const audioBlob = await audioResponse.blob();
@@ -104,35 +134,98 @@ serve(async (req) => {
     formData.append('language', 'en');
     formData.append('response_format', 'verbose_json');
     
-    // Get OpenAI API key
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-    
     console.log('Calling OpenAI Whisper API...');
-    const openaiResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`
-      },
-      body: formData
-    });
     
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${errorText}`);
+    // Call OpenAI API with retries
+    let openaiResponse;
+    let openaiRetries = 3;
+    let openaiBackoffTime = 2000;
+    
+    while (openaiRetries > 0) {
+      try {
+        console.log(`OpenAI API call attempt: ${4-openaiRetries}/3`);
+        
+        openaiResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openaiApiKey}`
+          },
+          body: formData
+        });
+        
+        if (openaiResponse.ok) {
+          console.log('OpenAI API call successful');
+          break;
+        } else {
+          const errorStatus = openaiResponse.status;
+          let errorText = '';
+          
+          try {
+            errorText = await openaiResponse.text();
+          } catch (e) {
+            errorText = 'Could not read error response';
+          }
+          
+          console.error(`OpenAI API call failed with status ${errorStatus}:`, errorText);
+          
+          // If rate limited, wait longer
+          if (errorStatus === 429) {
+            openaiBackoffTime = 10000; // 10 seconds for rate limit errors
+          }
+          
+          // If it's a fatal error that won't be fixed by retrying, throw immediately
+          if (errorStatus === 401) {
+            throw new Error(`OpenAI API authentication error: ${errorText}`);
+          }
+          
+          // For server errors, retry
+          if (errorStatus >= 500) {
+            openaiRetries--;
+            if (openaiRetries > 0) {
+              console.log(`Retrying OpenAI API call in ${openaiBackoffTime}ms...`);
+              await new Promise(resolve => setTimeout(resolve, openaiBackoffTime));
+              openaiBackoffTime *= 2;
+            } else {
+              throw new Error(`OpenAI API server error after retries: ${errorText}`);
+            }
+          } else {
+            // For client errors other than 401, throw immediately
+            throw new Error(`OpenAI API error: ${errorText}`);
+          }
+        }
+      } catch (err) {
+        console.error(`OpenAI API call attempt failed:`, err);
+        openaiRetries--;
+        
+        if (openaiRetries > 0) {
+          console.log(`Retrying OpenAI API call in ${openaiBackoffTime}ms...`);
+          await new Promise(resolve => setTimeout(resolve, openaiBackoffTime));
+          openaiBackoffTime *= 2;
+        } else {
+          throw err;
+        }
+      }
     }
     
-    const transcription = await openaiResponse.json();
+    if (!openaiResponse?.ok) {
+      throw new Error('Failed to call OpenAI API after multiple retries');
+    }
+    
+    let transcription;
+    try {
+      transcription = await openaiResponse.json();
+    } catch (jsonError) {
+      console.error('Error parsing OpenAI response:', jsonError);
+      throw new Error('Failed to parse OpenAI API response');
+    }
+    
     console.log('Transcription successful, length:', transcription.text.length);
     
     return new Response(
       JSON.stringify({
         transcription: transcription.text,
-        duration: transcription.duration,
-        language: transcription.language
+        duration: transcription.duration || 0,
+        language: transcription.language || 'en'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -144,7 +237,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Unknown error occurred',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        stack: error instanceof Error ? error.stack : undefined
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

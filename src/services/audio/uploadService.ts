@@ -46,14 +46,18 @@ export const uploadAudio = async (file: File): Promise<string> => {
     
     // Create the transcription record first
     console.log('Inserting transcription record with initial status: pending');
+    
+    // Create a minimal transcription record with required fields only
+    const transcriptionData = {
+      audio_url: publicUrl,
+      user_id: userId,
+      text: '', // Empty text initially, will be filled after transcription
+      status: 'pending'
+    };
+    
     const { data: insertData, error: transcriptionError } = await supabase
       .from('transcriptions')
-      .insert({
-        audio_url: publicUrl,
-        user_id: userId,
-        text: '', // Empty text initially, will be filled after transcription
-        status: 'pending'
-      })
+      .insert(transcriptionData)
       .select();
         
     if (transcriptionError) {
@@ -74,24 +78,31 @@ export const uploadAudio = async (file: File): Promise<string> => {
     }
     
     // Attempt to fix permissions before uploading
+    console.log('Calling fix-storage-permissions function to ensure proper access...');
     try {
-      console.log('Calling fix-storage-permissions function to ensure proper access...');
-      const { error: fixError } = await supabase.functions.invoke('fix-storage-permissions');
-      if (fixError) {
-        console.warn('Error fixing permissions:', fixError);
+      const { data, error } = await supabase.functions.invoke('fix-storage-permissions', {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      });
+      
+      if (error) {
+        console.warn('Error fixing permissions:', error);
+        // Continue anyway, the upload might still work
       } else {
-        console.log('Successfully fixed permissions');
+        console.log('Successfully fixed permissions:', data);
         // Wait for permissions to propagate
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
     } catch (fixErr) {
       console.warn('Error calling fix-permissions function:', fixErr);
+      // Continue anyway, the upload might still work
     }
     
     // Now upload the file
     console.log('Now uploading file to storage');
     let attempts = 0;
-    const maxAttempts = 3;
+    const maxAttempts = 5; // Increased from 3 to 5
     
     while (attempts < maxAttempts) {
       attempts++;
@@ -123,14 +134,20 @@ export const uploadAudio = async (file: File): Promise<string> => {
             throw error;
           }
           
-          // Wait longer between retries
-          await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
+          // Exponential backoff
+          const backoffTime = 2000 * Math.pow(2, attempts - 1);
+          console.log(`Waiting ${backoffTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, backoffTime));
           
           // Try fixing permissions again before retry
           if (attempts < maxAttempts) {
             try {
               console.log('Retrying fix-storage-permissions function...');
-              await supabase.functions.invoke('fix-storage-permissions');
+              await supabase.functions.invoke('fix-storage-permissions', {
+                headers: {
+                  Authorization: `Bearer ${sessionData.session.access_token}`
+                }
+              });
               await new Promise(resolve => setTimeout(resolve, 2000));
             } catch (e) {
               console.warn('Error retrying fix-permissions:', e);
@@ -157,7 +174,9 @@ export const uploadAudio = async (file: File): Promise<string> => {
         }
         
         // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
+        const backoffTime = 2000 * Math.pow(2, attempts - 1);
+        console.log(`Waiting ${backoffTime}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
       }
     }
     

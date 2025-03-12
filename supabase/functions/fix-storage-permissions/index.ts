@@ -13,10 +13,21 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting fix-storage-permissions function...');
+    
+    // Check for required environment variables
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error('Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+      throw new Error('Server configuration error: Missing required environment variables');
+    }
+
     // Create a Supabase client with the Admin key
     const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      supabaseUrl,
+      serviceRoleKey,
       {
         auth: {
           autoRefreshToken: false,
@@ -28,6 +39,7 @@ serve(async (req) => {
     // Get auth token from request
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('No Authorization header provided');
       throw new Error('Missing Authorization header');
     }
 
@@ -46,51 +58,102 @@ serve(async (req) => {
 
     // Ensure the transcriptions bucket exists and is public
     console.log('Creating or updating transcriptions bucket...');
-    const { error: bucketError } = await supabaseAdmin
-      .storage
-      .createBucket('transcriptions', {
-        public: true,
-        fileSizeLimit: 52428800, // 50MB
-        allowedMimeTypes: ['audio/*']
-      });
-
-    if (bucketError && !bucketError.message.includes('already exists')) {
-      console.error('Error creating bucket:', bucketError);
-      throw bucketError;
-    }
-
-    // Update bucket to be public if it exists but isn't public
-    if (bucketError?.message.includes('already exists')) {
-      console.log('Bucket already exists, updating settings...');
-      await supabaseAdmin
+    try {
+      const { error: bucketError } = await supabaseAdmin
         .storage
-        .updateBucket('transcriptions', {
+        .createBucket('transcriptions', {
           public: true,
-          fileSizeLimit: 52428800,
+          fileSizeLimit: 52428800, // 50MB
           allowedMimeTypes: ['audio/*']
         });
+
+      if (bucketError && !bucketError.message.includes('already exists')) {
+        console.error('Error creating bucket:', bucketError);
+        throw bucketError;
+      }
+
+      // Update bucket to be public if it exists but isn't public
+      if (bucketError?.message.includes('already exists')) {
+        console.log('Bucket already exists, updating settings...');
+        await supabaseAdmin
+          .storage
+          .updateBucket('transcriptions', {
+            public: true,
+            fileSizeLimit: 52428800,
+            allowedMimeTypes: ['audio/*']
+          });
+      }
+    } catch (bucketError) {
+      console.error('Error managing bucket:', bucketError);
+      throw new Error(`Error managing storage bucket: ${bucketError.message || 'Unknown error'}`);
     }
 
-    // Test bucket access
+    // Test bucket access with retries
     console.log('Testing bucket access...');
-    const testContent = new Uint8Array([1, 2, 3, 4]);
-    const testFilePath = `test-${Date.now()}.bin`;
+    const maxRetries = 3;
+    let retryCount = 0;
+    let uploadSuccess = false;
     
-    const { error: uploadError } = await supabaseAdmin
-      .storage
-      .from('transcriptions')
-      .upload(testFilePath, testContent);
+    while (retryCount < maxRetries && !uploadSuccess) {
+      try {
+        const testContent = new Uint8Array([1, 2, 3, 4]);
+        const testFilePath = `test-${Date.now()}.bin`;
+        
+        const { error: uploadError } = await supabaseAdmin
+          .storage
+          .from('transcriptions')
+          .upload(testFilePath, testContent);
 
-    if (uploadError) {
-      console.error('Test upload failed:', uploadError);
-      throw new Error(`Storage permission test failed: ${uploadError.message}`);
+        if (uploadError) {
+          console.error(`Test upload attempt ${retryCount + 1} failed:`, uploadError);
+          retryCount++;
+          
+          if (retryCount < maxRetries) {
+            console.log(`Retrying in ${retryCount * 1000}ms...`);
+            await new Promise(resolve => setTimeout(resolve, retryCount * 1000));
+          } else {
+            throw new Error(`Storage permission test failed after ${maxRetries} attempts: ${uploadError.message}`);
+          }
+        } else {
+          uploadSuccess = true;
+          console.log('Test upload successful');
+          
+          // Clean up test file
+          await supabaseAdmin
+            .storage
+            .from('transcriptions')
+            .remove([testFilePath]);
+        }
+      } catch (testError) {
+        console.error(`Error in test upload attempt ${retryCount + 1}:`, testError);
+        retryCount++;
+        
+        if (retryCount < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, retryCount * 1000));
+        } else {
+          throw new Error(`Failed to test storage permissions after ${maxRetries} attempts: ${testError.message}`);
+        }
+      }
     }
 
-    // Clean up test file
-    await supabaseAdmin
-      .storage
-      .from('transcriptions')
-      .remove([testFilePath]);
+    // Configure RLS policies if needed
+    try {
+      console.log('Ensuring RLS policies are properly configured...');
+      
+      // Execute RPC to ensure storage policies - this is a custom function that should be defined in your database
+      const { error: policyError } = await supabaseAdmin.rpc('ensure_storage_policies', {
+        bucket_id: 'transcriptions',
+        user_id: user.id
+      });
+      
+      if (policyError) {
+        console.warn('Warning: Could not update RLS policies via RPC:', policyError);
+        // Continue execution - this is not critical if policies are already set up
+      }
+    } catch (policyError) {
+      console.warn('Warning: Error while configuring RLS policies:', policyError);
+      // Continue execution - this is not critical if policies are already set up
+    }
 
     console.log('Storage permissions verified successfully');
 
@@ -110,7 +173,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        errorDetails: error instanceof Error ? error.stack : undefined
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

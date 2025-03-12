@@ -71,7 +71,7 @@ const processRealTranscription = async (audioUrl: string, accessToken: string): 
   await new Promise(resolve => setTimeout(resolve, 2000));
   
   // Initialize transcription attempt with improved retry handling
-  const maxAttempts = 3;
+  const maxAttempts = 5; // Increased from 3 to 5
   const baseRetryDelay = 3000; // 3 seconds
   
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -139,20 +139,57 @@ const updateTranscriptionRecord = async (
 ): Promise<void> => {
   console.log('Updating transcription record in database');
   
-  const { error: updateError } = await supabase
-    .from('transcriptions')
-    .update({ 
+  try {
+    // Build the update object with only fields we know exist
+    const updateData: Record<string, any> = { 
       text: transcriptionResult.text,
       status: 'completed',
-      duration: transcriptionResult.duration,
-      ...(transcriptionResult.language && { language: transcriptionResult.language }),
       completed_at: new Date().toISOString()
-    })
-    .eq('audio_url', audioUrl)
-    .eq('user_id', userId);
-      
-  if (updateError) {
-    console.error('Error updating transcription record:', updateError);
-    throw new Error(`Failed to update transcription: ${updateError.message}`);
+    };
+    
+    // Only add duration if it exists
+    if (transcriptionResult.duration !== undefined) {
+      updateData.duration = transcriptionResult.duration;
+    }
+    
+    // Only add language if it exists
+    if (transcriptionResult.language) {
+      updateData.language = transcriptionResult.language;
+    }
+    
+    const { error: updateError } = await supabase
+      .from('transcriptions')
+      .update(updateData)
+      .eq('audio_url', audioUrl)
+      .eq('user_id', userId);
+        
+    if (updateError) {
+      // Check for specific error about missing columns
+      if (updateError.message.includes('column') && updateError.message.includes('does not exist')) {
+        console.warn('Column missing in transcriptions table:', updateError.message);
+        
+        // Try again without the problematic fields
+        const fallbackUpdateData = { 
+          text: transcriptionResult.text,
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        };
+        
+        const { error: fallbackError } = await supabase
+          .from('transcriptions')
+          .update(fallbackUpdateData)
+          .eq('audio_url', audioUrl)
+          .eq('user_id', userId);
+          
+        if (fallbackError) {
+          throw fallbackError;
+        }
+      } else {
+        throw updateError;
+      }
+    }
+  } catch (error) {
+    console.error('Error updating transcription record:', error);
+    throw new Error(`Failed to update transcription: ${error.message}`);
   }
 };
