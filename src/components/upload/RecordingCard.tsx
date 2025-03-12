@@ -3,24 +3,19 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mic } from 'lucide-react';
 import { AudioRecorder } from './audio-recorder';
-import { SimulationButton } from './SimulationButton';
 
 interface RecordingCardProps {
   onRecordingComplete: (file: File) => void;
   isRecording: boolean;
   setIsRecording: (isRecording: boolean) => void;
-  onSimulate: () => void;
   isUploading: boolean;
-  isSimulating: boolean;
 }
 
 export const RecordingCard: React.FC<RecordingCardProps> = ({ 
   onRecordingComplete, 
   isRecording, 
   setIsRecording,
-  onSimulate,
-  isUploading,
-  isSimulating
+  isUploading
 }) => {
   return (
     <Card className="mb-6">
@@ -35,12 +30,6 @@ export const RecordingCard: React.FC<RecordingCardProps> = ({
           onRecordingComplete={onRecordingComplete} 
           isRecording={isRecording}
           setIsRecording={setIsRecording}
-        />
-        
-        <SimulationButton 
-          onSimulate={onSimulate} 
-          disabled={isUploading || isRecording} 
-          isSimulating={isSimulating}
         />
       </CardContent>
     </Card>

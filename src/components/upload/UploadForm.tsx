@@ -19,7 +19,6 @@ interface UploadFormProps {
 
 export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete }) => {
   const { user, signOut } = useAuth();
-  const [simulationInProgress, setSimulationInProgress] = useState(false);
   const [navigating, setNavigating] = useState(false);
   const navigate = useNavigate();
   
@@ -90,28 +89,6 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
     }
   }, [originalHandleSubmit, onTranscriptionComplete, navigate]);
   
-  const simulateRecording = useCallback(() => {
-    setSimulationInProgress(true);
-    toast.info("Simulating audio recording...");
-    
-    setTimeout(() => {
-      const arrayBuffer = new ArrayBuffer(44100);
-      const mockAudioBlob = new Blob([arrayBuffer], { type: 'audio/webm' });
-      const mockFile = new File([mockAudioBlob], 'simulation-recording.webm', { 
-        type: 'audio/webm',
-        lastModified: Date.now() 
-      });
-      
-      handleRecordingComplete(mockFile);
-      toast.success("Simulated recording completed");
-      
-      setTimeout(() => {
-        handleSubmit();
-        setSimulationInProgress(false);
-      }, 1000);
-    }, 2000);
-  }, [handleRecordingComplete, handleSubmit]);
-  
   if (!sessionChecked) {
     return <AuthenticationCheck isLoading={true} />;
   }
@@ -139,9 +116,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
           onRecordingComplete={handleRecordingComplete} 
           isRecording={isRecording}
           setIsRecording={setIsRecording}
-          onSimulate={simulateRecording}
           isUploading={isUploading}
-          isSimulating={simulationInProgress}
         />
         
         {isUploading && (

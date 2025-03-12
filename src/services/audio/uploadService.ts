@@ -57,12 +57,6 @@ export const uploadAudio = async (file: File): Promise<string> => {
     
     console.log('Created initial transcription record:', insertData);
     
-    // For simulated recordings, we don't actually need to upload a file
-    if (file.name.includes('simulation')) {
-      console.log('Simulation mode detected, skipping actual file upload');
-      return publicUrl;
-    }
-    
     // Now upload the file
     console.log('Now uploading file to storage');
     let attempts = 0;

@@ -43,10 +43,8 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       setIsUploading(true);
       setError(null);
       
-      const isSimulation = file.name.includes('simulation-recording');
-      
       // Start tracking progress and get the interval reference
-      const progressInterval = startProgressTracking(isSimulation);
+      const progressInterval = startProgressTracking();
       
       // Verify and refresh the authentication session if needed - do this in parallel
       const sessionPromise = verifyAndRefreshSession();

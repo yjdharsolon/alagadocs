@@ -7,7 +7,7 @@ export const useUploadProgress = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState<UploadStep>('idle');
 
-  const startProgressTracking = (isSimulation: boolean = false) => {
+  const startProgressTracking = () => {
     setCurrentStep('verifying');
     setUploadProgress(5);
     
@@ -17,11 +17,6 @@ export const useUploadProgress = () => {
         return prev;
       });
     }, 100);
-    
-    // For simulation, move a bit faster
-    if (isSimulation) {
-      setUploadProgress(30);
-    }
     
     return progressInterval;
   };
