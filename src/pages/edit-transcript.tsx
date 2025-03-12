@@ -13,11 +13,14 @@ export default function EditTranscriptPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [locationStateRecovered, setLocationStateRecovered] = useState(false);
+  const [recoveryAttempted, setRecoveryAttempted] = useState(false);
   
   // Check for location state; if missing, try to recover from sessionStorage
   useEffect(() => {
     if (!location.state) {
       console.log('No location state found, checking sessionStorage...');
+      setRecoveryAttempted(true);
+      
       try {
         const savedData = sessionStorage.getItem('lastTranscriptionResult');
         if (savedData) {
@@ -35,12 +38,12 @@ export default function EditTranscriptPage() {
         } else {
           console.log('No saved transcription data found');
           toast.error('No transcription data found');
-          navigate('/upload');
+          setTimeout(() => navigate('/upload'), 1500);
         }
       } catch (err) {
         console.error('Error recovering transcription data:', err);
         toast.error('Error loading transcription data');
-        navigate('/upload');
+        setTimeout(() => navigate('/upload'), 1500);
       }
     } else {
       setIsLoading(false);
@@ -51,8 +54,11 @@ export default function EditTranscriptPage() {
   useEffect(() => {
     if (locationStateRecovered && location.state) {
       setIsLoading(false);
+    } else if (recoveryAttempted && !locationStateRecovered && !location.state) {
+      // If we tried recovery but failed and still don't have state, redirect
+      navigate('/upload');
     }
-  }, [locationStateRecovered, location.state]);
+  }, [locationStateRecovered, location.state, recoveryAttempted, navigate]);
   
   // Setup transcription edit functionality with the location state
   const {

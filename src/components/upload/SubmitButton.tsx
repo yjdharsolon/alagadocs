@@ -18,9 +18,9 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   onSubmit,
   getStepLabel
 }) => {
-  // Use useCallback to memoize the handler
+  // Use useCallback to memoize the handler with improved event prevention
   const handleClick = useCallback((e: React.MouseEvent) => {
-    // Completely prevent any default browser behavior
+    // Stop any form submission or default behavior
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -45,11 +45,8 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
     
     console.log('Submit button clicked, initiating upload process');
     
-    // Use requestAnimationFrame for better timing
-    window.requestAnimationFrame(() => {
-      // Execute the onSubmit callback
-      onSubmit();
-    });
+    // Execute the onSubmit callback immediately
+    onSubmit();
     
     // Return false to prevent any default in older browsers
     return false;

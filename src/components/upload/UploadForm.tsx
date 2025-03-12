@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { FileInputCard } from './FileInputCard';
 import { RecordingCard } from './RecordingCard';
 import { AuthenticationCheck } from './AuthenticationCheck';
+import { Loader2 } from 'lucide-react';
 
 interface UploadFormProps {
   onTranscriptionComplete?: (transcriptionData: any, audioUrl: string, transcriptionId: string) => void;
@@ -17,6 +18,7 @@ interface UploadFormProps {
 export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete }) => {
   const { user, signOut } = useAuth();
   const [simulationInProgress, setSimulationInProgress] = useState(false);
+  const [navigating, setNavigating] = useState(false);
   
   const {
     file,
@@ -38,20 +40,28 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   const handleSubmit = useCallback(async () => {
     try {
       console.log("Submit button clicked, handling submission...");
+      setNavigating(false);
       
       const result = await originalHandleSubmit();
       
-      if (onTranscriptionComplete && result && result.transcriptionData) {
+      if (result && result.transcriptionData) {
         console.log('Transcription completed, calling onTranscriptionComplete with results:', result);
-        onTranscriptionComplete(
-          result.transcriptionData,
-          result.audioUrl || '',
-          result.transcriptionId || ''
-        );
+        
+        // Set navigating state to show transition UI
+        setNavigating(true);
+        
+        if (onTranscriptionComplete) {
+          onTranscriptionComplete(
+            result.transcriptionData,
+            result.audioUrl || '',
+            result.transcriptionId || ''
+          );
+        }
       }
     } catch (error) {
       console.error('Error in handleSubmit:', error);
       toast.error('Error completing transcription process');
+      setNavigating(false);
     }
   }, [originalHandleSubmit, onTranscriptionComplete]);
   
@@ -79,6 +89,15 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   
   if (!sessionChecked) {
     return <AuthenticationCheck isLoading={true} />;
+  }
+  
+  if (navigating) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin mb-4" />
+        <p className="text-muted-foreground text-lg">Navigating to transcription editor...</p>
+      </div>
+    );
   }
   
   return (
