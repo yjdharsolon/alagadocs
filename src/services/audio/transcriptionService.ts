@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { TranscriptionResult } from './types';
 import { toast } from 'sonner';
@@ -147,12 +146,11 @@ const updateTranscriptionRecord = async (
       completed_at: new Date().toISOString()
     };
     
-    // Only add duration if it exists
+    // Only add optional fields if they exist
     if (transcriptionResult.duration !== undefined) {
       updateData.duration = transcriptionResult.duration;
     }
     
-    // Only add language if it exists
     if (transcriptionResult.language) {
       updateData.language = transcriptionResult.language;
     }
@@ -164,11 +162,10 @@ const updateTranscriptionRecord = async (
       .eq('user_id', userId);
         
     if (updateError) {
-      // Check for specific error about missing columns
+      // Check if error is about missing columns and try without optional fields
       if (updateError.message.includes('column') && updateError.message.includes('does not exist')) {
         console.warn('Column missing in transcriptions table:', updateError.message);
         
-        // Try again without the problematic fields
         const fallbackUpdateData = { 
           text: transcriptionResult.text,
           status: 'completed',

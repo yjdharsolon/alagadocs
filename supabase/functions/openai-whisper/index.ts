@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -16,21 +15,18 @@ serve(async (req) => {
   try {
     console.log('Starting openai-whisper function...');
     
-    // Check for required environment variables
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
       console.error('OpenAI API key not configured');
       throw new Error('Server configuration error: OpenAI API key not configured');
     }
 
-    // Get the authorization header from the request
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       console.error('No Authorization header provided');
       throw new Error('Missing Authorization header');
     }
 
-    // Get the audio URL from the request body
     let audioUrl;
     try {
       const requestData = await req.json();
@@ -44,7 +40,6 @@ serve(async (req) => {
       throw new Error('Invalid request format. Expected JSON with audioUrl field.');
     }
 
-    // Check if this is a simulation request
     const isSimulation = audioUrl.includes('simulation-recording');
     
     if (isSimulation) {
@@ -71,13 +66,13 @@ serve(async (req) => {
     // Fetch the audio file with retries and exponential backoff
     let audioResponse;
     let retries = 5;
-    let backoffTime = 1000; // Start with 1 second
+    let backoffTime = 2000; // Start with 2 seconds
     
     while (retries > 0) {
       try {
         console.log(`Attempt to fetch audio file: ${6-retries}/5, URL: ${audioUrl}`);
         
-        // Add cache-busting query parameter to URL
+        // Add cache-busting query parameter
         const cacheBuster = `?t=${Date.now()}`;
         const fetchUrl = audioUrl.includes('?') ? `${audioUrl}&cb=${Date.now()}` : `${audioUrl}${cacheBuster}`;
         
@@ -93,15 +88,9 @@ serve(async (req) => {
           console.log('Successfully fetched audio file');
           break;
         } else {
-          console.error(`Fetch attempt failed with status: ${audioResponse.status}, statusText: ${audioResponse.statusText}`);
-          
-          // Try to get more details about the error
-          try {
-            const errorText = await audioResponse.text();
-            console.error('Error response:', errorText);
-          } catch (e) {
-            console.error('Could not read error response text');
-          }
+          console.error(`Fetch attempt failed with status: ${audioResponse.status}`);
+          const errorText = await audioResponse.text();
+          console.error('Error response:', errorText);
         }
       } catch (err) {
         console.error(`Fetch attempt failed, ${retries - 1} retries left:`, err);
@@ -112,11 +101,13 @@ serve(async (req) => {
         console.log(`Waiting ${backoffTime}ms before next retry...`);
         await new Promise(resolve => setTimeout(resolve, backoffTime));
         backoffTime *= 2; // Exponential backoff
+      } else {
+        throw new Error(`Failed to fetch audio file after multiple retries`);
       }
     }
 
     if (!audioResponse?.ok) {
-      throw new Error(`Failed to fetch audio file after multiple retries. Status: ${audioResponse?.status || 'unknown'}, Status Text: ${audioResponse?.statusText || 'unknown'}`);
+      throw new Error(`Failed to fetch audio file. Status: ${audioResponse?.status || 'unknown'}`);
     }
     
     const audioBlob = await audioResponse.blob();
@@ -138,12 +129,12 @@ serve(async (req) => {
     
     // Call OpenAI API with retries
     let openaiResponse;
-    let openaiRetries = 3;
+    let openaiRetries = 5; // Increased from 3 to 5
     let openaiBackoffTime = 2000;
     
     while (openaiRetries > 0) {
       try {
-        console.log(`OpenAI API call attempt: ${4-openaiRetries}/3`);
+        console.log(`OpenAI API call attempt: ${6-openaiRetries}/5`);
         
         openaiResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
           method: 'POST',
@@ -158,24 +149,12 @@ serve(async (req) => {
           break;
         } else {
           const errorStatus = openaiResponse.status;
-          let errorText = '';
-          
-          try {
-            errorText = await openaiResponse.text();
-          } catch (e) {
-            errorText = 'Could not read error response';
-          }
-          
+          const errorText = await openaiResponse.text();
           console.error(`OpenAI API call failed with status ${errorStatus}:`, errorText);
           
           // If rate limited, wait longer
           if (errorStatus === 429) {
             openaiBackoffTime = 10000; // 10 seconds for rate limit errors
-          }
-          
-          // If it's a fatal error that won't be fixed by retrying, throw immediately
-          if (errorStatus === 401) {
-            throw new Error(`OpenAI API authentication error: ${errorText}`);
           }
           
           // For server errors, retry
@@ -189,7 +168,7 @@ serve(async (req) => {
               throw new Error(`OpenAI API server error after retries: ${errorText}`);
             }
           } else {
-            // For client errors other than 401, throw immediately
+            // For client errors, throw immediately
             throw new Error(`OpenAI API error: ${errorText}`);
           }
         }
@@ -224,7 +203,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         transcription: transcription.text,
-        duration: transcription.duration || 0,
+        duration: transcription.duration || null,
         language: transcription.language || 'en'
       }),
       { 

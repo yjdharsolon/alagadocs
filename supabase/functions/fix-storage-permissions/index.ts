@@ -64,7 +64,7 @@ serve(async (req) => {
         .createBucket('transcriptions', {
           public: true,
           fileSizeLimit: 52428800, // 50MB
-          allowedMimeTypes: ['audio/*']
+          allowedMimeTypes: ['audio/*', 'application/octet-stream'] // Added binary MIME type
         });
 
       if (bucketError && !bucketError.message.includes('already exists')) {
@@ -80,7 +80,7 @@ serve(async (req) => {
           .updateBucket('transcriptions', {
             public: true,
             fileSizeLimit: 52428800,
-            allowedMimeTypes: ['audio/*']
+            allowedMimeTypes: ['audio/*', 'application/octet-stream'] // Added binary MIME type
           });
       }
     } catch (bucketError) {
@@ -88,29 +88,34 @@ serve(async (req) => {
       throw new Error(`Error managing storage bucket: ${bucketError.message || 'Unknown error'}`);
     }
 
-    // Test bucket access with retries
+    // Test bucket access with improved binary test file
     console.log('Testing bucket access...');
-    const maxRetries = 3;
+    const maxRetries = 5; // Increased from 3 to 5
     let retryCount = 0;
     let uploadSuccess = false;
     
     while (retryCount < maxRetries && !uploadSuccess) {
       try {
-        const testContent = new Uint8Array([1, 2, 3, 4]);
+        // Create a proper binary file for testing
+        const testContent = new Uint8Array([0x89, 0x50, 0x4E, 0x47]); // PNG file header
         const testFilePath = `test-${Date.now()}.bin`;
         
         const { error: uploadError } = await supabaseAdmin
           .storage
           .from('transcriptions')
-          .upload(testFilePath, testContent);
+          .upload(testFilePath, testContent, {
+            contentType: 'application/octet-stream', // Explicitly set binary MIME type
+            cacheControl: 'no-cache' // Prevent caching issues
+          });
 
         if (uploadError) {
           console.error(`Test upload attempt ${retryCount + 1} failed:`, uploadError);
           retryCount++;
           
           if (retryCount < maxRetries) {
-            console.log(`Retrying in ${retryCount * 1000}ms...`);
-            await new Promise(resolve => setTimeout(resolve, retryCount * 1000));
+            const backoffTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
+            console.log(`Retrying in ${backoffTime}ms...`);
+            await new Promise(resolve => setTimeout(resolve, backoffTime));
           } else {
             throw new Error(`Storage permission test failed after ${maxRetries} attempts: ${uploadError.message}`);
           }
@@ -129,7 +134,8 @@ serve(async (req) => {
         retryCount++;
         
         if (retryCount < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, retryCount * 1000));
+          const backoffTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
+          await new Promise(resolve => setTimeout(resolve, backoffTime));
         } else {
           throw new Error(`Failed to test storage permissions after ${maxRetries} attempts: ${testError.message}`);
         }
@@ -140,7 +146,7 @@ serve(async (req) => {
     try {
       console.log('Ensuring RLS policies are properly configured...');
       
-      // Execute RPC to ensure storage policies - this is a custom function that should be defined in your database
+      // Execute RPC to ensure storage policies
       const { error: policyError } = await supabaseAdmin.rpc('ensure_storage_policies', {
         bucket_id: 'transcriptions',
         user_id: user.id
@@ -148,11 +154,9 @@ serve(async (req) => {
       
       if (policyError) {
         console.warn('Warning: Could not update RLS policies via RPC:', policyError);
-        // Continue execution - this is not critical if policies are already set up
       }
     } catch (policyError) {
       console.warn('Warning: Error while configuring RLS policies:', policyError);
-      // Continue execution - this is not critical if policies are already set up
     }
 
     console.log('Storage permissions verified successfully');
