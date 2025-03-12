@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { FileInputCard } from './FileInputCard';
 import { RecordingCard } from './RecordingCard';
 import { AuthenticationCheck } from './AuthenticationCheck';
+import { useNavigate } from 'react-router-dom';
 
 interface UploadFormProps {
   onTranscriptionComplete?: (transcriptionData: any, audioUrl: string, transcriptionId: string) => void;
@@ -18,6 +19,7 @@ interface UploadFormProps {
 export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete }) => {
   const { user, signOut } = useAuth();
   const [simulationInProgress, setSimulationInProgress] = useState(false);
+  const navigate = useNavigate();
   
   const {
     file,
@@ -36,8 +38,13 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   } = useUploadForm(user, signOut);
 
   // Wrap the handleSubmit function to intercept the result
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault(); // Prevent form submission
+    }
+    
     try {
+      console.log("Submit button clicked, handling submission...");
       const result = await originalHandleSubmit();
       
       // If we have an onTranscriptionComplete callback and result data
@@ -51,6 +58,14 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       } else if (result && !onTranscriptionComplete) {
         // If no callback provided but transcription was successful, navigate programmatically
         console.log('No callback provided, but transcription completed successfully');
+        navigate('/edit-transcript', { 
+          state: { 
+            transcriptionData: result.transcriptionData,
+            audioUrl: result.audioUrl || '',
+            transcriptionId: result.transcriptionId || ''
+          },
+          replace: true // Use replace to avoid adding to history stack
+        });
       } else if (!result) {
         console.error('Transcription failed or returned no results');
       }

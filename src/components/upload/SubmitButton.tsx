@@ -21,8 +21,12 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   return (
     <Button 
       size="lg" 
-      onClick={onSubmit}
+      onClick={(e) => {
+        e.preventDefault(); // Prevent form submission
+        onSubmit();
+      }}
       disabled={!hasFile || isUploading || isRecording}
+      type="button" // Change from 'submit' to 'button'
     >
       {isUploading ? (
         <>
