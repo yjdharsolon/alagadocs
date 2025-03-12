@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface MedicalTranscriptionFormatterProps {
   transcriptionText: string;
@@ -146,13 +147,23 @@ const MedicalTranscriptionFormatter: React.FC<MedicalTranscriptionFormatterProps
             </Alert>
           )}
           
-          <Textarea 
-            className="min-h-[300px] font-mono text-sm"
-            value={formattedText}
-            onChange={(e) => setFormattedText(e.target.value)}
-            placeholder="Structured medical text will appear here..."
-            readOnly={isProcessing}
-          />
+          {isProcessing ? (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">AI is structuring your medical text...</p>
+              </div>
+              <Skeleton className="h-[300px] w-full" />
+            </div>
+          ) : (
+            <Textarea 
+              className="min-h-[300px] font-mono text-sm"
+              value={formattedText}
+              onChange={(e) => setFormattedText(e.target.value)}
+              placeholder="Structured medical text will appear here..."
+              readOnly={isProcessing}
+            />
+          )}
         </CardContent>
         <CardFooter className="flex justify-between flex-wrap gap-2">
           <Button 
