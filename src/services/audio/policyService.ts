@@ -3,12 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface PolicyInfo {
   schema: string;
-  table: string;
+  table_name: string;
   policy_name: string;
   action: string;
   roles: string[];
   definition: string;
-  check: string | null;
+  check_clause: string;
 }
 
 interface GetPoliciesParams {
@@ -22,18 +22,21 @@ interface GetPoliciesParams {
  */
 export const getPoliciesForTable = async (tableName: string): Promise<PolicyInfo[] | null> => {
   try {
-    const params = {
+    const params: GetPoliciesParams = {
       p_table_name: tableName
     };
 
-    const { data, error } = await supabase.rpc('get_policies_for_table', params);
+    const { data, error } = await supabase.rpc<PolicyInfo[], GetPoliciesParams>(
+      'get_policies_for_table', 
+      params
+    );
     
     if (error) {
       console.error(`Error getting policies for table ${tableName}:`, error);
       return null;
     }
     
-    return data as PolicyInfo[];
+    return data;
   } catch (error) {
     console.error('Error in getPoliciesForTable:', error);
     return null;

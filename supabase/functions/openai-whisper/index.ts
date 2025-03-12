@@ -49,29 +49,53 @@ serve(async (req) => {
     console.log('Processing audio transcription for URL:', audioUrl);
 
     // Add delay to ensure file is available
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Fetch the audio file with retries
+    // Fetch the audio file with retries and exponential backoff
     let audioResponse;
-    let retries = 3;
+    let retries = 5;
+    let backoffTime = 1000; // Start with 1 second
     
     while (retries > 0) {
       try {
-        audioResponse = await fetch(audioUrl);
-        if (audioResponse.ok) break;
+        console.log(`Attempt to fetch audio file: ${6-retries}/5, URL: ${audioUrl}`);
+        audioResponse = await fetch(audioUrl, {
+          headers: {
+            // Add cache-busting query parameter
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        if (audioResponse.ok) {
+          console.log('Successfully fetched audio file');
+          break;
+        } else {
+          console.error(`Fetch attempt failed with status: ${audioResponse.status}`);
+        }
       } catch (err) {
         console.error(`Fetch attempt failed, ${retries - 1} retries left:`, err);
       }
+      
       retries--;
-      if (retries > 0) await new Promise(resolve => setTimeout(resolve, 1000));
+      if (retries > 0) {
+        console.log(`Waiting ${backoffTime}ms before next retry...`);
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
+        backoffTime *= 2; // Exponential backoff
+      }
     }
 
     if (!audioResponse?.ok) {
-      throw new Error(`Failed to fetch audio file after retries`);
+      throw new Error(`Failed to fetch audio file after multiple retries. Status: ${audioResponse?.status || 'unknown'}`);
     }
     
     const audioBlob = await audioResponse.blob();
-    console.log('Audio file fetched successfully, size:', audioBlob.size);
+    const fileSizeKB = Math.round(audioBlob.size / 1024);
+    console.log(`Audio file fetched successfully, size: ${fileSizeKB}KB`);
+    
+    if (audioBlob.size === 0) {
+      throw new Error('Audio file has zero size. The file may be corrupted or not properly uploaded.');
+    }
     
     // Create FormData for OpenAI API
     const formData = new FormData();
@@ -119,7 +143,8 @@ serve(async (req) => {
     console.error('Error in whisper function:', error);
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        timestamp: new Date().toISOString()
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

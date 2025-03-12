@@ -33,6 +33,7 @@ serve(async (req) => {
     }
 
     // Ensure the transcriptions bucket exists and is public
+    console.log('Creating or updating transcriptions bucket...');
     const { data: bucketData, error: bucketError } = await supabaseAdmin
       .storage
       .createBucket('transcriptions', {
@@ -42,11 +43,13 @@ serve(async (req) => {
       });
 
     if (bucketError && !bucketError.message.includes('already exists')) {
+      console.error('Error creating bucket:', bucketError);
       throw bucketError;
     }
 
     // Update bucket to be public if it exists but isn't public
     if (bucketError?.message.includes('already exists')) {
+      console.log('Bucket already exists, updating settings...');
       await supabaseAdmin
         .storage
         .updateBucket('transcriptions', {
@@ -57,15 +60,20 @@ serve(async (req) => {
     }
 
     // Get user ID from auth token
+    console.log('Verifying user authentication...');
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
 
     if (userError || !user) {
+      console.error('Invalid auth token:', userError);
       throw new Error('Invalid auth token');
     }
 
+    console.log(`Authenticated user: ${user.id}`);
+
     // Ensure storage permissions are set correctly
+    console.log('Ensuring storage policies are set correctly...');
     const { error: policyError } = await supabaseAdmin
       .rpc('ensure_storage_policies', {
         bucket_id: 'transcriptions',
@@ -77,10 +85,35 @@ serve(async (req) => {
       throw policyError;
     }
 
+    // Add a delay to allow policies to propagate
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Test bucket access by uploading a small test file
+    console.log('Testing bucket access...');
+    const testFileContent = new Blob(['test content']);
+    const testFilePath = `test-permissions-${Date.now()}.txt`;
+    
+    const { error: testUploadError } = await supabaseAdmin
+      .storage
+      .from('transcriptions')
+      .upload(testFilePath, testFileContent, {
+        cacheControl: '3600',
+        upsert: true
+      });
+      
+    if (testUploadError) {
+      console.error('Test upload failed:', testUploadError);
+    } else {
+      console.log('Test upload successful!');
+      // Clean up the test file
+      await supabaseAdmin.storage.from('transcriptions').remove([testFilePath]);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Storage permissions updated successfully' 
+        message: 'Storage permissions updated successfully',
+        userId: user.id
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

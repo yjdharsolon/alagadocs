@@ -42,6 +42,7 @@ serve(async (req) => {
         .createBucket('transcriptions', {
           public: true,
           fileSizeLimit: 52428800, // 50MB in bytes
+          allowedMimeTypes: ['audio/*']
         });
 
       if (createError) {
@@ -50,41 +51,41 @@ serve(async (req) => {
       }
 
       console.log("Setting up bucket policies...");
-      // Add very permissive policies for the bucket
-      const policiesSQL = `
-        -- Create public read policy (allow anyone to read)
-        CREATE POLICY "Public Read Access"
-        ON storage.objects FOR SELECT
-        USING (bucket_id = 'transcriptions');
-        
-        -- Create authenticated insert policy (allow any authenticated user to upload)
-        CREATE POLICY "Authenticated Users Can Upload"
-        ON storage.objects FOR INSERT
-        TO authenticated
-        WITH CHECK (bucket_id = 'transcriptions');
-        
-        -- Create authenticated update policy (allow any authenticated user to update any file)
-        CREATE POLICY "Authenticated Users Can Update Any Files"
-        ON storage.objects FOR UPDATE
-        TO authenticated
-        USING (bucket_id = 'transcriptions');
-        
-        -- Create authenticated delete policy (allow any authenticated user to delete any file)
-        CREATE POLICY "Authenticated Users Can Delete Any Files"
-        ON storage.objects FOR DELETE
-        TO authenticated
-        USING (bucket_id = 'transcriptions');
-      `;
-      
-      // Execute the SQL
-      const { error: policyError } = await supabase.rpc('run_sql_query', {
-        query: policiesSQL
+      // Add very permissive policies for the bucket using RPC function
+      const { error: rpcError } = await supabase.rpc('ensure_storage_policies', {
+        bucket_id: 'transcriptions',
+        user_id: 'system' // This is just a placeholder, policies will be created for all users
       });
       
-      if (policyError) {
-        console.warn("Error setting up policies:", policyError);
+      if (rpcError) {
+        console.warn("Error setting up policies via RPC:", rpcError);
+        
+        // Fallback to direct SQL if RPC fails
+        const directPoliciesSQL = `
+          -- Create authenticated insert policy (allow any authenticated user to upload)
+          CREATE POLICY IF NOT EXISTS "Allow authenticated uploads to transcriptions"
+          ON storage.objects FOR INSERT
+          TO authenticated
+          WITH CHECK (bucket_id = 'transcriptions');
+          
+          -- Create authenticated select policy (allow any authenticated user to select)
+          CREATE POLICY IF NOT EXISTS "Allow authenticated selects from transcriptions"
+          ON storage.objects FOR SELECT
+          TO authenticated
+          USING (bucket_id = 'transcriptions');
+        `;
+        
+        const { error: sqlError } = await supabase.rpc('run_sql_query', {
+          query: directPoliciesSQL
+        });
+        
+        if (sqlError) {
+          console.warn("Error with direct SQL policy setup:", sqlError);
+        } else {
+          console.log("Direct SQL policy setup successful");
+        }
       } else {
-        console.log("Storage policies setup successful");
+        console.log("Storage policies setup successful via RPC");
       }
       
       // Test the bucket by uploading a test file
@@ -100,10 +101,25 @@ serve(async (req) => {
         console.warn("Test upload failed:", testError);
       } else {
         console.log("Test upload successful");
+        
+        // Clean up test file
+        await supabase.storage.from('transcriptions').remove(['test-file.txt']);
       }
     } else {
       // Make sure permissions are set correctly
       console.log("Bucket already exists, verifying policies...");
+      
+      // Verify and fix policies using RPC
+      const { error: rpcError } = await supabase.rpc('ensure_storage_policies', {
+        bucket_id: 'transcriptions',
+        user_id: 'system' // This is just a placeholder
+      });
+      
+      if (rpcError) {
+        console.warn("Error ensuring policies via RPC:", rpcError);
+      } else {
+        console.log("Storage policies verified successfully");
+      }
       
       // Check permissions by testing upload
       try {
@@ -116,56 +132,12 @@ serve(async (req) => {
           });
           
         if (testError) {
-          if (testError.message.includes('row-level security policy') || 
-              testError.message.includes('new row violates')) {
-            console.log("Upload test failed due to RLS policy, fixing policies...");
-            
-            // Fix policies for existing bucket
-            const policiesSQL = `
-              -- Drop existing policies for this bucket if any
-              DROP POLICY IF EXISTS "Public Read Access" ON storage.objects;
-              DROP POLICY IF EXISTS "Authenticated Users Can Upload" ON storage.objects;
-              DROP POLICY IF EXISTS "Authenticated Users Can Update Own Files" ON storage.objects;
-              DROP POLICY IF EXISTS "Authenticated Users Can Delete Own Files" ON storage.objects;
-              
-              -- Create public read policy (allow anyone to read)
-              CREATE POLICY "Public Read Access"
-              ON storage.objects FOR SELECT
-              USING (bucket_id = 'transcriptions');
-              
-              -- Create authenticated insert policy (allow any authenticated user to upload)
-              CREATE POLICY "Authenticated Users Can Upload"
-              ON storage.objects FOR INSERT
-              TO authenticated
-              WITH CHECK (bucket_id = 'transcriptions');
-              
-              -- Create authenticated update policy (allow any authenticated user to update any file)
-              CREATE POLICY "Authenticated Users Can Update Any Files"
-              ON storage.objects FOR UPDATE
-              TO authenticated
-              USING (bucket_id = 'transcriptions');
-              
-              -- Create authenticated delete policy (allow any authenticated user to delete any file)
-              CREATE POLICY "Authenticated Users Can Delete Any Files"
-              ON storage.objects FOR DELETE
-              TO authenticated
-              USING (bucket_id = 'transcriptions');
-            `;
-            
-            const { error: policyError } = await supabase.rpc('run_sql_query', {
-              query: policiesSQL
-            });
-            
-            if (policyError) {
-              console.warn("Error fixing policies:", policyError);
-            } else {
-              console.log("Successfully fixed bucket policies");
-            }
-          } else {
-            console.warn("Test upload failed for other reason:", testError);
-          }
+          console.warn("Test upload failed:", testError);
         } else {
-          console.log("Upload test successful, bucket is properly configured");
+          console.log("Test upload successful");
+          
+          // Clean up test file
+          await supabase.storage.from('transcriptions').remove(['test-file.txt']);
         }
       } catch (err) {
         console.warn("Error during test upload:", err);
@@ -179,7 +151,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in ensure-transcription-bucket function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

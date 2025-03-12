@@ -39,11 +39,11 @@ export const transcribeAudio = async (audioUrl: string): Promise<TranscriptionRe
       console.log('Calling OpenAI Whisper API via edge function');
       
       // Add a short delay to ensure the file is available
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Initialize transcription attempt
       let attempts = 0;
-      const maxAttempts = 2;
+      const maxAttempts = 3;
       let lastError: Error | null = null;
       
       while (attempts < maxAttempts) {
@@ -60,17 +60,27 @@ export const transcribeAudio = async (audioUrl: string): Promise<TranscriptionRe
           
           if (error) {
             console.error(`Transcription attempt ${attempts} failed:`, error);
-            lastError = new Error(error.message);
+            lastError = new Error(`Edge function error: ${error.message}`);
             // Wait longer before retrying
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 3000));
             continue;
           }
           
-          if (!data || !data.transcription) {
-            console.error(`No transcription data returned in attempt ${attempts}`);
-            lastError = new Error('No transcription data returned');
+          if (!data || (!data.transcription && !data.error)) {
+            console.error(`No transcription data returned in attempt ${attempts}`, data);
+            lastError = new Error('No transcription data returned from the API');
             if (attempts < maxAttempts) {
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await new Promise(resolve => setTimeout(resolve, 3000));
+              continue;
+            }
+            throw lastError;
+          }
+          
+          if (data.error) {
+            console.error(`API returned error in attempt ${attempts}:`, data.error);
+            lastError = new Error(`API error: ${data.error}`);
+            if (attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 3000));
               continue;
             }
             throw lastError;
@@ -78,8 +88,8 @@ export const transcribeAudio = async (audioUrl: string): Promise<TranscriptionRe
           
           transcriptionResult = {
             text: data.transcription,
-            duration: data.duration,
-            language: data.language
+            duration: data.duration || 0,
+            language: data.language || 'en'
           };
           
           break;
@@ -88,6 +98,8 @@ export const transcribeAudio = async (audioUrl: string): Promise<TranscriptionRe
           if (attempts >= maxAttempts) {
             throw lastError;
           }
+          // Exponential backoff
+          await new Promise(resolve => setTimeout(resolve, 3000 * attempts));
         }
       }
       
