@@ -1,8 +1,7 @@
-
 import React, { useEffect } from 'react';
 import TranscriptionEditor from '@/components/transcription/TranscriptionEditor';
 import AudioPlayer from '@/components/transcription/AudioPlayer';
-import { addCacheBuster } from '@/supabase/functions/openai-whisper/utils/urlUtils';
+import { addCacheBuster } from '@/utils/urlUtils';
 
 interface EditStepProps {
   audioUrl: string;
