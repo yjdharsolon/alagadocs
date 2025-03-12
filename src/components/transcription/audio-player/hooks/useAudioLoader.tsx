@@ -57,11 +57,23 @@ export const useAudioLoader = ({ audioUrl, retryCount }: UseAudioLoaderProps): U
     
     console.log(`Loading audio from URL: ${urlWithCacheBuster}`);
     
-    // Create audio element with validated URL
+    // Create audio element
     const audio = new Audio();
     
-    // Set up event listeners before setting src to catch any immediate errors
+    // For debugging - log any issues with the audio element
+    if (!audio) {
+      console.error('Failed to create audio element');
+      setIsLoading(false);
+      setError('Failed to create audio player');
+      return null;
+    }
+    
+    // Set crossOrigin to fix potential CORS issues with recorded audio
+    audio.crossOrigin = 'anonymous';
+    
+    // Set up event listeners before setting src
     audio.addEventListener('loadedmetadata', () => {
+      console.log('Audio metadata loaded successfully');
       if (isFinite(audio.duration)) {
         setAudioDuration(Math.floor(audio.duration));
         console.log(`Audio duration: ${audio.duration}`);
@@ -81,12 +93,26 @@ export const useAudioLoader = ({ audioUrl, retryCount }: UseAudioLoaderProps): U
       audio.currentTime = 0;
     });
     
+    audio.addEventListener('canplaythrough', () => {
+      // If we get to this point, the audio is definitely loaded
+      console.log('Audio can be played through without buffering');
+      setIsLoading(false);
+      if (audio.duration && isFinite(audio.duration)) {
+        setAudioDuration(Math.floor(audio.duration));
+      }
+    });
+    
     audio.addEventListener('error', (e) => {
       const errorCode = audio.error?.code || 0;
       const errorMessage = audio.error?.message || 'Unknown error';
       console.error(`Error loading audio file: ${errorMessage} (code: ${errorCode})`, e);
+      
+      // Add more diagnostic info
+      console.log('Audio src at time of error:', audio.src);
+      
       setIsLoading(false);
       
+      // Try to get more info about the audio file
       fetch(urlWithCacheBuster, { method: 'HEAD' })
         .then(response => {
           if (response.status === 403) {
@@ -118,8 +144,25 @@ export const useAudioLoader = ({ audioUrl, retryCount }: UseAudioLoaderProps): U
       toast.error('Error loading audio file');
     });
     
-    // Only set src after event listeners are in place
-    audio.src = urlWithCacheBuster;
+    // Set audio preload attribute programmatically (HTMLAudioElement doesn't have this as a property)
+    audio.setAttribute('preload', 'auto');
+    
+    // For webm files specifically (commonly used for recordings)
+    if (urlWithCacheBuster.toLowerCase().includes('.webm')) {
+      console.log('Detected WebM audio format, ensuring proper loading');
+      // Some browsers need a small timeout before setting the src for WebM files
+      setTimeout(() => {
+        audio.src = urlWithCacheBuster;
+      }, 100);
+    } else {
+      // Set the src after all event listeners are in place
+      audio.src = urlWithCacheBuster;
+    }
+    
+    // Debugging: verify src was set
+    console.log(`Audio src set to: ${audio.src}`);
+    
+    // Store the audio element in state
     setAudioElement(audio);
     
     return audio;
@@ -137,8 +180,10 @@ export const useAudioLoader = ({ audioUrl, retryCount }: UseAudioLoaderProps): U
     
     return () => {
       if (audio) {
+        // Properly clean up the audio element
         audio.pause();
-        audio.src = '';
+        audio.removeAttribute('src'); // Safer than setting to empty string
+        audio.load(); // This forces the audio element to reset
       }
     };
   }, [audioUrl, loadAudio, retryCount]);
