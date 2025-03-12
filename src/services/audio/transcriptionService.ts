@@ -1,11 +1,10 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { TranscriptionResult } from './types';
 import { toast } from 'sonner';
 
 /**
  * Transcribes an audio file using the OpenAI Whisper API
- * @param audioUrl The URL of the audio file to transcribe
- * @returns The transcription result
  */
 export const transcribeAudio = async (audioUrl: string): Promise<TranscriptionResult> => {
   try {
@@ -70,15 +69,19 @@ const processRealTranscription = async (audioUrl: string, accessToken: string): 
   await new Promise(resolve => setTimeout(resolve, 2000));
   
   // Initialize transcription attempt with improved retry handling
-  const maxAttempts = 5; // Increased from 3 to 5
-  const baseRetryDelay = 3000; // 3 seconds
+  const maxAttempts = 5;
+  const baseRetryDelay = 3000;
   
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       console.log(`Transcription attempt ${attempt}/${maxAttempts} for URL: ${audioUrl}`);
       
+      // Add cache-busting parameter to URL
+      const cacheBuster = `cb=${Date.now()}`;
+      const processUrl = audioUrl.includes('?') ? `${audioUrl}&${cacheBuster}` : `${audioUrl}?${cacheBuster}`;
+      
       const { data, error } = await supabase.functions.invoke('openai-whisper', {
-        body: { audioUrl },
+        body: { audioUrl: processUrl },
         headers: {
           Authorization: `Bearer ${accessToken}`
         }
@@ -120,16 +123,14 @@ const processRealTranscription = async (audioUrl: string, accessToken: string): 
       if (attempt === maxAttempts) {
         throw attemptError;
       }
-      // Continue to the next iteration for retry
     }
   }
   
-  // This should never be reached due to throw in the loop, but TypeScript requires a return
   throw new Error('Failed to transcribe audio after multiple attempts');
 };
 
 /**
- * Updates the transcription record in the database
+ * Updates the transcription record in the database with fallback handling
  */
 const updateTranscriptionRecord = async (
   audioUrl: string, 

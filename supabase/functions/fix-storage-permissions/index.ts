@@ -64,7 +64,7 @@ serve(async (req) => {
         .createBucket('transcriptions', {
           public: true,
           fileSizeLimit: 52428800, // 50MB
-          allowedMimeTypes: ['audio/*', 'application/octet-stream'] // Added binary MIME type
+          allowedMimeTypes: ['audio/*', 'application/octet-stream', 'binary/octet-stream'] // Added more binary MIME types
         });
 
       if (bucketError && !bucketError.message.includes('already exists')) {
@@ -72,7 +72,7 @@ serve(async (req) => {
         throw bucketError;
       }
 
-      // Update bucket to be public if it exists but isn't public
+      // Update bucket if it exists
       if (bucketError?.message.includes('already exists')) {
         console.log('Bucket already exists, updating settings...');
         await supabaseAdmin
@@ -80,7 +80,7 @@ serve(async (req) => {
           .updateBucket('transcriptions', {
             public: true,
             fileSizeLimit: 52428800,
-            allowedMimeTypes: ['audio/*', 'application/octet-stream'] // Added binary MIME type
+            allowedMimeTypes: ['audio/*', 'application/octet-stream', 'binary/octet-stream']
           });
       }
     } catch (bucketError) {
@@ -90,13 +90,13 @@ serve(async (req) => {
 
     // Test bucket access with improved binary test file
     console.log('Testing bucket access...');
-    const maxRetries = 5; // Increased from 3 to 5
+    const maxRetries = 5;
     let retryCount = 0;
     let uploadSuccess = false;
     
     while (retryCount < maxRetries && !uploadSuccess) {
       try {
-        // Create a proper binary file for testing
+        // Create a proper binary file for testing using a PNG header
         const testContent = new Uint8Array([0x89, 0x50, 0x4E, 0x47]); // PNG file header
         const testFilePath = `test-${Date.now()}.bin`;
         
@@ -104,8 +104,8 @@ serve(async (req) => {
           .storage
           .from('transcriptions')
           .upload(testFilePath, testContent, {
-            contentType: 'application/octet-stream', // Explicitly set binary MIME type
-            cacheControl: 'no-cache' // Prevent caching issues
+            contentType: 'application/octet-stream',
+            cacheControl: 'no-cache'
           });
 
         if (uploadError) {
@@ -113,7 +113,7 @@ serve(async (req) => {
           retryCount++;
           
           if (retryCount < maxRetries) {
-            const backoffTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
+            const backoffTime = Math.pow(2, retryCount) * 1000;
             console.log(`Retrying in ${backoffTime}ms...`);
             await new Promise(resolve => setTimeout(resolve, backoffTime));
           } else {
@@ -134,7 +134,7 @@ serve(async (req) => {
         retryCount++;
         
         if (retryCount < maxRetries) {
-          const backoffTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
+          const backoffTime = Math.pow(2, retryCount) * 1000;
           await new Promise(resolve => setTimeout(resolve, backoffTime));
         } else {
           throw new Error(`Failed to test storage permissions after ${maxRetries} attempts: ${testError.message}`);
