@@ -4,9 +4,18 @@ import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const TranscriptionError = () => {
   const navigate = useNavigate();
+  
+  const handleReturn = () => {
+    // Clear any pending transcription data
+    sessionStorage.removeItem('pendingTranscription');
+    sessionStorage.removeItem('preserveAuthRedirect');
+    toast.info('Returning to upload page...');
+    navigate('/upload');
+  };
   
   return (
     <Layout>
@@ -22,7 +31,7 @@ const TranscriptionError = () => {
             <p className="mb-4">Please return to the upload page and try again.</p>
             <Button 
               className="bg-primary text-white px-4 py-2 rounded"
-              onClick={() => navigate('/upload')}
+              onClick={handleReturn}
             >
               Return to Upload
             </Button>

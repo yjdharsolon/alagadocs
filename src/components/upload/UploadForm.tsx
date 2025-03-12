@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { ErrorAlert } from './ErrorAlert';
@@ -10,6 +9,7 @@ import { FileInputCard } from './FileInputCard';
 import { RecordingCard } from './RecordingCard';
 import { AuthenticationCheck } from './AuthenticationCheck';
 import { Loader2 } from 'lucide-react';
+import LoadingTranscription from '../transcription/LoadingTranscription';
 
 interface UploadFormProps {
   onTranscriptionComplete?: (transcriptionData: any, audioUrl: string, transcriptionId: string) => void;
@@ -36,7 +36,6 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
     getStepLabel
   } = useUploadForm(user, signOut);
 
-  // Use useCallback to memoize the handler
   const handleSubmit = useCallback(async () => {
     try {
       console.log("Submit button clicked, handling submission...");
@@ -92,12 +91,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   }
   
   if (navigating) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin mb-4" />
-        <p className="text-muted-foreground text-lg">Navigating to transcription editor...</p>
-      </div>
-    );
+    return <LoadingTranscription />;
   }
   
   return (
