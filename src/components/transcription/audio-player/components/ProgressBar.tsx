@@ -9,10 +9,11 @@ interface ProgressBarProps {
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ currentTime, audioDuration, isLoading }) => {
-  // Provide a fallback duration for recorded audio if needed
+  // Ensure we have a valid duration value
+  // If audioDuration is NaN, Infinity, or less than 0, estimate based on currentTime
   const effectiveDuration = isFinite(audioDuration) && audioDuration > 0 
     ? audioDuration 
-    : 0;
+    : Math.max(currentTime + 10, 30); // Estimate: current position + 10 seconds, minimum 30 seconds
   
   // Calculate progress percentage
   const progressPercentage = effectiveDuration > 0 
@@ -21,7 +22,11 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ currentTime, audioDuration, i
   
   // Format the time display
   const currentTimeDisplay = formatTime(currentTime);
-  const durationDisplay = formatTime(effectiveDuration);
+  const durationDisplay = isFinite(audioDuration) && audioDuration > 0
+    ? formatTime(audioDuration)
+    : isLoading 
+      ? '--:--' 
+      : `~${formatTime(effectiveDuration)}`; // Show approximate duration with ~ prefix
   
   return (
     <div className="space-y-1">
@@ -36,7 +41,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ currentTime, audioDuration, i
       </div>
       <div className="flex justify-between text-xs text-gray-500">
         <span>{currentTimeDisplay}</span>
-        <span>{isLoading ? '--:--' : durationDisplay}</span>
+        <span>{durationDisplay}</span>
       </div>
     </div>
   );
