@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { UploadForm } from '@/components/upload/UploadForm';
@@ -12,6 +12,7 @@ import TranscriptionEditor from '@/components/transcription/TranscriptionEditor'
 import AudioPlayer from '@/components/transcription/AudioPlayer';
 import { useTranscriptionEdit } from '@/hooks/useTranscriptionEdit';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function UnifiedTranscriptionPage() {
   const { user } = useAuth();
@@ -38,18 +39,38 @@ export default function UnifiedTranscriptionPage() {
     handleSave,
     handleContinueToStructured
   } = useTranscriptionEdit(localState);
+
+  // Check if we already have data from location state
+  useEffect(() => {
+    if (location.state?.transcriptionData) {
+      setTranscriptionData(location.state.transcriptionData);
+      setAudioUrl(location.state.audioUrl || '');
+      setTranscriptionId(location.state.transcriptionId || '');
+      setActiveStep('transcribe');
+    }
+  }, [location.state]);
   
   // Handle completion of upload process
   const handleUploadComplete = (data: any, url: string, id: string) => {
+    console.log('Upload complete! Received data:', data);
     setTranscriptionData(data);
     setAudioUrl(url);
     setTranscriptionId(id);
     setActiveStep('transcribe');
+    
+    // Show success notification
+    toast.success('Transcription completed successfully!');
   };
   
   // Handle moving to edit step
   const handleStartEditing = () => {
     setActiveStep('edit');
+  };
+  
+  // Add better error handling for user feedback
+  const handleError = (error: any) => {
+    console.error('Error in transcription workflow:', error);
+    toast.error('Error processing transcription. Please try again.');
   };
   
   return (

@@ -43,14 +43,21 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       
       // If we have an onTranscriptionComplete callback and result data
       if (onTranscriptionComplete && result && result.transcriptionData) {
+        console.log('Transcription completed, calling onTranscriptionComplete with results:', result);
         onTranscriptionComplete(
           result.transcriptionData,
           result.audioUrl || '',
           result.transcriptionId || ''
         );
+      } else if (result && !onTranscriptionComplete) {
+        // If no callback provided but transcription was successful, navigate programmatically
+        console.log('No callback provided, but transcription completed successfully');
+      } else if (!result) {
+        console.error('Transcription failed or returned no results');
       }
     } catch (error) {
       console.error('Error in handleSubmit:', error);
+      toast.error('Error completing transcription process');
     }
   };
   
