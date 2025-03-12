@@ -82,7 +82,6 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   }
   
   return (
-    // Important: Changed from <form> to <div> to completely avoid form submission behavior
     <div className="max-w-2xl mx-auto">
       {error && (
         <ErrorAlert 

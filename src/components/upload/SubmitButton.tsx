@@ -20,19 +20,40 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
 }) => {
   // Use useCallback to memoize the handler
   const handleClick = useCallback((e: React.MouseEvent) => {
-    // Multiple layers of prevention for any form submission
-    if (e && e.preventDefault) e.preventDefault();
-    if (e && e.stopPropagation) e.stopPropagation();
+    // Completely prevent any default browser behavior
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
-    // Add a small delay before calling onSubmit
-    // This helps ensure any other click handlers have resolved
-    setTimeout(() => {
+    // Stop any further propagation
+    if (e.nativeEvent) {
+      e.nativeEvent.stopImmediatePropagation();
+    }
+    
+    // Ensure we're not in the middle of recording or uploading
+    if (isRecording || isUploading) {
+      console.log('Button clicked while recording or uploading, ignoring');
+      return false;
+    }
+    
+    // Check if we have a file
+    if (!hasFile) {
+      console.log('Button clicked without a file, ignoring');
+      return false;
+    }
+    
+    console.log('Submit button clicked, initiating upload process');
+    
+    // Use requestAnimationFrame for better timing
+    window.requestAnimationFrame(() => {
+      // Execute the onSubmit callback
       onSubmit();
-    }, 10);
+    });
     
-    // Return false to prevent default in older browsers
+    // Return false to prevent any default in older browsers
     return false;
-  }, [onSubmit]);
+  }, [onSubmit, isRecording, isUploading, hasFile]);
 
   return (
     <Button 

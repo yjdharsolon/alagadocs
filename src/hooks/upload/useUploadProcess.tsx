@@ -81,18 +81,32 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
         duration: transcriptionData.duration || null
       };
 
-      // Once we have the result, carefully navigate programmatically
+      // Critical fix: store the result in sessionStorage as a backup
+      // This ensures we can recover the data even if navigation fails
+      try {
+        sessionStorage.setItem('lastTranscriptionResult', JSON.stringify(result));
+      } catch (err) {
+        console.warn('Could not store transcription in sessionStorage:', err);
+      }
+
+      // Turn off uploading state before navigation to avoid state conflicts
+      setIsUploading(false);
+      resetProgress();
+      
+      // Use a more reliable navigation approach with a longer delay
       console.log('Attempting to navigate to edit-transcript with data:', result);
       
-      // Use setTimeout with 0ms delay to push navigation to the next event loop tick
-      // This can help prevent issues with navigation during state updates
-      setTimeout(() => {
-        navigate('/edit-transcript', { 
-          state: result,
-          replace: false  // Changed from true to false to avoid replacing history
+      // Use a reliable approach to navigation
+      window.setTimeout(() => {
+        // Force a complete state reset before navigation
+        Promise.resolve().then(() => {
+          navigate('/edit-transcript', { 
+            state: result,
+            replace: false
+          });
         });
         console.log('Navigation executed');
-      }, 0);
+      }, 500); // Increased delay for more reliable navigation
       
       return result;
     } catch (error) {
