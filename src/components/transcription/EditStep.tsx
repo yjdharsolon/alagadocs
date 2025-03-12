@@ -26,8 +26,18 @@ const EditStep: React.FC<EditStepProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-1">
+      <div className="lg:col-span-1 space-y-4">
         <AudioPlayer audioUrl={audioUrl} />
+        
+        <div className="bg-muted p-4 rounded-lg">
+          <h3 className="text-sm font-medium mb-2">Tips:</h3>
+          <ul className="text-xs text-muted-foreground space-y-1">
+            <li>• Use the Edit tab to correct transcription errors</li>
+            <li>• Switch to the Format tab to structure your text as a clinical note</li>
+            <li>• Choose from different note types like SOAP, Consultation, etc.</li>
+            <li>• You can edit the formatted text before saving</li>
+          </ul>
+        </div>
       </div>
       
       <div className="lg:col-span-2">

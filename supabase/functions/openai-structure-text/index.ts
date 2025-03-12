@@ -43,6 +43,8 @@ serve(async (req) => {
 
     const systemPrompt = getSystemPrompt(role, template);
     
+    console.log("Calling OpenAI with system prompt:", systemPrompt);
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -89,6 +91,7 @@ serve(async (req) => {
       });
     }
   } catch (error) {
+    console.error("Error in structure-text function:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: {
@@ -101,12 +104,8 @@ serve(async (req) => {
 
 function getSystemPrompt(role: string, template?: { sections: string[] }): string {
   const standardSections = [
-    "Chief Complaint",
-    "History of Present Illness",
-    "Past Medical History",
-    "Medications",
-    "Allergies",
-    "Physical Examination",
+    "Subjective",
+    "Objective",
     "Assessment",
     "Plan"
   ];
