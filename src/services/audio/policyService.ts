@@ -11,6 +11,10 @@ interface PolicyInfo {
   check: string | null;
 }
 
+type GetPoliciesParams = {
+  p_table_name: string;
+};
+
 /**
  * Gets the RLS policies for a table to help diagnose permissions issues
  * @param tableName The name of the table to get policies for
@@ -20,9 +24,13 @@ export const getPoliciesForTable = async (tableName: string): Promise<PolicyInfo
   try {
     // This requires admin privileges, so it will generally fail for regular users
     // It's mainly included for debugging during development
-    const { data, error } = await supabase.rpc(
-      'get_policies_for_table', 
-      { p_table_name: tableName } as any // Use type assertion to avoid TypeScript error
+    const params: GetPoliciesParams = {
+      p_table_name: tableName
+    };
+
+    const { data, error } = await supabase.rpc<PolicyInfo[]>(
+      'get_policies_for_table',
+      params
     );
     
     if (error) {
