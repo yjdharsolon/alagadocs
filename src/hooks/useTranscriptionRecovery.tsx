@@ -42,33 +42,7 @@ export const useTranscriptionRecovery = () => {
     }
   }, [navigate]);
 
-  // Check for URL parameters that might indicate pending status
-  const checkUrlPendingStatus = useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isPendingParam = urlParams.get('pending');
-    
-    if (isPendingParam === 'true') {
-      console.log('Detected pending param in URL');
-      try {
-        const pendingTranscription = sessionStorage.getItem('pendingTranscription');
-        if (pendingTranscription) {
-          console.log('Found pending transcription in sessionStorage');
-          const parsedData = JSON.parse(pendingTranscription);
-          setPendingData(parsedData);
-          setIsPending(true);
-          setIsLoading(false);
-          
-          // Clean up the URL
-          window.history.replaceState({}, document.title, '/edit-transcript');
-          return;
-        }
-      } catch (pendingErr) {
-        console.error('Error checking pending transcription:', pendingErr);
-      }
-    }
-  }, []);
-
-  // Recover data from session storage if no location state
+  // Recover data from session storage
   const recoverFromSessionStorage = useCallback(() => {
     console.log('No location state found, checking sessionStorage...');
     setRecoveryAttempted(true);
@@ -126,7 +100,6 @@ export const useTranscriptionRecovery = () => {
     pendingData,
     setPendingData,
     checkTranscriptionStatus,
-    checkUrlPendingStatus,
     recoverFromSessionStorage,
     location,
     navigate

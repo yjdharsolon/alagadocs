@@ -20,6 +20,7 @@ export default function EditTranscriptPage() {
     locationStateRecovered,
     recoveryAttempted,
     checkTranscriptionStatus,
+    recoverFromSessionStorage,
     location,
     navigate
   } = useTranscriptionRecovery();
@@ -63,9 +64,31 @@ export default function EditTranscriptPage() {
       return;
     }
     
+    // Check URL parameters that might indicate pending status
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPendingParam = urlParams.get('pending');
+    
+    if (isPendingParam === 'true') {
+      console.log('Detected pending param in URL');
+      try {
+        const pendingTranscription = sessionStorage.getItem('pendingTranscription');
+        if (pendingTranscription) {
+          console.log('Found pending transcription in sessionStorage');
+          setIsPending(true);
+          setIsLoading(false);
+          
+          // Clean up the URL
+          window.history.replaceState({}, document.title, '/edit-transcript');
+          return;
+        }
+      } catch (pendingErr) {
+        console.error('Error checking pending transcription:', pendingErr);
+      }
+    }
+    
     // If no location state, try to recover from session storage
     if (!location.state) {
-      const recovered = useTranscriptionRecovery().recoverFromSessionStorage();
+      const recovered = recoverFromSessionStorage();
       
       // If recovery failed and we're not pending, redirect to upload
       if (!recovered && !isPending && recoveryAttempted) {
@@ -75,7 +98,7 @@ export default function EditTranscriptPage() {
     } else {
       setIsLoading(false);
     }
-  }, [location.state, navigate, isPending, recoveryAttempted, setIsPending, setIsLoading]);
+  }, [location.state, navigate, isPending, recoveryAttempted, setIsPending, setIsLoading, recoverFromSessionStorage]);
   
   // Update loading state when we've recovered data
   useEffect(() => {
