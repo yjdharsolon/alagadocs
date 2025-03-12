@@ -41,10 +41,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     openDirectLink 
   } = useAudioControls({ 
     audioElement, 
-    audioUrl, 
+    audioUrl: audioUrl || '', 
     audioDuration, 
     setCurrentTime 
   });
+
+  // Verify we have a valid URL
+  const hasValidUrl = audioUrl && audioUrl.trim().length > 0;
 
   return (
     <Card>
@@ -55,7 +58,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {audioUrl ? (
+        {hasValidUrl ? (
           <>
             <AudioError 
               error={error || ''} 

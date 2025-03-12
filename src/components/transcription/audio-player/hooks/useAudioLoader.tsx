@@ -29,15 +29,22 @@ export const useAudioLoader = ({ audioUrl, retryCount }: UseAudioLoaderProps): U
   const loadAudio = useCallback((url: string) => {
     if (!url) {
       setIsLoading(false);
-      return;
+      setError("No audio URL provided");
+      return null;
     }
+    
+    // Normalize URL - remove existing cache busters to prevent duplicates
+    const normalizedUrl = url.split('?')[0];
+    
+    // Only then add a single cache buster
+    const urlWithCacheBuster = addCacheBuster(normalizedUrl);
     
     setIsLoading(true);
     setError(null);
     setIs403Error(false);
     
-    console.log(`Loading audio from URL: ${url}`);
-    const audio = new Audio(url);
+    console.log(`Loading audio from URL: ${urlWithCacheBuster}`);
+    const audio = new Audio(urlWithCacheBuster);
     setAudioElement(audio);
     
     audio.addEventListener('loadedmetadata', () => {
@@ -66,7 +73,7 @@ export const useAudioLoader = ({ audioUrl, retryCount }: UseAudioLoaderProps): U
       console.error(`Error loading audio file: ${errorMessage} (code: ${errorCode})`, e);
       setIsLoading(false);
       
-      fetch(url, { method: 'HEAD' })
+      fetch(urlWithCacheBuster, { method: 'HEAD' })
         .then(response => {
           if (response.status === 403) {
             setIs403Error(true);
@@ -104,10 +111,10 @@ export const useAudioLoader = ({ audioUrl, retryCount }: UseAudioLoaderProps): U
     let audio: HTMLAudioElement | null = null;
     
     if (audioUrl) {
-      const urlWithCacheBuster = addCacheBuster(audioUrl);
-      audio = loadAudio(urlWithCacheBuster);
+      audio = loadAudio(audioUrl);
     } else {
       setIsLoading(false);
+      setError("No audio URL provided");
     }
     
     return () => {

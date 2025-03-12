@@ -1,7 +1,7 @@
+
 import React, { useEffect } from 'react';
 import TranscriptionEditor from '@/components/transcription/TranscriptionEditor';
 import AudioPlayer from '@/components/transcription/AudioPlayer';
-import { addCacheBuster } from '@/utils/urlUtils';
 
 interface EditStepProps {
   audioUrl: string;
@@ -24,19 +24,16 @@ const EditStep: React.FC<EditStepProps> = ({
   saveError,
   saveSuccess
 }) => {
-  // Add cache buster to avoid audio caching issues
-  const audioUrlWithCacheBuster = audioUrl ? addCacheBuster(audioUrl) : '';
-  
   useEffect(() => {
     // Log when component mounts to verify it's being rendered
     console.log("EditStep rendered with text:", transcriptionText?.substring(0, 50));
-    console.log("Audio URL:", audioUrlWithCacheBuster);
-  }, [transcriptionText, audioUrlWithCacheBuster]);
+    console.log("Audio URL:", audioUrl);
+  }, [transcriptionText, audioUrl]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-1 space-y-4">
-        <AudioPlayer audioUrl={audioUrlWithCacheBuster} />
+        <AudioPlayer audioUrl={audioUrl || ''} />
         
         <div className="bg-muted p-4 rounded-lg">
           <h3 className="text-sm font-medium mb-2">Tips:</h3>
