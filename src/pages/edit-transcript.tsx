@@ -56,6 +56,32 @@ export default function EditTranscriptPage() {
     }
   }, [isPending, checkTranscriptionStatus]);
   
+  // Check for URL parameters that might indicate pending status
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPendingParam = urlParams.get('pending');
+    
+    if (isPendingParam === 'true') {
+      console.log('Detected pending param in URL');
+      try {
+        const pendingTranscription = sessionStorage.getItem('pendingTranscription');
+        if (pendingTranscription) {
+          console.log('Found pending transcription in sessionStorage');
+          const parsedData = JSON.parse(pendingTranscription);
+          setPendingData(parsedData);
+          setIsPending(true);
+          setIsLoading(false);
+          
+          // Clean up the URL
+          window.history.replaceState({}, document.title, '/edit-transcript');
+          return;
+        }
+      } catch (pendingErr) {
+        console.error('Error checking pending transcription:', pendingErr);
+      }
+    }
+  }, []);
+  
   // Check for location state or pending transcription
   useEffect(() => {
     // If we have the isPending flag in location state, show the pending UI

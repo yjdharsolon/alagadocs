@@ -73,15 +73,12 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       // Store this data for recovery
       sessionStorage.setItem('pendingTranscription', JSON.stringify(pendingData));
       
-      // Early navigation to edit-transcript with pending state
-      // This provides better UX by showing the user we're processing their request
-      navigate('/edit-transcript', {
-        state: {
-          isPending: true,
-          pendingData,
-        },
-        replace: true
-      });
+      // Force navigation to edit-transcript with pending state
+      console.log('Navigating to edit-transcript with pending state');
+      
+      // Use window.location.href for a full redirect instead of navigate
+      // This ensures a complete page transition
+      window.location.href = '/edit-transcript?pending=true';
       
       // Continue with transcription in the background
       clearInterval(progressInterval);
