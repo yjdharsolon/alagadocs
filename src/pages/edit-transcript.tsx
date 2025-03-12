@@ -8,15 +8,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function EditTranscriptPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, setIsPending] = useState(false);
   const [locationStateRecovered, setLocationStateRecovered] = useState(false);
   const [recoveryAttempted, setRecoveryAttempted] = useState(false);
   const [pendingData, setPendingData] = useState<any>(null);
+  
+  // Verify authentication first to prevent unwanted redirects
+  useEffect(() => {
+    // Check if we're in a redirect preservation state
+    const preserveRedirect = sessionStorage.getItem('preserveAuthRedirect');
+    
+    if (!user && !preserveRedirect) {
+      console.log('No authenticated user, redirecting to login');
+      navigate('/login');
+    } else if (preserveRedirect) {
+      // Clear the preservation flag
+      sessionStorage.removeItem('preserveAuthRedirect');
+    }
+  }, [user, navigate]);
   
   // Check for transcription completion from the background process
   const checkTranscriptionStatus = useCallback(() => {
@@ -137,18 +153,23 @@ export default function EditTranscriptPage() {
           toast.success('Recovered your transcription data');
         } else {
           console.log('No saved transcription data found');
-          toast.error('No transcription data found');
-          setTimeout(() => navigate('/upload'), 1500);
+          // Don't immediately redirect - this breaks the flow after initial upload
+          if (!isPending) {
+            toast.error('No transcription data found');
+            setTimeout(() => navigate('/upload'), 1500);
+          }
         }
       } catch (err) {
         console.error('Error recovering transcription data:', err);
-        toast.error('Error loading transcription data');
-        setTimeout(() => navigate('/upload'), 1500);
+        if (!isPending) {
+          toast.error('Error loading transcription data');
+          setTimeout(() => navigate('/upload'), 1500);
+        }
       }
     } else {
       setIsLoading(false);
     }
-  }, [location.state, navigate]);
+  }, [location.state, navigate, isPending]);
   
   // Update loading state when we've recovered data
   useEffect(() => {
@@ -156,6 +177,7 @@ export default function EditTranscriptPage() {
       setIsLoading(false);
     } else if (recoveryAttempted && !locationStateRecovered && !location.state && !isPending) {
       // If we tried recovery but failed and still don't have state, redirect
+      // but only if we're not in a pending state
       navigate('/upload');
     }
   }, [locationStateRecovered, location.state, recoveryAttempted, navigate, isPending]);
@@ -234,7 +256,7 @@ export default function EditTranscriptPage() {
   }
 
   // Render error state when no transcription is found
-  if (!transcriptionText) {
+  if (!transcriptionText && !isPending) {
     return (
       <Layout>
         <div className="container mx-auto py-10">

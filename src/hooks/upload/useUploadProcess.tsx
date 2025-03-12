@@ -76,9 +76,11 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       // Force navigation to edit-transcript with pending state
       console.log('Navigating to edit-transcript with pending state');
       
-      // Use window.location.href for a full redirect instead of navigate
-      // This ensures a complete page transition
-      window.location.href = '/edit-transcript?pending=true';
+      // Save auth state to preserve it across the navigation
+      sessionStorage.setItem('preserveAuthRedirect', 'true');
+      
+      // Use navigate instead of window.location to maintain React Router state
+      navigate('/edit-transcript?pending=true', { replace: true });
       
       // Continue with transcription in the background
       clearInterval(progressInterval);

@@ -27,6 +27,7 @@ import CustomizeTemplatePage from './pages/customize-template';
 import RatingsPage from './pages/ratings';
 import BillingPage from './pages/billing';
 import UnifiedTranscriptionPage from './pages/unified-transcription';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const queryClient = new QueryClient();
@@ -40,25 +41,27 @@ function App() {
             <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/role-selection" element={<RoleSelectionPage />} />
+            
+            {/* Protected routes */}
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/role-selection" element={<ProtectedRoute><RoleSelectionPage /></ProtectedRoute>} />
             
             {/* Original separate pages */}
-            <Route path="/upload" element={<UploadPage />} />
-            <Route path="/transcribe" element={<TranscriptionPage />} />
-            <Route path="/edit-transcript" element={<EditTranscriptPage />} />
+            <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
+            <Route path="/transcribe" element={<ProtectedRoute><TranscriptionPage /></ProtectedRoute>} />
+            <Route path="/edit-transcript" element={<ProtectedRoute><EditTranscriptPage /></ProtectedRoute>} />
             
             {/* New unified transcription page */}
-            <Route path="/unified-transcription" element={<UnifiedTranscriptionPage />} />
+            <Route path="/unified-transcription" element={<ProtectedRoute><UnifiedTranscriptionPage /></ProtectedRoute>} />
             
-            <Route path="/ask-ai" element={<AskAIPage />} />
-            <Route path="/templates" element={<TemplatesPage />} />
+            <Route path="/ask-ai" element={<ProtectedRoute><AskAIPage /></ProtectedRoute>} />
+            <Route path="/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
             
             {/* Phase 3 completion routes */}
-            <Route path="/copy-to-emr" element={<CopyToEMRPage />} />
-            <Route path="/customize-template" element={<CustomizeTemplatePage />} />
-            <Route path="/ratings" element={<RatingsPage />} />
-            <Route path="/billing" element={<BillingPage />} />
+            <Route path="/copy-to-emr" element={<ProtectedRoute><CopyToEMRPage /></ProtectedRoute>} />
+            <Route path="/customize-template" element={<ProtectedRoute><CustomizeTemplatePage /></ProtectedRoute>} />
+            <Route path="/ratings" element={<ProtectedRoute><RatingsPage /></ProtectedRoute>} />
+            <Route path="/billing" element={<ProtectedRoute><BillingPage /></ProtectedRoute>} />
           </Routes>
         </QueryClientProvider>
       </AuthProvider>
