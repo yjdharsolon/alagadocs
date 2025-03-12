@@ -73,16 +73,7 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       // Store this data for recovery
       sessionStorage.setItem('pendingTranscription', JSON.stringify(pendingData));
       
-      // Force navigation to edit-transcript with pending state
-      console.log('Navigating to edit-transcript with pending state');
-      
-      // Save auth state to preserve it across the navigation
-      sessionStorage.setItem('preserveAuthRedirect', 'true');
-      
-      // Use navigate instead of window.location to maintain React Router state
-      navigate('/edit-transcript?pending=true', { replace: true });
-      
-      // Continue with transcription in the background
+      // Continue with transcription immediately instead of redirecting
       clearInterval(progressInterval);
       updateProgressForTranscription();
       
@@ -106,9 +97,7 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
 
       // Update the session storage with completed data
       sessionStorage.setItem('lastTranscriptionResult', JSON.stringify(result));
-      
-      // Signal completion to edit-transcript page via sessionStorage
-      sessionStorage.setItem('transcriptionComplete', 'true');
+      sessionStorage.removeItem('pendingTranscription');
       
       // Reset state after transcription is complete
       setIsUploading(false);

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { ErrorAlert } from './ErrorAlert';
@@ -10,6 +11,7 @@ import { RecordingCard } from './RecordingCard';
 import { AuthenticationCheck } from './AuthenticationCheck';
 import { Loader2 } from 'lucide-react';
 import LoadingTranscription from '../transcription/LoadingTranscription';
+import { useNavigate } from 'react-router-dom';
 
 interface UploadFormProps {
   onTranscriptionComplete?: (transcriptionData: any, audioUrl: string, transcriptionId: string) => void;
@@ -19,6 +21,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   const { user, signOut } = useAuth();
   const [simulationInProgress, setSimulationInProgress] = useState(false);
   const [navigating, setNavigating] = useState(false);
+  const navigate = useNavigate();
   
   const {
     file,
@@ -39,9 +42,6 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   const handleSubmit = useCallback(async () => {
     try {
       console.log("Submit button clicked, handling submission...");
-      setNavigating(false);
-      
-      // Show loading screen before starting the process
       setNavigating(true);
       
       const result = await originalHandleSubmit();
@@ -49,12 +49,38 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       if (result && result.transcriptionData) {
         console.log('Transcription completed, calling onTranscriptionComplete with results:', result);
         
+        // First, ensure we push to session storage for recovery
+        sessionStorage.setItem('lastTranscriptionResult', JSON.stringify({
+          transcriptionData: result.transcriptionData,
+          audioUrl: result.audioUrl || '',
+          transcriptionId: result.transcriptionId || ''
+        }));
+        
+        // Force navigation to edit-transcript
         if (onTranscriptionComplete) {
           onTranscriptionComplete(
             result.transcriptionData,
             result.audioUrl || '',
             result.transcriptionId || ''
           );
+        } else {
+          // If no callback provided, manually navigate
+          navigate('/edit-transcript', {
+            state: {
+              transcriptionData: result.transcriptionData,
+              audioUrl: result.audioUrl || '',
+              transcriptionId: result.transcriptionId || ''
+            }
+          });
+        }
+      } else {
+        // If no result, still attempt to navigate based on pending data
+        const pendingData = sessionStorage.getItem('pendingTranscription');
+        if (pendingData) {
+          navigate('/edit-transcript?pending=true');
+        } else {
+          setNavigating(false);
+          toast.error('Error completing transcription process');
         }
       }
     } catch (error) {
@@ -62,7 +88,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       toast.error('Error completing transcription process');
       setNavigating(false);
     }
-  }, [originalHandleSubmit, onTranscriptionComplete]);
+  }, [originalHandleSubmit, onTranscriptionComplete, navigate]);
   
   const simulateRecording = useCallback(() => {
     setSimulationInProgress(true);
