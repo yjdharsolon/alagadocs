@@ -1,12 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getPoliciesForTable } from './policyService';
 
-/**
- * Uploads an audio file to Supabase storage
- * @param file The audio file to upload
- * @returns The public URL of the uploaded file
- */
 export const uploadAudio = async (file: File): Promise<string> => {
   try {
     // Get the current user session first to ensure authentication
@@ -40,12 +34,8 @@ export const uploadAudio = async (file: File): Promise<string> => {
       .from('transcriptions')
       .getPublicUrl(filePath);
     
-    // Force a refresh of the session to ensure we have the latest token
-    console.log('Refreshing session before creating transcription record');
-    await supabase.auth.refreshSession();
-    
     // Create the transcription record first
-    console.log('Inserting transcription record with initial status: pending');
+    console.log('Creating initial transcription record');
     
     // Create a minimal transcription record with required fields only
     const transcriptionData = {
@@ -67,42 +57,16 @@ export const uploadAudio = async (file: File): Promise<string> => {
     
     console.log('Created initial transcription record:', insertData);
     
-    // Wait a moment for the database to process the insert
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
     // For simulated recordings, we don't actually need to upload a file
-    // Just return the public URL for the simulated case
     if (file.name.includes('simulation')) {
       console.log('Simulation mode detected, skipping actual file upload');
       return publicUrl;
     }
     
-    // Attempt to fix permissions before uploading
-    console.log('Calling fix-storage-permissions function to ensure proper access...');
-    try {
-      const { data, error } = await supabase.functions.invoke('fix-storage-permissions', {
-        headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`
-        }
-      });
-      
-      if (error) {
-        console.warn('Error fixing permissions:', error);
-        // Continue anyway, the upload might still work
-      } else {
-        console.log('Successfully fixed permissions:', data);
-        // Wait for permissions to propagate
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-    } catch (fixErr) {
-      console.warn('Error calling fix-permissions function:', fixErr);
-      // Continue anyway, the upload might still work
-    }
-    
     // Now upload the file
     console.log('Now uploading file to storage');
     let attempts = 0;
-    const maxAttempts = 5; // Increased from 3 to 5
+    const maxAttempts = 3;
     
     while (attempts < maxAttempts) {
       attempts++;
@@ -117,14 +81,6 @@ export const uploadAudio = async (file: File): Promise<string> => {
         if (error) {
           console.error(`Upload attempt ${attempts} failed:`, error);
           
-          // If it's a policy error and we've already created the record,
-          // we can still proceed with the transcription using the created record
-          if ((error.message.includes('new row violates') || 
-               error.message.includes('row-level security policy')) && insertData) {
-            console.log('RLS policy error, but transcription record was created. Proceeding with transcription.');
-            return publicUrl;
-          }
-          
           if (attempts >= maxAttempts) {
             // Return the URL anyway if we have a transcription record
             if (insertData) {
@@ -133,37 +89,14 @@ export const uploadAudio = async (file: File): Promise<string> => {
             }
             throw error;
           }
-          
-          // Exponential backoff
-          const backoffTime = 2000 * Math.pow(2, attempts - 1);
-          console.log(`Waiting ${backoffTime}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, backoffTime));
-          
-          // Try fixing permissions again before retry
-          if (attempts < maxAttempts) {
-            try {
-              console.log('Retrying fix-storage-permissions function...');
-              await supabase.functions.invoke('fix-storage-permissions', {
-                headers: {
-                  Authorization: `Bearer ${sessionData.session.access_token}`
-                }
-              });
-              await new Promise(resolve => setTimeout(resolve, 2000));
-            } catch (e) {
-              console.warn('Error retrying fix-permissions:', e);
-            }
-          }
-          
           continue;
         }
         
         console.log('File uploaded successfully:', data);
-        
         return publicUrl;
       } catch (uploadError) {
         console.error(`Error in upload attempt ${attempts}:`, uploadError);
         
-        // If transcription record was created, we can proceed even if the upload failed
         if (insertData) {
           console.log('Upload failed, but transcription record exists. Proceeding with transcription.');
           return publicUrl;
@@ -172,11 +105,6 @@ export const uploadAudio = async (file: File): Promise<string> => {
         if (attempts >= maxAttempts) {
           throw new Error(`Upload failed after ${maxAttempts} attempts: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
         }
-        
-        // Exponential backoff
-        const backoffTime = 2000 * Math.pow(2, attempts - 1);
-        console.log(`Waiting ${backoffTime}ms before retry...`);
-        await new Promise(resolve => setTimeout(resolve, backoffTime));
       }
     }
     

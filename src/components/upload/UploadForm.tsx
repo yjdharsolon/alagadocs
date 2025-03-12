@@ -41,13 +41,13 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       console.log("Submit button clicked, handling submission...");
       setNavigating(false);
       
+      // Show loading screen before starting the process
+      setNavigating(true);
+      
       const result = await originalHandleSubmit();
       
       if (result && result.transcriptionData) {
         console.log('Transcription completed, calling onTranscriptionComplete with results:', result);
-        
-        // Set navigating state to show transition UI
-        setNavigating(true);
         
         if (onTranscriptionComplete) {
           onTranscriptionComplete(
