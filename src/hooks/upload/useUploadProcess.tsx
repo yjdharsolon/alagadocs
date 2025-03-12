@@ -60,6 +60,27 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       
       console.log('Audio successfully uploaded:', audioUrl);
       
+      // Create early navigation data with pending state
+      const pendingData = {
+        audioUrl,
+        status: 'transcribing',
+        transcriptionId: Date.now().toString()
+      };
+      
+      // Store this data for recovery
+      sessionStorage.setItem('pendingTranscription', JSON.stringify(pendingData));
+      
+      // Early navigation to edit-transcript with pending state
+      // This provides better UX by showing the user we're processing their request
+      navigate('/edit-transcript', {
+        state: {
+          isPending: true,
+          pendingData,
+        },
+        replace: true
+      });
+      
+      // Continue with transcription in the background
       clearInterval(progressInterval);
       updateProgressForTranscription();
       
@@ -81,31 +102,21 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
         duration: transcriptionData.duration || null
       };
 
-      // Critical: store the result in sessionStorage as a backup
-      try {
-        sessionStorage.setItem('lastTranscriptionResult', JSON.stringify(result));
-      } catch (err) {
-        console.warn('Could not store transcription in sessionStorage:', err);
-      }
-
-      // Reset state before navigation to prevent UI issues
+      // Update the session storage with completed data
+      sessionStorage.setItem('lastTranscriptionResult', JSON.stringify(result));
+      
+      // Signal completion to edit-transcript page via sessionStorage
+      sessionStorage.setItem('transcriptionComplete', 'true');
+      
+      // Reset state after transcription is complete
       setIsUploading(false);
       resetProgress();
-      
-      // Immediately attempt navigation with a small delay to ensure React state updates
-      console.log('Attempting to navigate to edit-transcript with data:', result);
-      
-      // Use a more direct navigation approach with minimal delay
-      setTimeout(() => {
-        navigate('/edit-transcript', { 
-          state: result,
-          replace: false 
-        });
-      }, 100); // Minimal delay for reliable navigation
       
       return result;
     } catch (error) {
       console.error('Error in upload process:', error);
+      // Cleanup any pending state in case of error
+      sessionStorage.removeItem('pendingTranscription');
       return handleUploadError(error);
     } finally {
       console.log('Upload process completed, resetting state');

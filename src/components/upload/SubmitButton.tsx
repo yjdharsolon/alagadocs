@@ -61,6 +61,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       role="button"
       aria-label={isUploading ? getStepLabel() : 'Continue to Transcription'}
       data-prevent-default="true" // Extra attribute to signal event handling
+      className="transition-all"
     >
       {isUploading ? (
         <>
