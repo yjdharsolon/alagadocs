@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
       <div className="container px-4 md:px-6 mx-auto max-w-7xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div className="md:col-span-2">
-            <h3 className="text-xl font-medium mb-4">VoiceScribe AI</h3>
+            <h3 className="text-xl font-medium mb-4">AlagaDocs</h3>
             <p className="text-gray-600 max-w-md">
               Transform your voice recordings into accurate, editable text with our AI-powered medical transcription service.
             </p>
@@ -72,7 +72,7 @@ const Footer: React.FC = () => {
         
         <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-600 text-sm mb-4 md:mb-0">
-            &copy; {currentYear} VoiceScribe AI. All rights reserved.
+            &copy; {currentYear} AlagaDocs. All rights reserved.
           </p>
           
           <div className="flex space-x-8">

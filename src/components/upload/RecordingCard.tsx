@@ -18,14 +18,14 @@ export const RecordingCard: React.FC<RecordingCardProps> = ({
   isUploading
 }) => {
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Mic className="h-5 w-5" />
+    <Card className="mb-6 border-[#33C3F0]/10 shadow-sm">
+      <CardHeader className="bg-gradient-to-r from-[#F6F6F7] to-[#F1F1F1] rounded-t-md">
+        <CardTitle className="flex items-center gap-2 text-[#403E43]">
+          <Mic className="h-5 w-5 text-[#1EAEDB]" />
           Voice Recording
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <AudioRecorder 
           onRecordingComplete={onRecordingComplete} 
           isRecording={isRecording}

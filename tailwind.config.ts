@@ -66,6 +66,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Netlify-like color palette
+				netlify: {
+					charcoal: '#403E43',
+					white: '#FFFFFF',
+					mediumGray: '#8A898C',
+					brightBlue: '#1EAEDB',
+					darkCharcoal: '#221F26',
+					lightGray: '#C8C8C9',
+					silverGray: '#9F9EA1',
+					skyBlue: '#33C3F0',
+					bgGray: '#F6F6F7',
+					darkGray: '#555555',
+					accentBlue: '#0FA0CE',
 				}
 			},
 			borderRadius: {
