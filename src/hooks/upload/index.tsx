@@ -2,6 +2,9 @@
 import { useUploadAuth } from './useUploadAuth';
 import { useFileHandling } from './useFileHandling';
 import { useUploadProcess } from './useUploadProcess';
+import { useAuthenticationCheck } from './useAuthenticationCheck';
+import { useUploadProgress } from './useUploadProgress';
+import { useUploadError } from './useUploadError';
 
 export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
   const { 
@@ -53,3 +56,6 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
 export * from './useUploadAuth';
 export * from './useFileHandling';
 export * from './useUploadProcess';
+export * from './useAuthenticationCheck';
+export * from './useUploadProgress';
+export * from './useUploadError';
