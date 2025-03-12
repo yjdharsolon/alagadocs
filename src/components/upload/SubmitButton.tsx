@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
@@ -18,23 +18,31 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   onSubmit,
   getStepLabel
 }) => {
-  const handleClick = (e: React.MouseEvent) => {
-    // Ensure we prevent any default behavior
-    e.preventDefault();
-    e.stopPropagation();
+  // Use useCallback to memoize the handler
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    // Multiple layers of prevention for any form submission
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
     
-    // Call the submit handler
-    onSubmit();
-  };
+    // Add a small delay before calling onSubmit
+    // This helps ensure any other click handlers have resolved
+    setTimeout(() => {
+      onSubmit();
+    }, 10);
+    
+    // Return false to prevent default in older browsers
+    return false;
+  }, [onSubmit]);
 
   return (
     <Button 
-      size="lg" 
+      size="lg"
       onClick={handleClick}
       disabled={!hasFile || isUploading || isRecording}
-      type="button"
+      type="button" // Explicitly set as button, not submit
       role="button"
       aria-label={isUploading ? getStepLabel() : 'Continue to Transcription'}
+      data-prevent-default="true" // Extra attribute to signal event handling
     >
       {isUploading ? (
         <>

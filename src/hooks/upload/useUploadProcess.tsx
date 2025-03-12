@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { uploadAudio, transcribeAudio } from '@/services/audio';
@@ -24,7 +24,8 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
   } = useUploadProgress();
   const { handleUploadError } = useUploadError(setError);
 
-  const handleSubmit = async (file: File | null, user: any) => {
+  // We'll make this a useCallback to ensure stability
+  const handleSubmit = useCallback(async (file: File | null, user: any) => {
     if (!file) {
       toast.error('Please upload or record an audio file first');
       return null;
@@ -80,12 +81,18 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
         duration: transcriptionData.duration || null
       };
 
-      // Once we have the result, navigate programmatically
-      console.log('Navigating to edit-transcript with data:', result);
-      navigate('/edit-transcript', { 
-        state: result,
-        replace: true 
-      });
+      // Once we have the result, carefully navigate programmatically
+      console.log('Attempting to navigate to edit-transcript with data:', result);
+      
+      // Use setTimeout with 0ms delay to push navigation to the next event loop tick
+      // This can help prevent issues with navigation during state updates
+      setTimeout(() => {
+        navigate('/edit-transcript', { 
+          state: result,
+          replace: false  // Changed from true to false to avoid replacing history
+        });
+        console.log('Navigation executed');
+      }, 0);
       
       return result;
     } catch (error) {
@@ -96,7 +103,8 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       setIsUploading(false);
       resetProgress();
     }
-  };
+  }, [navigate, resetProgress, setError, completeProgress, updateProgressForTranscription, 
+     updateProgressForUpload, startProgressTracking, verifyAndRefreshSession, handleUploadError]);
 
   return {
     isUploading,

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { CardFooter } from '@/components/ui/card';
+
+import React, { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { ErrorAlert } from './ErrorAlert';
 import { UploadProgress } from './UploadProgress';
@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import { FileInputCard } from './FileInputCard';
 import { RecordingCard } from './RecordingCard';
 import { AuthenticationCheck } from './AuthenticationCheck';
-import { useNavigate } from 'react-router-dom';
 
 interface UploadFormProps {
   onTranscriptionComplete?: (transcriptionData: any, audioUrl: string, transcriptionId: string) => void;
@@ -18,7 +17,6 @@ interface UploadFormProps {
 export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete }) => {
   const { user, signOut } = useAuth();
   const [simulationInProgress, setSimulationInProgress] = useState(false);
-  const navigate = useNavigate();
   
   const {
     file,
@@ -36,7 +34,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
     getStepLabel
   } = useUploadForm(user, signOut);
 
-  const handleSubmit = async () => {
+  // Use useCallback to memoize the handler
+  const handleSubmit = useCallback(async () => {
     try {
       console.log("Submit button clicked, handling submission...");
       
@@ -54,9 +53,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       console.error('Error in handleSubmit:', error);
       toast.error('Error completing transcription process');
     }
-  };
+  }, [originalHandleSubmit, onTranscriptionComplete]);
   
-  const simulateRecording = () => {
+  const simulateRecording = useCallback(() => {
     setSimulationInProgress(true);
     toast.info("Simulating audio recording...");
     
@@ -76,13 +75,14 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
         setSimulationInProgress(false);
       }, 1000);
     }, 2000);
-  };
+  }, [handleRecordingComplete, handleSubmit]);
   
   if (!sessionChecked) {
     return <AuthenticationCheck isLoading={true} />;
   }
   
   return (
+    // Important: Changed from <form> to <div> to completely avoid form submission behavior
     <div className="max-w-2xl mx-auto">
       {error && (
         <ErrorAlert 
@@ -113,7 +113,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
           />
         )}
         
-        <CardFooter className="px-0 flex justify-end">
+        <div className="px-0 flex justify-end">
           <SubmitButton
             isUploading={isUploading}
             isRecording={isRecording}
@@ -121,7 +121,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
             onSubmit={handleSubmit}
             getStepLabel={getStepLabel}
           />
-        </CardFooter>
+        </div>
       </div>
     </div>
   );
