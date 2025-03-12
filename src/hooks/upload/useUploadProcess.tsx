@@ -48,8 +48,8 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       // Start tracking progress and get the interval reference
       const progressInterval = startProgressTracking(isSimulation);
       
-      // Verify and refresh the authentication session if needed
-      await verifyAndRefreshSession();
+      // Verify and refresh the authentication session if needed - do this in parallel
+      const sessionPromise = verifyAndRefreshSession();
       
       updateProgressForUpload();
       
@@ -57,6 +57,9 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       
       // Upload the audio file to Supabase storage
       const audioUrl = await uploadAudio(file);
+      
+      // Ensure session is verified before proceeding
+      await sessionPromise;
       
       console.log('Audio successfully uploaded:', audioUrl);
       

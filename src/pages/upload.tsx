@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 
 export default function AudioUploadPage() {
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [fixingPermissions, setFixingPermissions] = useState(false);
@@ -20,7 +19,6 @@ export default function AudioUploadPage() {
 
   const initializeStorageBucket = async () => {
     try {
-      setIsLoading(true);
       setError(null);
       
       if (!user) {
@@ -38,19 +36,17 @@ export default function AudioUploadPage() {
         return;
       }
       
-      // Call the function to ensure storage bucket exists
-      const { error: bucketError } = await supabase.functions.invoke('ensure-transcription-bucket');
-      
-      if (bucketError) {
-        console.error('Error initializing storage bucket:', bucketError);
-        setError('Error initializing storage. Please try again or contact support.');
-      }
-      
-      setIsLoading(false);
+      // Call the function to ensure storage bucket exists but don't block UI
+      supabase.functions.invoke('ensure-transcription-bucket')
+        .then(({ error: bucketError }) => {
+          if (bucketError) {
+            console.error('Error initializing storage bucket:', bucketError);
+            setError('Error initializing storage. Please try again or contact support.');
+          }
+        });
     } catch (err) {
       console.error('Error initializing storage bucket:', err);
       setError('Error initializing storage. Please try again or contact support.');
-      setIsLoading(false);
     }
   };
   
@@ -86,6 +82,7 @@ export default function AudioUploadPage() {
       return;
     }
 
+    // Initialize storage in the background without showing a loading state
     initializeStorageBucket();
   }, [user, navigate]);
 
@@ -140,16 +137,9 @@ export default function AudioUploadPage() {
           </Alert>
         )}
         
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-            <p className="text-muted-foreground">Initializing storage...</p>
-          </div>
-        ) : (
-          <UploadForm />
-        )}
+        <UploadForm />
         
-        {!error && !isLoading && (
+        {!error && (
           <div className="mt-4 flex justify-center">
             <Button
               variant="outline"

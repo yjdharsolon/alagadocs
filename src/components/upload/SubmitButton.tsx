@@ -45,8 +45,11 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
     
     console.log('Submit button clicked, initiating upload process');
     
-    // Execute the onSubmit callback immediately
-    onSubmit();
+    // Use requestAnimationFrame to ensure UI updates before heavy processing
+    requestAnimationFrame(() => {
+      // Execute the onSubmit callback immediately
+      onSubmit();
+    });
     
     // Return false to prevent any default in older browsers
     return false;
