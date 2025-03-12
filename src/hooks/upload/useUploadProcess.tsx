@@ -33,8 +33,7 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
     // Check if user is logged in
     if (!user) {
       toast.error('Please log in to upload audio');
-      // Use navigate instead of window.location to prevent full page reload
-      navigate('/login', { replace: true });
+      navigate('/login');
       return null;
     }
 
@@ -78,10 +77,16 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
         transcriptionData,
         audioUrl,
         transcriptionId,
-        duration: transcriptionData.duration || null // Include duration in the returned data
+        duration: transcriptionData.duration || null
       };
+
+      // Once we have the result, navigate programmatically
+      console.log('Navigating to edit-transcript with data:', result);
+      navigate('/edit-transcript', { 
+        state: result,
+        replace: true 
+      });
       
-      console.log('Returning transcription result:', result);
       return result;
     } catch (error) {
       console.error('Error in upload process:', error);

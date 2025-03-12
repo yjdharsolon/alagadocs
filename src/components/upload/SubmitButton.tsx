@@ -19,7 +19,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   getStepLabel
 }) => {
   const handleClick = (e: React.MouseEvent) => {
-    // Prevent any default behavior that might cause page refresh
+    // Ensure we prevent any default behavior
     e.preventDefault();
     e.stopPropagation();
     
@@ -32,7 +32,9 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       size="lg" 
       onClick={handleClick}
       disabled={!hasFile || isUploading || isRecording}
-      type="button" // Ensure it's a button, not a submit type
+      type="button"
+      role="button"
+      aria-label={isUploading ? getStepLabel() : 'Continue to Transcription'}
     >
       {isUploading ? (
         <>
