@@ -28,7 +28,7 @@ export const getPoliciesForTable = async (tableName: string): Promise<PolicyInfo
       p_table_name: tableName
     };
 
-    const { data, error } = await supabase.rpc<PolicyInfo[]>(
+    const { data, error } = await supabase.rpc<PolicyInfo[], GetPoliciesParams>(
       'get_policies_for_table',
       params
     );
@@ -44,3 +44,4 @@ export const getPoliciesForTable = async (tableName: string): Promise<PolicyInfo
     return null;
   }
 };
+
