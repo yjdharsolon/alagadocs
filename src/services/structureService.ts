@@ -17,7 +17,7 @@ export const structureText = async (
   try {
     console.log('Structuring text with role:', role);
     
-    // Call a single consistent edge function
+    // Call the edge function to structure the medical text
     const { data, error } = await supabase.functions.invoke('structure-medical-text', {
       body: { 
         text,
