@@ -4,6 +4,7 @@ import { RecordingControls } from './RecordingControls';
 import { AudioPreview } from './AudioPreview';
 import { useAudioRecording } from './useAudioRecording';
 import { Progress } from '@/components/ui/progress';
+import { RecordingNameDialog } from './RecordingNameDialog';
 
 interface AudioRecorderProps {
   onRecordingComplete: (file: File) => void;
@@ -33,7 +34,12 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     maxRecordingTime,
     formatTime,
     audioPreviewRef,
-    togglePlayPreview
+    togglePlayPreview,
+    showNameDialog,
+    setShowNameDialog,
+    saveRecordingWithName,
+    closeNameDialog,
+    defaultFileName
   } = useAudioRecording({
     onRecordingComplete,
     isRecording,
@@ -93,6 +99,14 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
           isPlayingPreview={isPlayingPreview}
         />
       )}
+
+      {/* Name recording dialog */}
+      <RecordingNameDialog
+        isOpen={showNameDialog}
+        onClose={closeNameDialog}
+        onSave={saveRecordingWithName}
+        defaultName={defaultFileName}
+      />
     </div>
   );
 };

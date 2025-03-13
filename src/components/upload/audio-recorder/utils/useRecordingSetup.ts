@@ -9,6 +9,9 @@ interface RecordingSetupParams {
   setIsRecording: (isRecording: boolean) => void;
   setRecordingTime: (time: number) => void;
   onRecordingComplete: (file: File) => void;
+  setShowNameDialog: (show: boolean) => void;
+  setTempBlob: (blob: Blob | null) => void;
+  setDefaultFileName: (name: string) => void;
 }
 
 export const useRecordingSetup = () => {
@@ -19,7 +22,10 @@ export const useRecordingSetup = () => {
     setAudioPreview,
     setIsRecording,
     setRecordingTime,
-    onRecordingComplete
+    onRecordingComplete,
+    setShowNameDialog,
+    setTempBlob,
+    setDefaultFileName
   }: RecordingSetupParams) => {
     try {
       // Clear previous recording if exists
@@ -61,17 +67,18 @@ export const useRecordingSetup = () => {
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         const fileExtension = mimeType.split('/')[1];
-        const audioFile = new File(
-          [audioBlob], 
-          `recording-${Date.now()}.${fileExtension}`, 
-          { type: mimeType }
-        );
+        
+        // Set default file name based on current date/time
+        const defaultFileName = `recording-${Date.now()}`;
+        setDefaultFileName(defaultFileName);
         
         // Create an audio preview URL
         const audioUrl = URL.createObjectURL(audioBlob);
         setAudioPreview(audioUrl);
         
-        onRecordingComplete(audioFile);
+        // Store the blob temporarily and show the naming dialog
+        setTempBlob(audioBlob);
+        setShowNameDialog(true);
         
         // Stop all tracks in the stream
         if (streamRef.current) {
@@ -94,7 +101,26 @@ export const useRecordingSetup = () => {
     }
   };
 
+  const completeRecordingWithName = (
+    blob: Blob,
+    fileName: string,
+    mimeType: string,
+    onRecordingComplete: (file: File) => void
+  ) => {
+    const fileExtension = mimeType.split('/')[1];
+    // Create file with custom name
+    const audioFile = new File(
+      [blob], 
+      `${fileName}.${fileExtension}`, 
+      { type: mimeType }
+    );
+    
+    onRecordingComplete(audioFile);
+    toast.success('Recording saved with name: ' + fileName);
+  };
+
   return {
-    setupRecorder
+    setupRecorder,
+    completeRecordingWithName
   };
 };

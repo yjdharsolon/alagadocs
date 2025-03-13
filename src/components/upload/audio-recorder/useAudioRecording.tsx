@@ -47,7 +47,12 @@ export const useAudioRecording = ({
     togglePlayPreview
   } = useAudioPreview();
 
-  const { setupRecorder } = useRecordingSetup();
+  const { setupRecorder, completeRecordingWithName } = useRecordingSetup();
+
+  // State for file naming dialog
+  const [showNameDialog, setShowNameDialog] = useState(false);
+  const [tempBlob, setTempBlob] = useState<Blob | null>(null);
+  const [defaultFileName, setDefaultFileName] = useState('');
 
   const startRecording = async () => {
     // Clear previous recording if exists
@@ -63,7 +68,10 @@ export const useAudioRecording = ({
       setAudioPreview,
       setIsRecording,
       setRecordingTime,
-      onRecordingComplete
+      onRecordingComplete,
+      setShowNameDialog,
+      setTempBlob,
+      setDefaultFileName
     });
     
     if (!success) {
@@ -85,6 +93,29 @@ export const useAudioRecording = ({
     }
   };
 
+  // Function to save recording with a custom name
+  const saveRecordingWithName = (customFileName: string) => {
+    if (tempBlob) {
+      const mimeType = tempBlob.type || 'audio/webm';
+      completeRecordingWithName(
+        tempBlob,
+        customFileName,
+        mimeType,
+        onRecordingComplete
+      );
+      setTempBlob(null);
+    }
+  };
+
+  // Close dialog without saving custom name
+  const closeNameDialog = () => {
+    // If dialog is closed without a name, use the default name
+    if (tempBlob) {
+      saveRecordingWithName(defaultFileName);
+    }
+    setShowNameDialog(false);
+  };
+
   // Update external isPlayingPreview state when local state changes
   const handleTogglePlayPreview = () => {
     togglePlayPreview(audioPreviewRef);
@@ -100,6 +131,11 @@ export const useAudioRecording = ({
     maxRecordingTime,
     formatTime,
     audioPreviewRef,
-    togglePlayPreview: handleTogglePlayPreview
+    togglePlayPreview: handleTogglePlayPreview,
+    showNameDialog,
+    setShowNameDialog,
+    saveRecordingWithName,
+    closeNameDialog,
+    defaultFileName
   };
 };
