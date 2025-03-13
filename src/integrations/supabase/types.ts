@@ -65,6 +65,7 @@ export type Database = {
           content: Json
           created_at: string
           id: string
+          original_id: string | null
           transcription_id: string
           updated_at: string
           user_id: string
@@ -73,6 +74,7 @@ export type Database = {
           content: Json
           created_at?: string
           id?: string
+          original_id?: string | null
           transcription_id: string
           updated_at?: string
           user_id: string
@@ -81,6 +83,7 @@ export type Database = {
           content?: Json
           created_at?: string
           id?: string
+          original_id?: string | null
           transcription_id?: string
           updated_at?: string
           user_id?: string
