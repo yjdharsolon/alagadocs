@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -119,12 +120,16 @@ serve(async (req) => {
         
         console.log(`Saving structured output for transcription ID ${transcriptionId} and user ID ${userData.user.id}`);
         
+        // Ensure transcriptionId is a valid UUID
+        const validTranscriptionId = ensureUuid(transcriptionId);
+        
         const { error: saveError } = await supabase
           .from('structured_notes')
           .insert({
-            transcription_id: transcriptionId,
+            transcription_id: validTranscriptionId,
             user_id: userData.user.id,
-            content: structuredContent
+            content: structuredContent,
+            original_id: transcriptionId
           });
           
         if (saveError) {
@@ -221,4 +226,47 @@ function toCamelCase(str: string): string {
       return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
     })
     .join('');
+}
+
+// Add UUID handling function
+function ensureUuid(str: string): string {
+  // UUID v5 namespace (use a consistent namespace for reproducibility)
+  const UUID_NAMESPACE = '1b671a64-40d5-491e-99b0-da01ff1f3341';
+  
+  // Check if the string is already a valid UUID
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidPattern.test(str)) {
+    return str; // Already a valid UUID
+  }
+  
+  // Convert to UUID v5 (name-based)
+  // Implementation of UUID v5 algorithm
+  // This is a simplified version and may not be cryptographically secure
+  
+  // For edge function, we need a simple implementation
+  // In production, you'd use a proper UUID library
+  function uuidv5(name: string, namespace: string): string {
+    // Simple hash function (not cryptographically secure, just for demo)
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      const char = name.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    // Convert hash to hex and format as UUID
+    const hashHex = Math.abs(hash).toString(16).padStart(8, '0');
+    const uuid = namespace.substring(0, 24) + hashHex.substring(0, 12);
+    
+    // Format as UUID (8-4-4-4-12)
+    return [
+      uuid.substring(0, 8),
+      uuid.substring(8, 12),
+      uuid.substring(12, 16),
+      uuid.substring(16, 20),
+      uuid.substring(20, 32)
+    ].join('-');
+  }
+  
+  return uuidv5(str, UUID_NAMESPACE);
 }

@@ -21,3 +21,12 @@ site_url = "http://localhost:5173"
 
 [functions.process-payment]
 verify_jwt = true
+
+[functions.structure-medical-text]
+verify_jwt = false
+
+[functions.structure-medical-transcript]
+verify_jwt = false
+
+[functions.openai-structure-text]
+verify_jwt = false
