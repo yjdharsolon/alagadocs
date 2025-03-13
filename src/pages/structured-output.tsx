@@ -17,7 +17,6 @@ import EditableDocumentView from '@/components/structured-output/EditableDocumen
 
 export default function StructuredOutput() {
   const location = useLocation();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   // Get data from location state or search params
@@ -27,7 +26,6 @@ export default function StructuredOutput() {
   
   const [isLoadingTranscription, setIsLoadingTranscription] = useState(false);
   const [loadedTranscription, setLoadedTranscription] = useState<any>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
   
   // Fetch transcription if no data but ID is available
   useEffect(() => {
@@ -51,7 +49,7 @@ export default function StructuredOutput() {
     fetchTranscription();
   }, [transcriptionId, transcriptionData]);
   
-  // Use the hook with either direct data or fetched data
+  // Use the refactored hook
   const {
     user,
     loading,
@@ -59,10 +57,12 @@ export default function StructuredOutput() {
     structuredData,
     templates,
     error,
+    isEditMode,
     handleBackToTranscription,
     handleTemplateSelect,
     handleEdit,
-    updateStructuredData
+    updateStructuredData,
+    handleToggleEditMode
   } = useStructuredOutput({
     transcriptionData: loadedTranscription || transcriptionData,
     transcriptionId: transcriptionId || 'no-id',
@@ -80,11 +80,6 @@ export default function StructuredOutput() {
         toast.success('Copied to clipboard');
       })
       .catch(() => toast.error('Failed to copy to clipboard'));
-  };
-  
-  // Handle toggling edit mode
-  const handleToggleEditMode = () => {
-    setIsEditMode(!isEditMode);
   };
   
   // Show combined loading state if either fetching transcription or processing it

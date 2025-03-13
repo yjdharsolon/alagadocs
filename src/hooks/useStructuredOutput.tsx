@@ -1,15 +1,11 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { 
-  structureText, 
-  saveStructuredNote, 
-  getStructuredNote
-} from '@/services/structuredTextService';
-import { getUserTemplates } from '@/services/templateService';
-import { StructuredNote, TextTemplate } from '@/components/structured-output/types';
+import { MedicalSections, StructuredNote, TextTemplate } from '@/components/structured-output/types';
+import { useStructuredNoteData } from './useStructuredNoteData';
+import { useTemplateSelection } from './useTemplateSelection';
+import { useNoteProcessing } from './useNoteProcessing';
+import { useNavigationActions } from './useNavigationActions';
 
 interface UseStructuredOutputParams {
   transcriptionData: any;
@@ -23,40 +19,54 @@ export const useStructuredOutput = ({
   audioUrl 
 }: UseStructuredOutputParams) => {
   const { user, getUserRole } = useAuth();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [structuredData, setStructuredData] = useState<StructuredNote | null>(null);
-  const [processingText, setProcessingText] = useState(false);
-  const [templates, setTemplates] = useState<TextTemplate[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch user templates
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      if (user) {
-        try {
-          const userTemplates = await getUserTemplates(user.id);
-          setTemplates(userTemplates);
-          
-          // Find default template if exists
-          const defaultTemplate = userTemplates.find(t => t.isDefault);
-          if (defaultTemplate) {
-            setSelectedTemplateId(defaultTemplate.id);
-          }
-        } catch (error) {
-          console.error('Error fetching templates:', error);
-        }
-      }
-    };
-    
-    fetchTemplates();
-  }, [user]);
+  // Use our smaller hooks
+  const {
+    loading,
+    setLoading,
+    processingText,
+    setProcessingText,
+    structuredData,
+    setStructuredData,
+    error,
+    setError,
+    checkExistingNote
+  } = useStructuredNoteData({ transcriptionData, transcriptionId });
   
+  const {
+    templates,
+    selectedTemplateId,
+    handleTemplateSelect
+  } = useTemplateSelection({ userId: user?.id });
+  
+  const {
+    processTranscriptionText,
+    updateStructuredData: updateNote
+  } = useNoteProcessing({
+    userId: user?.id,
+    setLoading,
+    setProcessingText,
+    setStructuredData,
+    setError
+  });
+  
+  const {
+    navigate,
+    handleBackToTranscription,
+    handleEdit
+  } = useNavigationActions({
+    transcriptionData,
+    transcriptionId,
+    audioUrl,
+    structuredData
+  });
+  
+  // Process transcription when data changes
   useEffect(() => {
     const processTranscription = async () => {
       if (!transcriptionData || !transcriptionId) {
-        console.error('Missing require data:', { transcriptionData, transcriptionId });
+        console.error('Missing required data:', { transcriptionData, transcriptionId });
         setError('Missing transcription data. Please go back and try again.');
         setLoading(false);
         return;
@@ -72,22 +82,11 @@ export const useStructuredOutput = ({
       try {
         console.log('Processing transcription:', { id: transcriptionId, text: transcriptionData.text?.substring(0, 50) + '...' });
         
-        try {
-          // First check if we already have structured data for this transcription
-          const existingData = await getStructuredNote(transcriptionId);
-          
-          if (existingData?.content) {
-            console.log('Found existing structured note');
-            setStructuredData(existingData.content);
-            setLoading(false);
-            return;
-          }
-        } catch (lookupError) {
-          console.log('No existing structured note found, will create a new one:', lookupError);
-          // Continue with creating a new note
-        }
+        // First check if we already have a structured note
+        const hasExistingNote = await checkExistingNote();
+        if (hasExistingNote) return;
         
-        setProcessingText(true);
+        // Get user role and selected template
         const userRole = await getUserRole();
         console.log('User role:', userRole);
         
@@ -97,47 +96,26 @@ export const useStructuredOutput = ({
           selectedTemplate = templates.find(t => t.id === selectedTemplateId) || null;
         }
         
-        // Structure the text
-        console.log('Structuring text with template:', selectedTemplate);
-        const structuredResult = await structureText(
-          transcriptionData.text, 
-          userRole,
+        // Process the transcription text
+        await processTranscriptionText(
+          transcriptionData.text,
+          transcriptionId,
+          userRole || 'Doctor',
           selectedTemplate
         );
-        
-        if (structuredResult) {
-          console.log('Structured result received:', structuredResult);
-          setStructuredData(structuredResult);
-          
-          try {
-            // Save to database - don't stop execution if this fails
-            await saveStructuredNote(user.id, transcriptionId, structuredResult);
-            toast.success('Medical notes structured successfully');
-          } catch (saveError) {
-            console.error('Error saving structured note:', saveError);
-            // We still have the structured result, so just inform the user
-            toast('Note structured but could not be saved. Some features may be limited.', {
-              icon: '⚠️'
-            });
-          }
-        } else {
-          throw new Error('No structured data returned');
-        }
       } catch (error: any) {
-        console.error('Error processing transcription:', error);
-        setError(`Failed to structure the transcription: ${error.message}`);
-        toast.error('Failed to structure the transcription. Please try again.');
-      } finally {
-        setProcessingText(false);
+        console.error('Error in processTranscription:', error);
+        setError(`Failed to process transcription: ${error.message}`);
         setLoading(false);
       }
     };
     
     processTranscription();
-  }, [transcriptionData, transcriptionId, user, getUserRole, templates, selectedTemplateId]);
+  }, [transcriptionData, transcriptionId, user, templates, selectedTemplateId]);
   
-  const handleTemplateSelect = (templateId: string) => {
-    setSelectedTemplateId(templateId);
+  // Template selection handler with reprocessing
+  const handleTemplateSelection = (templateId: string) => {
+    handleTemplateSelect(templateId);
     setLoading(true);
     setProcessingText(true);
     
@@ -150,40 +128,14 @@ export const useStructuredOutput = ({
     return () => clearTimeout(timer);
   };
   
-  const handleBackToTranscription = () => {
-    navigate('/transcribe', { 
-      state: { 
-        transcriptionData,
-        transcriptionId,
-        audioUrl
-      } 
-    });
-  };
-  
-  const handleEdit = () => {
-    navigate('/edit-transcript', { 
-      state: { 
-        structuredData,
-        transcriptionId,
-        audioUrl
-      } 
-    });
-  };
-  
-  // Add a function to update the structured data
+  // Update structured data wrapper
   const updateStructuredData = async (updatedData: StructuredNote) => {
-    if (!user || !transcriptionId) return;
-    
-    setStructuredData(updatedData);
-    
-    try {
-      // Save to database
-      await saveStructuredNote(user.id, transcriptionId, updatedData);
-      toast.success('Medical notes updated successfully');
-    } catch (error) {
-      console.error('Error saving updated notes:', error);
-      toast.error('Failed to save updated notes');
-    }
+    await updateNote(updatedData, transcriptionId);
+  };
+  
+  // Toggle edit mode
+  const handleToggleEditMode = () => {
+    setIsEditMode(!isEditMode);
   };
   
   return {
@@ -193,10 +145,12 @@ export const useStructuredOutput = ({
     structuredData,
     templates,
     error,
+    isEditMode,
     handleBackToTranscription,
-    handleTemplateSelect,
+    handleTemplateSelect: handleTemplateSelection,
     handleEdit,
     updateStructuredData,
+    handleToggleEditMode,
     navigate
   };
 };
