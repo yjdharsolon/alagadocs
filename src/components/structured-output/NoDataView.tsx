@@ -2,8 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, Upload } from 'lucide-react';
+import { AlertCircle, Upload, FileText, List } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const NoDataView = () => {
   const navigate = useNavigate();
@@ -18,25 +19,42 @@ const NoDataView = () => {
         </AlertDescription>
       </Alert>
       
-      <div className="space-y-2">
-        <p className="text-lg text-muted-foreground">
-          You can try one of these options to continue:
-        </p>
-        
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
-          <Button onClick={() => navigate('/upload')} className="flex items-center gap-2">
-            <Upload className="h-4 w-4" />
-            Upload New Audio
-          </Button>
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>How to get structured medical notes</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <h3 className="font-medium">You can try one of these options:</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <div className="flex flex-col items-center p-4 border rounded-md bg-gray-50">
+                <Upload className="h-10 w-10 text-primary mb-2" />
+                <h3 className="font-medium">Start a new transcription</h3>
+                <p className="text-sm text-muted-foreground mb-3">Upload a new audio file to transcribe</p>
+                <Button onClick={() => navigate('/upload')} className="mt-auto">
+                  Upload Audio
+                </Button>
+              </div>
+              
+              <div className="flex flex-col items-center p-4 border rounded-md bg-gray-50">
+                <List className="h-10 w-10 text-primary mb-2" />
+                <h3 className="font-medium">View your transcriptions</h3>
+                <p className="text-sm text-muted-foreground mb-3">Access your previous transcriptions</p>
+                <Button variant="outline" onClick={() => navigate('/transcribe')} className="mt-auto">
+                  View Transcriptions
+                </Button>
+              </div>
+            </div>
+          </div>
           
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/transcribe')}
-          >
-            Return to Transcription
-          </Button>
-        </div>
-      </div>
+          <div className="pt-4 border-t">
+            <p className="text-sm text-muted-foreground mb-3">
+              If you're experiencing persistent issues, please contact support for assistance.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

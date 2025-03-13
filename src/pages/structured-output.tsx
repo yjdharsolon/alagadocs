@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { formatClipboardText } from '@/components/structured-output/utils/exportUtils';
 import DocumentTabs from '@/components/structured-output/DocumentTabs';
@@ -12,15 +12,42 @@ import { useStructuredOutput } from '@/hooks/useStructuredOutput';
 import toast from 'react-hot-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { getTranscription } from '@/services/transcriptionService';
 
 export default function StructuredOutput() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
+  // Get data from location state or search params
   const transcriptionData = location.state?.transcriptionData;
-  const transcriptionId = location.state?.transcriptionId;
+  const transcriptionId = location.state?.transcriptionId || searchParams.get('id');
   const audioUrl = location.state?.audioUrl;
   
+  const [isLoadingTranscription, setIsLoadingTranscription] = useState(false);
+  const [loadedTranscription, setLoadedTranscription] = useState<any>(null);
+  
+  // Fetch transcription if no data but ID is available
+  useEffect(() => {
+    async function fetchTranscription() {
+      if (!transcriptionData && transcriptionId) {
+        try {
+          setIsLoadingTranscription(true);
+          const data = await getTranscription(transcriptionId);
+          setLoadedTranscription(data);
+          setIsLoadingTranscription(false);
+        } catch (error) {
+          console.error('Error fetching transcription:', error);
+          setIsLoadingTranscription(false);
+          toast.error('Failed to fetch transcription data');
+        }
+      }
+    }
+    
+    fetchTranscription();
+  }, [transcriptionId, transcriptionData]);
+  
+  // Use the hook with either direct data or fetched data
   const {
     user,
     loading,
@@ -32,19 +59,12 @@ export default function StructuredOutput() {
     handleTemplateSelect,
     handleEdit
   } = useStructuredOutput({
-    transcriptionData,
+    transcriptionData: loadedTranscription || transcriptionData,
     transcriptionId,
     audioUrl
   });
   
-  // If no data and not loading, redirect to upload
-  React.useEffect(() => {
-    if (!loading && !processingText && !transcriptionData && !transcriptionId) {
-      toast.error('No transcription data found. Please upload an audio file first.');
-      navigate('/upload');
-    }
-  }, [loading, processingText, transcriptionData, transcriptionId, navigate]);
-  
+  // Handle copy to clipboard functionality
   const handleCopyToClipboard = () => {
     if (!structuredData) return;
     
@@ -56,6 +76,13 @@ export default function StructuredOutput() {
       })
       .catch(() => toast.error('Failed to copy to clipboard'));
   };
+  
+  // Show combined loading state if either fetching transcription or processing it
+  const isLoading = loading || isLoadingTranscription;
+  const isProcessing = processingText;
+  
+  // Determine the effective transcription data
+  const effectiveTranscriptionData = loadedTranscription || transcriptionData;
   
   return (
     <Layout>
@@ -69,8 +96,8 @@ export default function StructuredOutput() {
           </Alert>
         )}
         
-        {loading || processingText ? (
-          <LoadingState message={processingText ? "Structuring your medical notes..." : "Loading your structured notes..."} />
+        {isLoading || isProcessing ? (
+          <LoadingState message={isProcessing ? "Structuring your medical notes..." : "Loading your structured notes..."} />
         ) : structuredData ? (
           <>
             <DocumentTabs structuredData={structuredData} />

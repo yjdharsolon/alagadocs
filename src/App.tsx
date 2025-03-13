@@ -20,6 +20,7 @@ import RoleSelectionPage from './pages/role-selection';
 import UploadPage from './pages/upload';
 import TranscriptionPage from './pages/transcribe';
 import EditTranscriptPage from './pages/edit-transcript';
+import StructuredOutputPage from './pages/structured-output';
 import AskAIPage from './pages/ask-ai';
 import TemplatesPage from './pages/templates';
 import CopyToEMRPage from './pages/copy-to-emr';
@@ -50,6 +51,7 @@ function App() {
             <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
             <Route path="/transcribe" element={<ProtectedRoute><TranscriptionPage /></ProtectedRoute>} />
             <Route path="/edit-transcript" element={<ProtectedRoute><EditTranscriptPage /></ProtectedRoute>} />
+            <Route path="/structured-output" element={<ProtectedRoute><StructuredOutputPage /></ProtectedRoute>} />
             
             {/* New unified transcription page */}
             <Route path="/unified-transcription" element={<ProtectedRoute><UnifiedTranscriptionPage /></ProtectedRoute>} />
