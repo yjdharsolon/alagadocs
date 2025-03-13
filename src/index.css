@@ -151,6 +151,15 @@
   .glass {
     @apply backdrop-blur-xl bg-white/20 border border-white/10;
   }
+  
+  .truncate-text {
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+  
+  .break-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
 }
 
 .glass-card {
@@ -186,6 +195,22 @@
 
 .reveal-delay-4 {
   transition-delay: 0.4s;
+}
+
+/* Improve mobile UI */
+@media (max-width: 640px) {
+  .tabs-mobile-fix [role="tablist"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+  
+  .tabs-mobile-fix [role="tab"] {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
 }
 
 ::-webkit-scrollbar {

@@ -57,9 +57,9 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="edit">Edit Transcription</TabsTrigger>
-            <TabsTrigger value="format">Format as Medical Note</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="edit" className="text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis">Edit Transcription</TabsTrigger>
+            <TabsTrigger value="format" className="text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis">Format as Medical Note</TabsTrigger>
           </TabsList>
           
           <TabsContent value="edit" className="pt-4">
@@ -82,7 +82,7 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
             )}
             
             <Textarea 
-              className="min-h-[400px] font-mono text-sm"
+              className="min-h-[300px] sm:min-h-[400px] font-mono text-sm resize-none"
               value={transcriptionText}
               onChange={handleTextChange}
               placeholder="Your transcription text will appear here for editing..."
@@ -90,24 +90,6 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
             
             <div className="text-sm text-muted-foreground mt-2">
               Word count: {wordCount}
-            </div>
-            
-            <div className="flex justify-between mt-4">
-              <Button 
-                variant="outline" 
-                onClick={onSave}
-                disabled={isSaving || !transcriptionText.trim()}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </Button>
-              <Button
-                onClick={() => setActiveTab('format')}
-                disabled={!transcriptionText.trim()}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Format as Medical Note
-              </Button>
             </div>
           </TabsContent>
           
@@ -119,11 +101,32 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
           </TabsContent>
         </Tabs>
       </CardContent>
-      <CardFooter className="flex justify-end">
-        {activeTab === 'format' && formattedText && (
+      <CardFooter className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-4">
+        {activeTab === 'edit' ? (
+          <>
+            <Button 
+              variant="outline" 
+              onClick={onSave}
+              disabled={isSaving || !transcriptionText.trim()}
+              className="w-full sm:w-auto"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
+            <Button
+              onClick={() => setActiveTab('format')}
+              disabled={!transcriptionText.trim()}
+              className="w-full sm:w-auto"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Format as Medical Note
+            </Button>
+          </>
+        ) : (
           <Button 
             onClick={onContinueToStructured}
-            disabled={!formattedText.trim()}
+            disabled={!formattedText.trim() && !transcriptionText.trim()}
+            className="ml-auto"
           >
             <FileText className="mr-2 h-4 w-4" />
             Continue to Structuring
