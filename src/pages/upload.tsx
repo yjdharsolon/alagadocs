@@ -95,7 +95,7 @@ export default function AudioUploadPage() {
 
   return (
     <Layout>
-      <div className="container mx-auto py-10 px-4">
+      <div className="container mx-auto py-10 px-4 pt-24">
         <h1 className="text-3xl font-bold mb-2">Upload Audio</h1>
         <p className="text-muted-foreground mb-6">
           Upload an audio file or record your voice to transcribe

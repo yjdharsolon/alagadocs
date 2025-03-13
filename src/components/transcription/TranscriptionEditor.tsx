@@ -58,11 +58,11 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
       <CardContent className="space-y-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="edit" className="text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis">
+            <TabsTrigger value="edit" className="text-xs sm:text-sm md:text-base px-1 truncate">
               Edit Transcription
             </TabsTrigger>
-            <TabsTrigger value="format" className="text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis">
-              Format as Note
+            <TabsTrigger value="format" className="text-xs sm:text-sm md:text-base px-1 truncate">
+              Format Note
             </TabsTrigger>
           </TabsList>
           

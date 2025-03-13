@@ -32,13 +32,13 @@ const WorkflowHeader: React.FC<WorkflowHeaderProps> = ({
       <h1 className={cn("text-3xl font-bold mb-2", titleClassName)}>{title}</h1>
       
       {description && (
-        <p className={cn("text-muted-foreground mb-6", descriptionClassName)}>
+        <p className={cn("text-muted-foreground mb-4", descriptionClassName)}>
           {description}
         </p>
       )}
       
       {(showAlert || alertContent) && (
-        <Alert className="mb-6" variant={alertVariant}>
+        <Alert className="mb-4" variant={alertVariant}>
           {alertIcon}
           <AlertDescription>
             {alertContent || "All steps of the transcription process are now combined on a single page for easier workflow."}
