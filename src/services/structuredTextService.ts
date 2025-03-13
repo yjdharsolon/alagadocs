@@ -1,6 +1,36 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { MedicalSections } from '@/components/structured-output/types';
 import { Json } from '@/integrations/supabase/types';
+import { v5 as uuidv5, validate as isValidUuid } from 'uuid';
+
+// UUID namespace for generating consistent UUIDs from strings
+// This is a random UUID used as a namespace for our application
+const UUID_NAMESPACE = '1b671a64-40d5-491e-99b0-da01ff1f3341';
+
+/**
+ * Validates if a string is a valid UUID
+ * @param str The string to validate
+ * @returns Boolean indicating if the string is a valid UUID
+ */
+const isUUID = (str: string): boolean => {
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidPattern.test(str) || isValidUuid(str);
+};
+
+/**
+ * Converts any string to a valid UUID (v5) consistently
+ * @param str The string to convert to UUID
+ * @returns A valid UUID string
+ */
+const ensureUuid = (str: string): string => {
+  if (isUUID(str)) {
+    return str; // Already a valid UUID
+  }
+  
+  // Generate a name-based UUID (v5) which will be consistent for the same input
+  return uuidv5(str, UUID_NAMESPACE);
+};
 
 /**
  * Structures transcribed text into medical note sections
@@ -92,14 +122,18 @@ export const saveStructuredNote = async (
   content: MedicalSections
 ): Promise<any> => {
   try {
-    // Insert into structured_notes table with correct fields
-    // Convert MedicalSections to a valid Json object that Supabase can store
+    // Ensure transcriptionId is a valid UUID before inserting
+    const validUuid = ensureUuid(transcriptionId);
+    console.log(`Original transcriptionId: ${transcriptionId}, converted to UUID: ${validUuid}`);
+    
+    // Insert into structured_notes table with correct UUID format
     const { data, error } = await supabase
       .from('structured_notes')
       .insert({
         user_id: userId,
-        transcription_id: transcriptionId,
-        content: content as unknown as Json // Type cast to satisfy TypeScript
+        transcription_id: validUuid,
+        content: content as unknown as Json, // Type cast to satisfy TypeScript
+        original_id: transcriptionId // Store the original ID for reference
       })
       .select()
       .single();
@@ -123,30 +157,16 @@ export const saveStructuredNote = async (
  */
 export const getStructuredNote = async (transcriptionId: string): Promise<any> => {
   try {
-    // Check if the transcriptionId is a UUID format by validating its pattern
-    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    // Ensure we have a valid UUID for querying
+    const validUuid = ensureUuid(transcriptionId);
+    console.log(`Getting note - Original ID: ${transcriptionId}, UUID: ${validUuid}`);
     
-    let query;
-    
-    if (uuidPattern.test(transcriptionId)) {
-      // If it's a UUID, query directly by transcription_id
-      query = supabase
-        .from('structured_notes')
-        .select('*')
-        .eq('transcription_id', transcriptionId);
-    } else {
-      // For numeric or other format IDs, we need a different approach
-      console.log('Transcription ID is not a UUID format:', transcriptionId);
-      
-      // Try to find any note associated with this ID
-      // This is a fallback query - might need to be adapted based on your database structure
-      query = supabase
-        .from('structured_notes')
-        .select('*')
-        .or(`transcription_id.eq.${transcriptionId},transcription_id.ilike.%${transcriptionId}%`);
-    }
-    
-    const { data, error } = await query.maybeSingle();
+    // Query by the validated UUID
+    const { data, error } = await supabase
+      .from('structured_notes')
+      .select('*')
+      .eq('transcription_id', validUuid)
+      .maybeSingle();
       
     if (error) {
       console.error('Error fetching structured note:', error);
