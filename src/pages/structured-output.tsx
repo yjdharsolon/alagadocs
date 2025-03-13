@@ -33,7 +33,9 @@ export default function StructuredOutput() {
       if (!transcriptionData && transcriptionId) {
         try {
           setIsLoadingTranscription(true);
+          console.log('Fetching transcription with ID:', transcriptionId);
           const data = await getTranscription(transcriptionId);
+          console.log('Loaded transcription data:', data);
           setLoadedTranscription(data);
           setIsLoadingTranscription(false);
         } catch (error) {
@@ -60,7 +62,7 @@ export default function StructuredOutput() {
     handleEdit
   } = useStructuredOutput({
     transcriptionData: loadedTranscription || transcriptionData,
-    transcriptionId,
+    transcriptionId: transcriptionId || 'no-id',
     audioUrl
   });
   
@@ -81,8 +83,11 @@ export default function StructuredOutput() {
   const isLoading = loading || isLoadingTranscription;
   const isProcessing = processingText;
   
-  // Determine the effective transcription data
-  const effectiveTranscriptionData = loadedTranscription || transcriptionData;
+  // Check if we have no data to show at all
+  const noDataToShow = !isLoading && 
+                       !isProcessing && 
+                       !structuredData && 
+                       (!transcriptionData && !loadedTranscription);
   
   return (
     <Layout>

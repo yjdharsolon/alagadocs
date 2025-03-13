@@ -72,14 +72,19 @@ export const useStructuredOutput = ({
       try {
         console.log('Processing transcription:', { id: transcriptionId, text: transcriptionData.text?.substring(0, 50) + '...' });
         
-        // First check if we already have structured data for this transcription
-        const existingData = await getStructuredNote(transcriptionId);
-        
-        if (existingData?.content) {
-          console.log('Found existing structured note');
-          setStructuredData(existingData.content);
-          setLoading(false);
-          return;
+        try {
+          // First check if we already have structured data for this transcription
+          const existingData = await getStructuredNote(transcriptionId);
+          
+          if (existingData?.content) {
+            console.log('Found existing structured note');
+            setStructuredData(existingData.content);
+            setLoading(false);
+            return;
+          }
+        } catch (lookupError) {
+          console.log('No existing structured note found, will create a new one:', lookupError);
+          // Continue with creating a new note
         }
         
         setProcessingText(true);
@@ -104,9 +109,15 @@ export const useStructuredOutput = ({
           console.log('Structured result received:', structuredResult);
           setStructuredData(structuredResult);
           
-          // Save to database
-          await saveStructuredNote(user.id, transcriptionId, structuredResult);
-          toast.success('Medical notes structured successfully');
+          try {
+            // Save to database - don't stop execution if this fails
+            await saveStructuredNote(user.id, transcriptionId, structuredResult);
+            toast.success('Medical notes structured successfully');
+          } catch (saveError) {
+            console.error('Error saving structured note:', saveError);
+            // We still have the structured result, so just warn the user
+            toast.warning('Note structured but could not be saved. Some features may be limited.');
+          }
         } else {
           throw new Error('No structured data returned');
         }

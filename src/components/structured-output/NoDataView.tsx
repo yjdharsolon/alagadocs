@@ -52,6 +52,9 @@ const NoDataView = () => {
             <p className="text-sm text-muted-foreground mb-3">
               If you're experiencing persistent issues, please contact support for assistance.
             </p>
+            <Button variant="link" onClick={() => window.history.back()} className="text-sm">
+              ← Go Back
+            </Button>
           </div>
         </CardContent>
       </Card>

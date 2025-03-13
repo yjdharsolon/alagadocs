@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { MedicalSections } from '@/components/structured-output/types';
 import { Json } from '@/integrations/supabase/types';
@@ -81,7 +80,7 @@ const createFallbackStructure = (text: string): MedicalSections => {
 };
 
 /**
- * Saves structured text to the database
+ * Saves structured note to the database
  * @param userId The user ID associated with the note
  * @param transcriptionId The ID of the source transcription
  * @param content The structured note content
@@ -124,11 +123,30 @@ export const saveStructuredNote = async (
  */
 export const getStructuredNote = async (transcriptionId: string): Promise<any> => {
   try {
-    const { data, error } = await supabase
-      .from('structured_notes')
-      .select('*')
-      .eq('transcription_id', transcriptionId)
-      .maybeSingle();
+    // Check if the transcriptionId is a UUID format by validating its pattern
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    
+    let query;
+    
+    if (uuidPattern.test(transcriptionId)) {
+      // If it's a UUID, query directly by transcription_id
+      query = supabase
+        .from('structured_notes')
+        .select('*')
+        .eq('transcription_id', transcriptionId);
+    } else {
+      // For numeric or other format IDs, we need a different approach
+      console.log('Transcription ID is not a UUID format:', transcriptionId);
+      
+      // Try to find any note associated with this ID
+      // This is a fallback query - might need to be adapted based on your database structure
+      query = supabase
+        .from('structured_notes')
+        .select('*')
+        .or(`transcription_id.eq.${transcriptionId},transcription_id.ilike.%${transcriptionId}%`);
+    }
+    
+    const { data, error } = await query.maybeSingle();
       
     if (error) {
       console.error('Error fetching structured note:', error);
