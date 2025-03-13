@@ -170,6 +170,22 @@ export const useStructuredOutput = ({
     });
   };
   
+  // Add a function to update the structured data
+  const updateStructuredData = async (updatedData: StructuredNote) => {
+    if (!user || !transcriptionId) return;
+    
+    setStructuredData(updatedData);
+    
+    try {
+      // Save to database
+      await saveStructuredNote(user.id, transcriptionId, updatedData);
+      toast.success('Medical notes updated successfully');
+    } catch (error) {
+      console.error('Error saving updated notes:', error);
+      toast.error('Failed to save updated notes');
+    }
+  };
+  
   return {
     user,
     loading,
@@ -180,6 +196,7 @@ export const useStructuredOutput = ({
     handleBackToTranscription,
     handleTemplateSelect,
     handleEdit,
+    updateStructuredData,
     navigate
   };
 };

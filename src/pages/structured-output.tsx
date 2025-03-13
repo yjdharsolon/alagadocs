@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { getTranscription } from '@/services/transcriptionService';
+import EditableDocumentView from '@/components/structured-output/EditableDocumentView';
 
 export default function StructuredOutput() {
   const location = useLocation();
@@ -26,6 +27,7 @@ export default function StructuredOutput() {
   
   const [isLoadingTranscription, setIsLoadingTranscription] = useState(false);
   const [loadedTranscription, setLoadedTranscription] = useState<any>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   
   // Fetch transcription if no data but ID is available
   useEffect(() => {
@@ -59,7 +61,8 @@ export default function StructuredOutput() {
     error,
     handleBackToTranscription,
     handleTemplateSelect,
-    handleEdit
+    handleEdit,
+    updateStructuredData
   } = useStructuredOutput({
     transcriptionData: loadedTranscription || transcriptionData,
     transcriptionId: transcriptionId || 'no-id',
@@ -77,6 +80,11 @@ export default function StructuredOutput() {
         toast.success('Copied to clipboard');
       })
       .catch(() => toast.error('Failed to copy to clipboard'));
+  };
+  
+  // Handle toggling edit mode
+  const handleToggleEditMode = () => {
+    setIsEditMode(!isEditMode);
   };
   
   // Show combined loading state if either fetching transcription or processing it
@@ -105,7 +113,15 @@ export default function StructuredOutput() {
           <LoadingState message={isProcessing ? "Structuring your medical notes..." : "Loading your structured notes..."} />
         ) : structuredData ? (
           <>
-            <DocumentTabs structuredData={structuredData} />
+            {isEditMode ? (
+              <EditableDocumentView 
+                structuredData={structuredData}
+                onSave={updateStructuredData}
+              />
+            ) : (
+              <DocumentTabs structuredData={structuredData} />
+            )}
+            
             <StructuredOutputActions 
               onEdit={handleEdit}
               onCopy={handleCopyToClipboard}
@@ -113,6 +129,8 @@ export default function StructuredOutput() {
               onTemplateSelect={handleTemplateSelect}
               user={user}
               structuredData={structuredData}
+              onToggleEditMode={handleToggleEditMode}
+              isEditMode={isEditMode}
             />
           </>
         ) : (

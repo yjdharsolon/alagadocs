@@ -2,6 +2,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SectionContent from './SectionContent';
+import DocumentView from './DocumentView';
 import { MedicalSections } from './types';
 
 interface DocumentTabsProps {
@@ -10,14 +11,19 @@ interface DocumentTabsProps {
 
 const DocumentTabs = ({ structuredData }: DocumentTabsProps) => {
   return (
-    <Tabs defaultValue="all" className="w-full">
-      <TabsList className="grid w-full grid-cols-5 mb-6">
+    <Tabs defaultValue="document" className="w-full">
+      <TabsList className="grid w-full grid-cols-6 mb-6">
+        <TabsTrigger value="document">Document</TabsTrigger>
         <TabsTrigger value="all">All Sections</TabsTrigger>
         <TabsTrigger value="cc-hpi">CC & HPI</TabsTrigger>
         <TabsTrigger value="medical-info">Medical Info</TabsTrigger>
         <TabsTrigger value="assessment">Assessment</TabsTrigger>
         <TabsTrigger value="plan">Plan</TabsTrigger>
       </TabsList>
+      
+      <TabsContent value="document" className="space-y-6">
+        <DocumentView structuredData={structuredData} />
+      </TabsContent>
       
       <TabsContent value="all" className="space-y-6">
         <SectionContent title="CHIEF COMPLAINT" content={structuredData.chiefComplaint} />
