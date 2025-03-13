@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
+import WorkflowHeader from '@/components/transcription/WorkflowHeader';
 
 export default function Transcribe() {
   const { user } = useAuth();
@@ -27,17 +28,23 @@ export default function Transcribe() {
   }, [stateAudioUrl]);
   
   // If no transcription data is available, redirect to upload page
-  if (!transcriptionData || !transcriptionId) {
-    toast.error('No transcription data found. Please upload an audio file first.');
-    navigate('/upload');
-    return null;
-  }
+  useEffect(() => {
+    if (!transcriptionData || !transcriptionId) {
+      toast.error('No transcription data found. Please upload an audio file first.');
+      navigate('/upload');
+    }
+  }, [transcriptionData, transcriptionId, navigate]);
   
   const handleBackToUpload = () => {
     navigate('/upload');
   };
   
   const handleStructureText = () => {
+    if (!transcriptionData || !transcriptionId) {
+      toast.error('No transcription data available. Please upload an audio file first.');
+      return;
+    }
+    
     navigate('/structured-output', { 
       state: { 
         transcriptionData,
@@ -47,9 +54,18 @@ export default function Transcribe() {
     });
   };
   
+  if (!transcriptionData || !transcriptionId) {
+    return null; // Will redirect in useEffect
+  }
+  
   return (
     <Layout>
       <div className="container mx-auto py-6 px-4">
+        <WorkflowHeader
+          title="Transcription Review"
+          description="Review your transcription before continuing to structured notes"
+        />
+        
         <div className="mb-6 flex items-center justify-between">
           <Button 
             variant="outline" 
@@ -59,8 +75,6 @@ export default function Transcribe() {
             <ArrowLeft className="h-4 w-4" />
             Back to Upload
           </Button>
-          
-          <h1 className="text-2xl font-bold">Transcription</h1>
           
           <Button 
             onClick={handleStructureText}

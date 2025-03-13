@@ -18,6 +18,7 @@ export const structureText = async (
   try {
     console.log('Structuring text with role:', role);
     
+    // Call a single consistent edge function
     const { data, error } = await supabase.functions.invoke('structure-medical-text', {
       body: { 
         text,
@@ -32,22 +33,29 @@ export const structureText = async (
     }
     
     // If the response is already a MedicalSections object
-    if (data.chiefComplaint !== undefined) {
+    if (data && typeof data === 'object' && data.chiefComplaint !== undefined) {
       return data as MedicalSections;
     }
     
     // If the response is in the content field
-    if (data.content) {
+    if (data && data.content) {
       try {
-        // Try to parse the content as JSON
-        return JSON.parse(data.content) as MedicalSections;
+        // Try to parse the content as JSON if it's a string
+        if (typeof data.content === 'string') {
+          return JSON.parse(data.content) as MedicalSections;
+        } else {
+          // If it's already an object, just return it
+          return data.content as unknown as MedicalSections;
+        }
       } catch (e) {
+        console.error('Error parsing structured content:', e);
         // Fallback structure if it's not parseable JSON
-        return createFallbackStructure(data.content);
+        return createFallbackStructure(typeof data.content === 'string' ? data.content : 'Error parsing content');
       }
     }
     
-    return data as MedicalSections;
+    console.error('Unexpected response format:', data);
+    return createFallbackStructure('Structured data not available');
   } catch (error) {
     console.error('Error in structureText:', error);
     throw error;

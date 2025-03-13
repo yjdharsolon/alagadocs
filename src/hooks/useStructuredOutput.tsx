@@ -29,6 +29,7 @@ export const useStructuredOutput = ({
   const [processingText, setProcessingText] = useState(false);
   const [templates, setTemplates] = useState<TextTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   // Fetch user templates
   useEffect(() => {
@@ -54,15 +55,28 @@ export const useStructuredOutput = ({
   
   useEffect(() => {
     const processTranscription = async () => {
-      if (!transcriptionData || !transcriptionId || !user) {
+      if (!transcriptionData || !transcriptionId) {
+        console.error('Missing required data:', { transcriptionData, transcriptionId });
+        setError('Missing transcription data. Please go back and try again.');
+        setLoading(false);
+        return;
+      }
+      
+      if (!user) {
+        console.error('No authenticated user');
+        setError('You must be logged in to view structured notes.');
         setLoading(false);
         return;
       }
       
       try {
+        console.log('Processing transcription:', { id: transcriptionId, text: transcriptionData.text?.substring(0, 50) + '...' });
+        
+        // First check if we already have structured data for this transcription
         const existingData = await getStructuredNote(transcriptionId);
         
         if (existingData?.content) {
+          console.log('Found existing structured note');
           setStructuredData(existingData.content);
           setLoading(false);
           return;
@@ -70,6 +84,7 @@ export const useStructuredOutput = ({
         
         setProcessingText(true);
         const userRole = await getUserRole();
+        console.log('User role:', userRole);
         
         // Get selected template if exists
         let selectedTemplate = null;
@@ -77,6 +92,8 @@ export const useStructuredOutput = ({
           selectedTemplate = templates.find(t => t.id === selectedTemplateId) || null;
         }
         
+        // Structure the text
+        console.log('Structuring text with template:', selectedTemplate);
         const structuredResult = await structureText(
           transcriptionData.text, 
           userRole,
@@ -84,13 +101,18 @@ export const useStructuredOutput = ({
         );
         
         if (structuredResult) {
+          console.log('Structured result received:', structuredResult);
           setStructuredData(structuredResult);
           
+          // Save to database
           await saveStructuredNote(user.id, transcriptionId, structuredResult);
           toast.success('Medical notes structured successfully');
+        } else {
+          throw new Error('No structured data returned');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error processing transcription:', error);
+        setError(`Failed to structure the transcription: ${error.message}`);
         toast.error('Failed to structure the transcription. Please try again.');
       } finally {
         setProcessingText(false);
@@ -141,6 +163,7 @@ export const useStructuredOutput = ({
     processingText,
     structuredData,
     templates,
+    error,
     handleBackToTranscription,
     handleTemplateSelect,
     handleEdit,

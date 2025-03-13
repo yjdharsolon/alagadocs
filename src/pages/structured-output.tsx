@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { formatClipboardText } from '@/components/structured-output/utils/exportUtils';
@@ -10,6 +10,8 @@ import StructuredOutputActions from '@/components/structured-output/StructuredOu
 import NoDataView from '@/components/structured-output/NoDataView';
 import { useStructuredOutput } from '@/hooks/useStructuredOutput';
 import toast from 'react-hot-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 export default function StructuredOutput() {
   const location = useLocation();
@@ -25,6 +27,7 @@ export default function StructuredOutput() {
     processingText,
     structuredData,
     templates,
+    error,
     handleBackToTranscription,
     handleTemplateSelect,
     handleEdit
@@ -34,11 +37,13 @@ export default function StructuredOutput() {
     audioUrl
   });
   
-  if (!loading && (!transcriptionData || !transcriptionId)) {
-    toast.error('No transcription data found. Please upload an audio file first.');
-    navigate('/upload');
-    return null;
-  }
+  // If no data and not loading, redirect to upload
+  React.useEffect(() => {
+    if (!loading && !processingText && !transcriptionData && !transcriptionId) {
+      toast.error('No transcription data found. Please upload an audio file first.');
+      navigate('/upload');
+    }
+  }, [loading, processingText, transcriptionData, transcriptionId, navigate]);
   
   const handleCopyToClipboard = () => {
     if (!structuredData) return;
@@ -57,8 +62,15 @@ export default function StructuredOutput() {
       <div className="container mx-auto py-6 px-4">
         <StructuredOutputHeader onBack={handleBackToTranscription} />
         
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
         {loading || processingText ? (
-          <LoadingState message={processingText ? "Structuring your medical notes..." : "Loading..."} />
+          <LoadingState message={processingText ? "Structuring your medical notes..." : "Loading your structured notes..."} />
         ) : structuredData ? (
           <>
             <DocumentTabs structuredData={structuredData} />
