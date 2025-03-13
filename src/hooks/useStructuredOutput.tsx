@@ -56,7 +56,7 @@ export const useStructuredOutput = ({
   useEffect(() => {
     const processTranscription = async () => {
       if (!transcriptionData || !transcriptionId) {
-        console.error('Missing required data:', { transcriptionData, transcriptionId });
+        console.error('Missing require data:', { transcriptionData, transcriptionId });
         setError('Missing transcription data. Please go back and try again.');
         setLoading(false);
         return;
@@ -115,8 +115,10 @@ export const useStructuredOutput = ({
             toast.success('Medical notes structured successfully');
           } catch (saveError) {
             console.error('Error saving structured note:', saveError);
-            // We still have the structured result, so just warn the user
-            toast.warning('Note structured but could not be saved. Some features may be limited.');
+            // We still have the structured result, so just inform the user
+            toast('Note structured but could not be saved. Some features may be limited.', {
+              icon: '⚠️'
+            });
           }
         } else {
           throw new Error('No structured data returned');
