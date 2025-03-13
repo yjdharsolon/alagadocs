@@ -58,8 +58,12 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
       <CardContent className="space-y-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="edit" className="text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis">Edit Transcription</TabsTrigger>
-            <TabsTrigger value="format" className="text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis">Format as Medical Note</TabsTrigger>
+            <TabsTrigger value="edit" className="text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis">
+              Edit Transcription
+            </TabsTrigger>
+            <TabsTrigger value="format" className="text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis">
+              Format as Note
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="edit" className="pt-4">
@@ -110,7 +114,7 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
               disabled={isSaving || !transcriptionText.trim()}
               className="w-full sm:w-auto"
             >
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="h-4 w-4 mr-2" />
               {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
             <Button
@@ -118,8 +122,8 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
               disabled={!transcriptionText.trim()}
               className="w-full sm:w-auto"
             >
-              <FileText className="mr-2 h-4 w-4" />
-              Format as Medical Note
+              <FileText className="h-4 w-4 mr-2" />
+              Format Note
             </Button>
           </>
         ) : (
@@ -128,7 +132,7 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
             disabled={!formattedText.trim() && !transcriptionText.trim()}
             className="ml-auto"
           >
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="h-4 w-4 mr-2" />
             Continue to Structuring
           </Button>
         )}

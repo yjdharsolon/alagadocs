@@ -141,7 +141,7 @@ export default function EditTranscriptPage() {
   // Render normal edit view when transcription is available
   return (
     <Layout>
-      <div className="container mx-auto py-10">
+      <div className="container mx-auto py-10 pt-24">
         <h1 className="text-3xl font-bold mb-2">Edit Transcript</h1>
         <p className="text-muted-foreground mb-6">
           Review and edit your transcription
@@ -160,4 +160,4 @@ export default function EditTranscriptPage() {
       </div>
     </Layout>
   );
-}
+};

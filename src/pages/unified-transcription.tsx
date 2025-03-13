@@ -74,7 +74,7 @@ export default function UnifiedTranscriptionPage() {
   
   return (
     <Layout>
-      <div className="container mx-auto py-6 px-4">
+      <div className="container mx-auto py-6 px-4 pt-24">
         <WorkflowHeader 
           title="Transcription Workflow" 
           description="Upload, transcribe, and edit your audio in one place" 
