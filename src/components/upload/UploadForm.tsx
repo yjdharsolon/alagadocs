@@ -126,7 +126,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
           />
         )}
         
-        <div className="px-0 flex justify-end">
+        <div className="px-0 flex justify-center">
           <SubmitButton
             isUploading={isUploading}
             isRecording={isRecording}
@@ -139,3 +139,4 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
     </div>
   );
 };
+
