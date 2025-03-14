@@ -5,6 +5,8 @@ import { AudioPreview } from './AudioPreview';
 import { useAudioRecording } from './useAudioRecording';
 import { Progress } from '@/components/ui/progress';
 import { RecordingNameDialog } from './RecordingNameDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Mic } from 'lucide-react';
 
 interface AudioRecorderProps {
   onRecordingComplete: (file: File) => void;
@@ -20,6 +22,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   // Use internal state if external state is not provided
   const [internalIsRecording, setInternalIsRecording] = useState(false);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
+  const isMobile = useIsMobile();
   
   // Determine which state to use
   const isRecording = externalIsRecording !== undefined ? externalIsRecording : internalIsRecording;
@@ -57,7 +60,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   }, [audioPreview, audioPreviewRef]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {audioPreview && (
         <AudioPreview 
           audioPreviewRef={audioPreviewRef}
@@ -71,14 +74,14 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       )}
       
       {isRecording ? (
-        <div className="space-y-4">
-          <div className="animate-pulse flex items-center justify-center p-4">
-            <div className="h-16 w-16 rounded-full bg-red-500 flex items-center justify-center">
-              <Mic className="h-8 w-8 text-white" />
+        <div className="space-y-2">
+          <div className="animate-pulse flex items-center justify-center p-2">
+            <div className={`${isMobile ? 'h-12 w-12' : 'h-16 w-16'} rounded-full bg-red-500 flex items-center justify-center`}>
+              <Mic className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} text-white`} />
             </div>
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
               <span>{formatTime(recordingTime)}</span>
               <span>{formatTime(maxRecordingTime)}</span>
             </div>
@@ -110,6 +113,3 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     </div>
   );
 };
-
-// Need to import Mic at the top of the file
-import { Mic } from 'lucide-react';

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, RefreshCw } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AudioPreviewProps {
   audioPreviewRef: React.RefObject<HTMLAudioElement>;
@@ -22,36 +23,38 @@ export const AudioPreview: React.FC<AudioPreviewProps> = ({
   recordingTime,
   formatTime
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
-    <div className="flex flex-col items-center p-4 rounded-md bg-muted/50">
+    <div className="flex flex-col items-center p-2 rounded-md bg-muted/50">
       <audio ref={audioPreviewRef} src={audioPreview} className="hidden"></audio>
-      <div className="flex gap-2 w-full mb-2">
+      <div className="flex gap-1 w-full mb-1">
         <Button 
           type="button"
           variant="secondary" 
-          size="sm"
+          size={isMobile ? "xs" : "sm"}
           onClick={togglePlayPreview}
-          className="flex-1 gap-2"
+          className="flex-1 gap-1"
         >
           {isPlayingPreview ? (
-            <><Pause className="h-4 w-4" /> Pause</>
+            <><Pause className="h-3 w-3" /> Pause</>
           ) : (
-            <><Play className="h-4 w-4" /> Play Preview</>
+            <><Play className="h-3 w-3" /> Play</>
           )}
         </Button>
         <Button 
           type="button"
           variant="destructive" 
-          size="sm"
+          size={isMobile ? "xs" : "sm"}
           onClick={resetRecording}
-          className="flex-shrink-0 gap-2"
+          className="flex-shrink-0 gap-1"
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className="h-3 w-3" />
           Reset
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Recording length: {formatTime(recordingTime)}
+        Length: {formatTime(recordingTime)}
       </p>
     </div>
   );

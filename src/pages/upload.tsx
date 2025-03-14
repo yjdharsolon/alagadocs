@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function AudioUploadPage() {
   const [error, setError] = useState<string | null>(null);
@@ -16,6 +17,7 @@ export default function AudioUploadPage() {
   const [fixingPermissions, setFixingPermissions] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const initializeStorageBucket = async () => {
     try {
@@ -95,14 +97,14 @@ export default function AudioUploadPage() {
 
   return (
     <Layout>
-      <div className="container mx-auto py-10 px-4 pt-24">
-        <h1 className="text-3xl font-bold mb-2">Upload Audio</h1>
-        <p className="text-muted-foreground mb-6">
-          Upload an audio file or record your voice to transcribe
+      <div className="container mx-auto py-6 px-4 pt-20">
+        <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold mb-2`}>Upload Audio</h1>
+        <p className="text-muted-foreground mb-4 text-sm">
+          Upload audio or record your voice
         </p>
         
         {error && (
-          <Alert variant="destructive" className="mb-6">
+          <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between">
               <span>{error}</span>
@@ -133,7 +135,7 @@ export default function AudioUploadPage() {
         <UploadForm />
         
         {!error && (
-          <div className="mt-4 flex justify-center">
+          <div className="mt-2 flex justify-center">
             <Button
               variant="outline"
               size="sm"
@@ -142,11 +144,11 @@ export default function AudioUploadPage() {
               className="flex items-center gap-1"
             >
               <RefreshCw className={`h-3 w-3 ${fixingPermissions ? 'animate-spin' : ''}`} />
-              {fixingPermissions ? 'Fixing Permissions...' : 'Reset Storage Permissions'}
+              {fixingPermissions ? 'Fixing...' : 'Reset Permissions'}
             </Button>
           </div>
         )}
       </div>
     </Layout>
   );
-}
+};

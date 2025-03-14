@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, StopCircle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RecordingControlsProps {
   isRecording: boolean;
@@ -16,11 +17,13 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
   startRecording,
   stopRecording
 }) => {
+  const isMobile = useIsMobile();
+  
   if (isRecording) {
     return (
       <Button 
         variant="destructive" 
-        size="lg" 
+        size={isMobile ? "sm" : "lg"}
         onClick={stopRecording}
         className="w-full gap-2"
       >
@@ -35,17 +38,17 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
       <Button 
         variant="outline" 
         size="lg" 
-        className="h-24 w-24 rounded-full"
+        className={`${isMobile ? 'h-16 w-16' : 'h-24 w-24'} rounded-full`}
         onClick={startRecording}
         disabled={isPlayingPreview}
       >
-        <Mic className="h-10 w-10" />
+        <Mic className={`${isMobile ? 'h-6 w-6' : 'h-10 w-10'}`} />
       </Button>
-      <p className="text-sm text-muted-foreground mt-2">
-        Click to start recording your voice
+      <p className="text-xs text-muted-foreground mt-2">
+        Click to start recording
       </p>
-      <p className="text-xs text-muted-foreground mt-1">
-        Maximum recording time is 5 minutes
+      <p className="text-xs text-muted-foreground">
+        Max 5 minutes
       </p>
     </div>
   );
