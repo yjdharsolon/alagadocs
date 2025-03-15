@@ -46,10 +46,8 @@ export function SaveNoteButton({
       
       toast.success('Note saved successfully!');
       
-      // After successful save, navigate to select-patient page
-      setTimeout(() => {
-        navigate('/select-patient');
-      }, 1500); // 1.5 second delay to show the success message
+      // Removed the setTimeout that navigated to select-patient
+      // User will now remain on the current page after saving
       
     } catch (error) {
       console.error('Error saving note:', error);
