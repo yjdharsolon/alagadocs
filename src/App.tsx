@@ -17,6 +17,7 @@ import LoginPage from './pages/login';
 import SignupPage from './pages/signup';
 import ProfilePage from './pages/profile';
 import RoleSelectionPage from './pages/role-selection';
+import SelectPatientPage from './pages/select-patient';
 import UploadPage from './pages/upload';
 import TranscriptionPage from './pages/transcribe';
 import EditTranscriptPage from './pages/edit-transcript';
@@ -46,6 +47,7 @@ function App() {
             {/* Protected routes */}
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/role-selection" element={<ProtectedRoute><RoleSelectionPage /></ProtectedRoute>} />
+            <Route path="/select-patient" element={<ProtectedRoute><SelectPatientPage /></ProtectedRoute>} />
             
             {/* Original separate pages */}
             <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
