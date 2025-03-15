@@ -3,22 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
+import { MedicalSections } from '@/components/structured-output/types';
 import StructuredOutputHeader from '@/components/structured-output/StructuredOutputHeader';
-import DocumentView from '@/components/structured-output/DocumentView';
-import EditableDocumentView from '@/components/structured-output/EditableDocumentView';
-import { MedicalSections, StructuredNote } from '@/components/structured-output/types';
 import LoadingState from '@/components/structured-output/LoadingState';
 import NoDataView from '@/components/structured-output/NoDataView';
-import { SaveNoteButton } from '@/components/structured-output/buttons/SaveNoteButton';
-import CopyButton from '@/components/structured-output/buttons/CopyButton';
-import ExportButton from '@/components/structured-output/buttons/ExportButton';
-import EditButton from '@/components/structured-output/buttons/EditButton';
+import DocumentContainer from '@/components/structured-output/DocumentContainer';
 import { getStructuredNoteById } from '@/services/structuredNoteService';
 import { structureText } from '@/services/structureService';
 import { toast } from 'sonner';
+import { useStructuredOutputPage } from '@/hooks/useStructuredOutput';
 
 export default function StructuredOutputPage() {
   const { user } = useAuth();
@@ -30,7 +23,6 @@ export default function StructuredOutputPage() {
   const [loading, setLoading] = useState(true);
   const [processingText, setProcessingText] = useState(false);
   const [structuredData, setStructuredData] = useState<MedicalSections | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Get all potential sources of patient information
@@ -51,6 +43,21 @@ export default function StructuredOutputPage() {
     name: null
   });
   
+  // Use our custom hook for page functionality
+  const {
+    isEditMode,
+    handleBackClick,
+    handleToggleEditMode,
+    handleSaveEdit,
+    handleRetry
+  } = useStructuredOutputPage({
+    structuredData,
+    setStructuredData,
+    transcriptionData,
+    audioUrl,
+    error
+  });
+
   // Consolidate patient information from all possible sources
   useEffect(() => {
     // First priority: Use data from location state
@@ -148,53 +155,6 @@ export default function StructuredOutputPage() {
       setLoading(false);
     }
   };
-
-  const handleBackClick = () => {
-    if (transcriptionData) {
-      navigate('/edit-transcript', { 
-        state: { 
-          transcriptionData,
-          audioUrl,
-          patientId: patientInfo.id,
-          patientName: patientInfo.name
-        } 
-      });
-    } else {
-      navigate('/select-patient');
-    }
-  };
-
-  const handleToggleEditMode = () => {
-    setIsEditMode(!isEditMode);
-  };
-
-  const handleSaveEdit = (updatedData: MedicalSections) => {
-    setStructuredData(updatedData);
-    setIsEditMode(false);
-  };
-
-  const handleRetry = () => {
-    setLoading(true);
-    setError(null);
-    processTranscription();
-  };
-
-  const getStructuredText = () => {
-    if (!structuredData) return '';
-    
-    return Object.entries(structuredData)
-      .map(([key, value]) => {
-        const title = key
-          .replace(/([A-Z])/g, ' $1')
-          .replace(/^./, str => str.toUpperCase())
-          .toUpperCase();
-        
-        return `${title}:\n${value}\n`;
-      })
-      .join('\n');
-  };
-
-  const structuredText = getStructuredText();
   
   if (loading) {
     return (
@@ -221,50 +181,15 @@ export default function StructuredOutputPage() {
         {!structuredData ? (
           <NoDataView error={error} onRetry={handleRetry} />
         ) : (
-          <>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">
-                Medical Report {patientInfo.name ? 
-                  `for ${patientInfo.name}` : 
-                  patientInfo.id ? `(Patient ID: ${patientInfo.id})` : ''}
-              </h2>
-              
-              <div className="flex gap-2">
-                {!isEditMode ? (
-                  <>
-                    <SaveNoteButton 
-                      user={user} 
-                      sections={structuredData}
-                      structuredText={structuredText}
-                      patientId={patientInfo.id}
-                      transcriptionId={transcriptionId || ''}
-                    />
-                    <CopyButton sections={structuredData} />
-                    <ExportButton sections={structuredData} />
-                    <EditButton onClick={handleToggleEditMode} />
-                  </>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    onClick={handleToggleEditMode}
-                  >
-                    Cancel Editing
-                  </Button>
-                )}
-              </div>
-            </div>
-            
-            <Separator className="my-4" />
-            
-            {isEditMode ? (
-              <EditableDocumentView 
-                structuredData={structuredData} 
-                onSave={handleSaveEdit}
-              />
-            ) : (
-              <DocumentView structuredData={structuredData} />
-            )}
-          </>
+          <DocumentContainer 
+            structuredData={structuredData}
+            patientInfo={patientInfo}
+            user={user}
+            transcriptionId={transcriptionId || ''}
+            isEditMode={isEditMode}
+            onToggleEditMode={handleToggleEditMode}
+            onSaveEdit={handleSaveEdit}
+          />
         )}
       </div>
     </Layout>
