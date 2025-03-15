@@ -110,9 +110,9 @@ export default function RoleSelection() {
 
       toast.success(`Role set to ${role}`);
       
-      // Navigate to the upload page to start the transcription process
+      // Navigate to the select-patient page instead of upload
       setTimeout(() => {
-        navigate('/upload');
+        navigate('/select-patient');
       }, 1000);
     } catch (error: any) {
       toast.error(error.message || 'Failed to set role');
