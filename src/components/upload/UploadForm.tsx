@@ -41,7 +41,6 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   
   const {
     file,
-    setFile,
     isUploading,
     isRecording,
     setIsRecording,
