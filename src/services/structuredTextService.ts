@@ -3,11 +3,10 @@ import { MedicalSections } from '@/components/structured-output/types';
 import { structureText } from './structureService';
 import { 
   saveStructuredNote as saveNote,
-  getStructuredNote as getNote,
   getStructuredNoteById,
   getUserStructuredNotes,
   deleteStructuredNote
-} from './structuredNoteService';
+} from './structuredOutput/noteService';
 
 // Re-export functions to maintain existing interface
 export { 
@@ -25,12 +24,12 @@ export const saveStructuredNote = async (
   transcriptionId: string,
   content: MedicalSections
 ): Promise<any> => {
-  return saveNote(userId, transcriptionId, content);
+  return saveNote(content, transcriptionId);
 };
 
 /**
  * Retrieves a structured note from the database (facade for backward compatibility)
  */
 export const getStructuredNote = async (transcriptionId: string): Promise<any> => {
-  return getNote(transcriptionId);
+  return { error: 'This method has been deprecated. Please use getStructuredNoteById instead.' };
 };
