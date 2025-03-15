@@ -26,8 +26,8 @@ export default function SelectPatientPage() {
     sessionStorage.setItem('selectedPatient', JSON.stringify(patient));
     toast.success(`Selected patient: ${patient.first_name} ${patient.last_name}`);
     
-    // Navigate to upload as next step in workflow
-    navigate('/upload');
+    // Navigate to patient details page instead of directly to upload
+    navigate('/patient-details', { state: { patient } });
   };
   
   const handleCreatePatient = () => {

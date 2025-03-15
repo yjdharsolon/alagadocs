@@ -41,7 +41,7 @@ export const PatientSearchResults: React.FC<PatientSearchResultsProps> = ({
                   e.stopPropagation();
                   onSelectPatient(patient);
                 }}>
-                  Select
+                  View Patient
                 </Button>
               </div>
             ))}

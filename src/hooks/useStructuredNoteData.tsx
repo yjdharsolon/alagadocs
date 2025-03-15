@@ -1,24 +1,54 @@
 
 import { useState, useEffect } from 'react';
 import { MedicalSections, TextTemplate } from '@/components/structured-output/types';
-import { getStructuredNote } from '@/services/structuredTextService';
+import { getStructuredNote, getStructuredNoteById } from '@/services/structuredTextService';
 
 interface UseStructuredNoteDataParams {
-  transcriptionData: any;
-  transcriptionId: string;
+  transcriptionData?: any;
+  transcriptionId?: string;
+  noteId?: string;
 }
 
 export const useStructuredNoteData = ({ 
   transcriptionData, 
-  transcriptionId 
+  transcriptionId,
+  noteId
 }: UseStructuredNoteDataParams) => {
   const [loading, setLoading] = useState(true);
   const [processingText, setProcessingText] = useState(false);
   const [structuredData, setStructuredData] = useState<MedicalSections | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Load note by ID if provided
+  useEffect(() => {
+    async function loadNoteById() {
+      if (!noteId) return;
+      
+      try {
+        setLoading(true);
+        const note = await getStructuredNoteById(noteId);
+        
+        if (note?.content) {
+          setStructuredData(note.content);
+        } else {
+          setError('Note not found');
+        }
+      } catch (err) {
+        console.error('Error loading note by ID:', err);
+        setError('Failed to load note');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    if (noteId) {
+      loadNoteById();
+    }
+  }, [noteId]);
+
   // Check for existing structured note
   const checkExistingNote = async () => {
+    if (noteId) return true; // If we're loading by noteId, no need to check
     if (!transcriptionId) return false;
     
     try {
