@@ -6,7 +6,13 @@ export const useFileHandling = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isRecording, setIsRecording] = useState(false);
 
-  const handleFileSelect = (selectedFile: File) => {
+  const handleFileSelect = (selectedFile: File | null) => {
+    // Allow null to clear the file
+    if (selectedFile === null) {
+      setFile(null);
+      return;
+    }
+    
     setFile(selectedFile);
     toast.success('File selected successfully');
   };

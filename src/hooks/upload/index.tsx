@@ -6,6 +6,7 @@ import { useUploadProcess } from './useUploadProcess';
 
 export const useUploadForm = (user: any, signOut: () => Promise<void>, patientId?: string | null) => {
   const [error, setError] = useState<string | null>(null);
+  const [shouldResetFile, setShouldResetFile] = useState(false);
   
   // Authentication handling
   const {
@@ -16,7 +17,6 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>, patientId
   // File handling
   const {
     file,
-    setFile,
     isRecording,
     setIsRecording,
     handleFileSelect,
@@ -31,6 +31,14 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>, patientId
     handleSubmit: processUpload,
     getStepLabel
   } = useUploadProcess(setError);
+  
+  // Reset file when needed
+  useEffect(() => {
+    if (shouldResetFile) {
+      handleFileSelect(null as any); // This will reset the file
+      setShouldResetFile(false);
+    }
+  }, [shouldResetFile, handleFileSelect]);
   
   // Clear any errors when component mounts/unmounts
   useEffect(() => {
@@ -50,12 +58,16 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>, patientId
       return null;
     }
     
-    return processUpload(file, user, patientId || undefined);
+    const result = await processUpload(file, user, patientId || undefined);
+    
+    // Request file reset after successful upload
+    setShouldResetFile(true);
+    
+    return result;
   };
   
   return {
     file,
-    setFile,
     isUploading,
     isRecording,
     setIsRecording,
