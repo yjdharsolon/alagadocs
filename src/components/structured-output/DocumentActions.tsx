@@ -20,6 +20,7 @@ interface DocumentActionsProps {
   isEditMode: boolean;
   onToggleEditMode: () => void;
   onNoteSaved?: () => void;
+  onEndConsult?: () => void;
   noteSaved?: boolean;
 }
 
@@ -32,6 +33,7 @@ const DocumentActions = ({
   isEditMode,
   onToggleEditMode,
   onNoteSaved,
+  onEndConsult,
   noteSaved = false
 }: DocumentActionsProps) => {
   return (
@@ -49,7 +51,10 @@ const DocumentActions = ({
           <CopyButton sections={structuredData} />
           <ExportButton sections={structuredData} />
           <EditButton onClick={onToggleEditMode} />
-          <EndConsultButton isVisible={noteSaved} />
+          <EndConsultButton 
+            isVisible={noteSaved} 
+            onEndConsult={onEndConsult}
+          />
         </>
       ) : (
         <Button 

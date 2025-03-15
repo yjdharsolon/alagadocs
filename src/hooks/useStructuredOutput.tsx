@@ -1,8 +1,10 @@
-
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MedicalSections } from '@/components/structured-output/types';
 import { toast } from 'sonner';
+
+// This file is deprecated, use hooks/useStructuredOutput/index.tsx instead
+// Keeping this file for backward compatibility
 
 interface UseStructuredOutputPageParams {
   structuredData: MedicalSections | null;
@@ -21,6 +23,7 @@ export const useStructuredOutputPage = ({
 }: UseStructuredOutputPageParams) => {
   const navigate = useNavigate();
   const [isEditMode, setIsEditMode] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
 
   const handleBackClick = useCallback(() => {
     if (transcriptionData) {
@@ -60,11 +63,22 @@ export const useStructuredOutputPage = ({
     });
   }, [navigate, transcriptionData, audioUrl]);
 
+  const handleNoteSaved = useCallback(() => {
+    setNoteSaved(true);
+  }, []);
+
+  const handleEndConsult = useCallback(() => {
+    navigate('/select-patient');
+  }, [navigate]);
+
   return {
     isEditMode,
     handleBackClick,
     handleToggleEditMode,
     handleSaveEdit,
-    handleRetry
+    handleRetry,
+    handleNoteSaved,
+    handleEndConsult,
+    noteSaved
   };
 };

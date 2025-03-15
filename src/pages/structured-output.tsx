@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -11,7 +10,7 @@ import DocumentContainer from '@/components/structured-output/DocumentContainer'
 import { getStructuredNoteById } from '@/services/structuredNoteService';
 import { structureText } from '@/services/structureService';
 import { toast } from 'sonner';
-import { useStructuredOutputPage } from '@/hooks/useStructuredOutput';
+import { useStructuredOutputPage } from '@/hooks/useStructuredOutput/index';
 
 export default function StructuredOutputPage() {
   const { user } = useAuth();
@@ -25,25 +24,20 @@ export default function StructuredOutputPage() {
   const [structuredData, setStructuredData] = useState<MedicalSections | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // Get all potential sources of patient information
   const transcriptionData = location.state?.transcriptionData;
   const audioUrl = location.state?.audioUrl;
   const transcriptionId = location.state?.transcriptionId;
   
-  // Check for patient info from location state first (highest priority)
   const statePatientId = location.state?.patientId;
   const statePatientName = location.state?.patientName;
   
-  // Then check transcriptionData (medium priority)
   const transcriptionPatientId = transcriptionData?.patient_id;
   
-  // Finally, try to get from sessionStorage as fallback (lowest priority)
   const [patientInfo, setPatientInfo] = useState<{id: string | null, name: string | null}>({
     id: null,
     name: null
   });
   
-  // Use our custom hook for page functionality
   const {
     isEditMode,
     handleBackClick,
@@ -51,6 +45,7 @@ export default function StructuredOutputPage() {
     handleSaveEdit,
     handleRetry,
     handleNoteSaved,
+    handleEndConsult,
     noteSaved
   } = useStructuredOutputPage({
     structuredData,
@@ -60,9 +55,7 @@ export default function StructuredOutputPage() {
     error
   });
 
-  // Consolidate patient information from all possible sources
   useEffect(() => {
-    // First priority: Use data from location state
     if (statePatientId) {
       setPatientInfo({
         id: statePatientId,
@@ -71,16 +64,14 @@ export default function StructuredOutputPage() {
       return;
     }
     
-    // Second priority: Use data from transcription
     if (transcriptionPatientId) {
       setPatientInfo({
         id: transcriptionPatientId,
-        name: null // We don't have the name from transcription data
+        name: null
       });
       return;
     }
     
-    // Third priority: Try to get from sessionStorage
     try {
       const storedPatient = sessionStorage.getItem('selectedPatient');
       if (storedPatient) {
