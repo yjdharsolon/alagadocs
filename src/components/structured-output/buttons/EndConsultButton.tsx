@@ -5,7 +5,7 @@ import { LogOut } from 'lucide-react';
 
 interface EndConsultButtonProps {
   isVisible: boolean;
-  onEndConsult: () => void;
+  onEndConsult?: () => void;
 }
 
 const EndConsultButton = ({ isVisible, onEndConsult }: EndConsultButtonProps) => {

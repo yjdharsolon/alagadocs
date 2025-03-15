@@ -1,43 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+
+import React from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
-import { MedicalSections } from '@/components/structured-output/types';
 import StructuredOutputHeader from '@/components/structured-output/StructuredOutputHeader';
-import LoadingState from '@/components/structured-output/LoadingState';
-import NoDataView from '@/components/structured-output/NoDataView';
-import DocumentContainer from '@/components/structured-output/DocumentContainer';
-import { getStructuredNoteById } from '@/services/structuredNoteService';
-import { structureText } from '@/services/structureService';
-import { toast } from 'sonner';
+import StructuredOutputContent from '@/components/structured-output/StructuredOutputContent';
 import { useStructuredOutputPage } from '@/hooks/useStructuredOutput/index';
+import { useStructuredOutputData } from '@/hooks/useStructuredOutputData';
 
 export default function StructuredOutputPage() {
   const { user } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const noteId = searchParams.get('noteId');
   
-  const [loading, setLoading] = useState(true);
-  const [processingText, setProcessingText] = useState(false);
-  const [structuredData, setStructuredData] = useState<MedicalSections | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Use the data loading hook
+  const {
+    loading,
+    processingText,
+    structuredData,
+    setStructuredData,
+    error,
+    patientInfo,
+    transcriptionData,
+    audioUrl,
+    transcriptionId
+  } = useStructuredOutputData();
   
-  const transcriptionData = location.state?.transcriptionData;
-  const audioUrl = location.state?.audioUrl;
-  const transcriptionId = location.state?.transcriptionId;
-  
-  const statePatientId = location.state?.patientId;
-  const statePatientName = location.state?.patientName;
-  
-  const transcriptionPatientId = transcriptionData?.patient_id;
-  
-  const [patientInfo, setPatientInfo] = useState<{id: string | null, name: string | null}>({
-    id: null,
-    name: null
-  });
-  
+  // Use the navigation and edit mode hook
   const {
     isEditMode,
     handleBackClick,
@@ -55,114 +41,6 @@ export default function StructuredOutputPage() {
     error
   });
 
-  useEffect(() => {
-    if (statePatientId) {
-      setPatientInfo({
-        id: statePatientId,
-        name: statePatientName || null
-      });
-      return;
-    }
-    
-    if (transcriptionPatientId) {
-      setPatientInfo({
-        id: transcriptionPatientId,
-        name: null
-      });
-      return;
-    }
-    
-    try {
-      const storedPatient = sessionStorage.getItem('selectedPatient');
-      if (storedPatient) {
-        const patientData = JSON.parse(storedPatient);
-        setPatientInfo({
-          id: patientData.id,
-          name: `${patientData.first_name} ${patientData.last_name}`
-        });
-      }
-    } catch (error) {
-      console.error('Error retrieving patient from sessionStorage:', error);
-    }
-  }, [statePatientId, statePatientName, transcriptionPatientId]);
-
-  console.log('StructuredOutputPage patientInfo:', patientInfo);
-
-  useEffect(() => {
-    const loadNote = async () => {
-      if (noteId) {
-        try {
-          setLoading(true);
-          const note = await getStructuredNoteById(noteId);
-          if (note?.content) {
-            setStructuredData(note.content);
-          } else {
-            setError('Note not found');
-          }
-        } catch (error) {
-          console.error('Error loading note:', error);
-          setError('Error loading note');
-        } finally {
-          setLoading(false);
-        }
-      } else if (location.state?.structuredData) {
-        setStructuredData(location.state.structuredData);
-        setLoading(false);
-      } else if (transcriptionData && transcriptionData.text) {
-        processTranscription();
-      } else {
-        setLoading(false);
-        setError('No transcription data found');
-      }
-    };
-
-    loadNote();
-  }, [noteId, location.state]);
-
-  const processTranscription = async () => {
-    if (!transcriptionData || !transcriptionData.text) {
-      setError('Missing transcription text');
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      setProcessingText(true);
-      console.log('Processing transcription:', transcriptionData.text);
-      
-      const structuredResult = await structureText(transcriptionData.text);
-      
-      if (structuredResult) {
-        console.log('Structured result received:', structuredResult);
-        setStructuredData(structuredResult);
-        toast.success('Medical notes structured successfully');
-      } else {
-        throw new Error('No structured data returned');
-      }
-    } catch (error: any) {
-      console.error('Error processing transcription:', error);
-      setError(`Failed to structure the transcription: ${error.message}`);
-      toast.error('Failed to structure the transcription');
-    } finally {
-      setProcessingText(false);
-      setLoading(false);
-    }
-  };
-  
-  if (loading) {
-    return (
-      <Layout>
-        <div className="container mx-auto py-6 px-4">
-          <StructuredOutputHeader onBack={handleBackClick} />
-          <LoadingState 
-            message={processingText ? "Processing transcription..." : "Loading structured data..."} 
-            subMessage={processingText ? "Converting your transcription into structured medical notes. This may take a moment." : undefined}
-          />
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <div className="container mx-auto py-6 px-4">
@@ -171,21 +49,21 @@ export default function StructuredOutputPage() {
           subtitle={transcriptionData?.text ? `Based on transcription: "${transcriptionData.text.substring(0, 40)}${transcriptionData.text.length > 40 ? '...' : ''}"` : undefined}
         />
         
-        {!structuredData ? (
-          <NoDataView error={error} onRetry={handleRetry} />
-        ) : (
-          <DocumentContainer 
-            structuredData={structuredData}
-            patientInfo={patientInfo}
-            user={user}
-            transcriptionId={transcriptionId || ''}
-            isEditMode={isEditMode}
-            onToggleEditMode={handleToggleEditMode}
-            onSaveEdit={handleSaveEdit}
-            onNoteSaved={handleNoteSaved}
-            noteSaved={noteSaved}
-          />
-        )}
+        <StructuredOutputContent
+          loading={loading}
+          processingText={processingText}
+          structuredData={structuredData}
+          error={error}
+          patientInfo={patientInfo}
+          user={user}
+          transcriptionId={transcriptionId || ''}
+          isEditMode={isEditMode}
+          onToggleEditMode={handleToggleEditMode}
+          onSaveEdit={handleSaveEdit}
+          onRetry={handleRetry}
+          onNoteSaved={handleNoteSaved}
+          noteSaved={noteSaved}
+        />
       </div>
     </Layout>
   );
