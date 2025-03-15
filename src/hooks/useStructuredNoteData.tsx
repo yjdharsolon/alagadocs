@@ -1,18 +1,20 @@
 
 import { useState, useEffect } from 'react';
 import { MedicalSections, TextTemplate } from '@/components/structured-output/types';
-import { getStructuredNote, getStructuredNoteById } from '@/services/structuredTextService';
+import { getStructuredNote, getStructuredNoteById } from '@/services/structuredNoteService';
 
 interface UseStructuredNoteDataParams {
   transcriptionData?: any;
   transcriptionId?: string;
   noteId?: string;
+  patientId?: string;
 }
 
 export const useStructuredNoteData = ({ 
   transcriptionData, 
   transcriptionId,
-  noteId
+  noteId,
+  patientId
 }: UseStructuredNoteDataParams) => {
   const [loading, setLoading] = useState(true);
   const [processingText, setProcessingText] = useState(false);

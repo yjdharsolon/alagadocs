@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PatientDisplayCard } from '@/components/upload/PatientDisplayCard';
 import { Patient } from '@/types/patient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getUserStructuredNotes } from '@/services/structuredTextService';
+import { getUserStructuredNotes } from '@/services/structuredNoteService';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { Stethoscope, File, Loader2 } from 'lucide-react';
@@ -63,7 +63,11 @@ export default function PatientDetailsPage() {
 
   const handleStartConsultation = () => {
     // Navigate to upload page to start consultation
-    navigate('/upload');
+    navigate('/upload', { 
+      state: { 
+        patient: patient 
+      } 
+    });
   };
 
   const handleViewNote = (noteId: string) => {

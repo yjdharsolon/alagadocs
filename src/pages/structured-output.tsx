@@ -2,134 +2,174 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { formatClipboardText } from '@/components/structured-output/utils/exportUtils';
-import DocumentTabs from '@/components/structured-output/DocumentTabs';
-import LoadingState from '@/components/structured-output/LoadingState';
-import StructuredOutputHeader from '@/components/structured-output/StructuredOutputHeader';
-import StructuredOutputActions from '@/components/structured-output/StructuredOutputActions';
-import NoDataView from '@/components/structured-output/NoDataView';
-import { useStructuredOutput } from '@/hooks/useStructuredOutput';
-import toast from 'react-hot-toast';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { getTranscription } from '@/services/transcriptionService';
+import { useAuth } from '@/hooks/useAuth';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Clipboard, Download, Pencil } from 'lucide-react';
+import { StructuredOutputHeader } from '@/components/structured-output/StructuredOutputHeader';
+import { DocumentView } from '@/components/structured-output/DocumentView';
 import EditableDocumentView from '@/components/structured-output/EditableDocumentView';
+import { MedicalSections, StructuredNote } from '@/components/structured-output/types';
+import { LoadingState } from '@/components/structured-output/LoadingState';
+import { NoDataView } from '@/components/structured-output/NoDataView';
+import { SaveNoteButton } from '@/components/structured-output/buttons/SaveNoteButton';
+import { CopyButton } from '@/components/structured-output/buttons/CopyButton';
+import { ExportButton } from '@/components/structured-output/buttons/ExportButton';
+import { ViewNotesButton } from '@/components/structured-output/buttons/ViewNotesButton';
+import { EditButton } from '@/components/structured-output/buttons/EditButton';
+import { getStructuredNoteById } from '@/services/structuredNoteService';
 
-export default function StructuredOutput() {
+export default function StructuredOutputPage() {
+  const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const noteId = searchParams.get('noteId');
   
-  // Get data from location state or search params
+  const [loading, setLoading] = useState(true);
+  const [structuredData, setStructuredData] = useState<MedicalSections | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  
+  // Get data from location state if available (from transcription)
   const transcriptionData = location.state?.transcriptionData;
-  const transcriptionId = location.state?.transcriptionId || searchParams.get('id');
   const audioUrl = location.state?.audioUrl;
-  
-  const [isLoadingTranscription, setIsLoadingTranscription] = useState(false);
-  const [loadedTranscription, setLoadedTranscription] = useState<any>(null);
-  
-  // Fetch transcription if no data but ID is available
+  const transcriptionId = location.state?.transcriptionId;
+  const patientId = location.state?.patientId || 
+    (transcriptionData?.patient_id ? transcriptionData.patient_id : null);
+
   useEffect(() => {
-    async function fetchTranscription() {
-      if (!transcriptionData && transcriptionId) {
+    const loadNote = async () => {
+      if (noteId) {
         try {
-          setIsLoadingTranscription(true);
-          console.log('Fetching transcription with ID:', transcriptionId);
-          const data = await getTranscription(transcriptionId);
-          console.log('Loaded transcription data:', data);
-          setLoadedTranscription(data);
-          setIsLoadingTranscription(false);
+          setLoading(true);
+          const note = await getStructuredNoteById(noteId);
+          if (note?.content) {
+            setStructuredData(note.content);
+          }
         } catch (error) {
-          console.error('Error fetching transcription:', error);
-          setIsLoadingTranscription(false);
-          toast.error('Failed to fetch transcription data');
+          console.error('Error loading note:', error);
+        } finally {
+          setLoading(false);
         }
+      } else if (location.state?.structuredData) {
+        // If we have structuredData from navigation state
+        setStructuredData(location.state.structuredData);
+        setLoading(false);
+      } else {
+        // No noteId or state data
+        setLoading(false);
       }
+    };
+
+    loadNote();
+  }, [noteId, location.state]);
+
+  const handleBackClick = () => {
+    if (transcriptionData) {
+      navigate('/edit-transcript', { 
+        state: { 
+          transcriptionData,
+          audioUrl 
+        } 
+      });
+    } else {
+      navigate('/select-patient');
     }
+  };
+
+  const handleToggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+  };
+
+  const handleSaveEdit = (updatedData: MedicalSections) => {
+    setStructuredData(updatedData);
+    setIsEditMode(false);
+  };
+
+  // Format structured data as text for copy/export
+  const getStructuredText = () => {
+    if (!structuredData) return '';
     
-    fetchTranscription();
-  }, [transcriptionId, transcriptionData]);
-  
-  // Use the refactored hook
-  const {
-    user,
-    loading,
-    processingText,
-    structuredData,
-    templates,
-    error,
-    isEditMode,
-    handleBackToTranscription,
-    handleTemplateSelect,
-    handleEdit,
-    updateStructuredData,
-    handleToggleEditMode
-  } = useStructuredOutput({
-    transcriptionData: loadedTranscription || transcriptionData,
-    transcriptionId: transcriptionId || 'no-id',
-    audioUrl
-  });
-  
-  // Handle copy to clipboard functionality
-  const handleCopyToClipboard = () => {
-    if (!structuredData) return;
-    
-    const formattedText = formatClipboardText(structuredData);
-    
-    navigator.clipboard.writeText(formattedText)
-      .then(() => {
-        toast.success('Copied to clipboard');
+    return Object.entries(structuredData)
+      .map(([key, value]) => {
+        // Convert camelCase to UPPERCASE with spaces
+        const title = key
+          .replace(/([A-Z])/g, ' $1')
+          .replace(/^./, str => str.toUpperCase())
+          .toUpperCase();
+        
+        return `${title}:\n${value}\n`;
       })
-      .catch(() => toast.error('Failed to copy to clipboard'));
+      .join('\n');
   };
   
-  // Show combined loading state if either fetching transcription or processing it
-  const isLoading = loading || isLoadingTranscription;
-  const isProcessing = processingText;
-  
-  // Check if we have no data to show at all
-  const noDataToShow = !isLoading && 
-                       !isProcessing && 
-                       !structuredData && 
-                       (!transcriptionData && !loadedTranscription);
-  
+  // Structured text for export
+  const structuredText = getStructuredText();
+
+  if (loading) {
+    return <LoadingState />;
+  }
+
   return (
     <Layout>
       <div className="container mx-auto py-6 px-4">
-        <StructuredOutputHeader onBack={handleBackToTranscription} />
+        <StructuredOutputHeader title="Structured Medical Document" />
         
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        <Button 
+          variant="outline"
+          className="mb-6"
+          onClick={handleBackClick}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
         
-        {isLoading || isProcessing ? (
-          <LoadingState message={isProcessing ? "Structuring your medical notes..." : "Loading your structured notes..."} />
-        ) : structuredData ? (
+        {!structuredData ? (
+          <NoDataView />
+        ) : (
           <>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">
+                Medical Report
+              </h2>
+              
+              <div className="flex gap-2">
+                {!isEditMode ? (
+                  <>
+                    <SaveNoteButton 
+                      user={user} 
+                      sections={structuredData}
+                      structuredText={structuredText}
+                      patientId={patientId}
+                      transcriptionId={transcriptionId || ''}
+                    />
+                    <CopyButton text={structuredText} />
+                    <ExportButton sections={structuredData} />
+                    <EditButton onEdit={handleToggleEditMode} />
+                  </>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    onClick={handleToggleEditMode}
+                  >
+                    Cancel Editing
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
             {isEditMode ? (
               <EditableDocumentView 
-                structuredData={structuredData}
-                onSave={updateStructuredData}
+                structuredData={structuredData} 
+                onSave={handleSaveEdit}
               />
             ) : (
-              <DocumentTabs structuredData={structuredData} />
+              <DocumentView structuredData={structuredData} />
             )}
-            
-            <StructuredOutputActions 
-              onEdit={handleEdit}
-              onCopy={handleCopyToClipboard}
-              templates={templates}
-              onTemplateSelect={handleTemplateSelect}
-              user={user}
-              structuredData={structuredData}
-              onToggleEditMode={handleToggleEditMode}
-              isEditMode={isEditMode}
-            />
           </>
-        ) : (
-          <NoDataView />
         )}
       </div>
     </Layout>

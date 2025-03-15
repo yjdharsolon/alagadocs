@@ -2,25 +2,46 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
-import { saveStructuredNote } from '@/services/noteService';
+import { saveStructuredNote } from '@/services/structuredNoteService';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { MedicalSections } from '@/components/structured-output/types';
 
 export interface SaveNoteButtonProps {
   user: any; 
-  sections: any;
+  sections: MedicalSections;
   structuredText: string;
+  patientId?: string | null;
+  transcriptionId: string;
 }
 
-export function SaveNoteButton({ user, sections, structuredText }: SaveNoteButtonProps) {
+export function SaveNoteButton({ 
+  user, 
+  sections, 
+  structuredText, 
+  patientId,
+  transcriptionId 
+}: SaveNoteButtonProps) {
   const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
 
   const handleSaveNote = async () => {
+    if (!user?.id) {
+      toast.error('You must be logged in to save notes');
+      return;
+    }
+
     try {
       setIsSaving(true);
-      // Pass structuredText as a string
-      await saveStructuredNote(structuredText);
+      
+      // Using the structuredNoteService to save the note with patient association
+      await saveStructuredNote(
+        user.id,
+        transcriptionId,
+        sections,
+        patientId
+      );
+      
       toast.success('Note saved successfully!');
       
       // After successful save, navigate to select-patient page

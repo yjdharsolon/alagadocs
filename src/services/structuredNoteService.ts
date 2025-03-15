@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { MedicalSections } from '@/components/structured-output/types';
 import { Json } from '@/integrations/supabase/types';
