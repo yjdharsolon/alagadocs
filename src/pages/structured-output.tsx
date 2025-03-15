@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -32,15 +33,60 @@ export default function StructuredOutputPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // Get all potential sources of patient information
   const transcriptionData = location.state?.transcriptionData;
   const audioUrl = location.state?.audioUrl;
   const transcriptionId = location.state?.transcriptionId;
-  const patientId = location.state?.patientId || 
-    (transcriptionData?.patient_id ? transcriptionData.patient_id : null);
+  
+  // Check for patient info from location state first (highest priority)
+  const statePatientId = location.state?.patientId;
+  const statePatientName = location.state?.patientName;
+  
+  // Then check transcriptionData (medium priority)
+  const transcriptionPatientId = transcriptionData?.patient_id;
+  
+  // Finally, try to get from sessionStorage as fallback (lowest priority)
+  const [patientInfo, setPatientInfo] = useState<{id: string | null, name: string | null}>({
+    id: null,
+    name: null
+  });
+  
+  // Consolidate patient information from all possible sources
+  useEffect(() => {
+    // First priority: Use data from location state
+    if (statePatientId) {
+      setPatientInfo({
+        id: statePatientId,
+        name: statePatientName || null
+      });
+      return;
+    }
+    
+    // Second priority: Use data from transcription
+    if (transcriptionPatientId) {
+      setPatientInfo({
+        id: transcriptionPatientId,
+        name: null // We don't have the name from transcription data
+      });
+      return;
+    }
+    
+    // Third priority: Try to get from sessionStorage
+    try {
+      const storedPatient = sessionStorage.getItem('selectedPatient');
+      if (storedPatient) {
+        const patientData = JSON.parse(storedPatient);
+        setPatientInfo({
+          id: patientData.id,
+          name: `${patientData.first_name} ${patientData.last_name}`
+        });
+      }
+    } catch (error) {
+      console.error('Error retrieving patient from sessionStorage:', error);
+    }
+  }, [statePatientId, statePatientName, transcriptionPatientId]);
 
-  console.log('StructuredOutputPage patientId:', patientId);
-  console.log('Location state:', location.state);
-  console.log('Transcription data:', transcriptionData);
+  console.log('StructuredOutputPage patientInfo:', patientInfo);
 
   useEffect(() => {
     const loadNote = async () => {
@@ -108,7 +154,9 @@ export default function StructuredOutputPage() {
       navigate('/edit-transcript', { 
         state: { 
           transcriptionData,
-          audioUrl 
+          audioUrl,
+          patientId: patientInfo.id,
+          patientName: patientInfo.name
         } 
       });
     } else {
@@ -176,7 +224,9 @@ export default function StructuredOutputPage() {
           <>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">
-                Medical Report {patientId ? `(Patient ID: ${patientId})` : ''}
+                Medical Report {patientInfo.name ? 
+                  `for ${patientInfo.name}` : 
+                  patientInfo.id ? `(Patient ID: ${patientInfo.id})` : ''}
               </h2>
               
               <div className="flex gap-2">
@@ -186,7 +236,7 @@ export default function StructuredOutputPage() {
                       user={user} 
                       sections={structuredData}
                       structuredText={structuredText}
-                      patientId={patientId}
+                      patientId={patientInfo.id}
                       transcriptionId={transcriptionId || ''}
                     />
                     <CopyButton sections={structuredData} />

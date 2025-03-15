@@ -21,6 +21,34 @@ export default function Transcribe() {
   const transcriptionId = location.state?.transcriptionId;
   const stateAudioUrl = location.state?.audioUrl;
   
+  // Get patient information from location state
+  const patientId = location.state?.patientId;
+  const patientName = location.state?.patientName;
+  
+  // Fallback to session storage if not in location state
+  const [patientInfo, setPatientInfo] = useState<{id: string | null, name: string | null}>({
+    id: patientId || null,
+    name: patientName || null
+  });
+  
+  useEffect(() => {
+    // If we don't have patient info from location state, try session storage
+    if (!patientId) {
+      try {
+        const storedPatient = sessionStorage.getItem('selectedPatient');
+        if (storedPatient) {
+          const patientData = JSON.parse(storedPatient);
+          setPatientInfo({
+            id: patientData.id,
+            name: `${patientData.first_name} ${patientData.last_name}`
+          });
+        }
+      } catch (error) {
+        console.error('Error retrieving patient from sessionStorage:', error);
+      }
+    }
+  }, [patientId]);
+  
   useEffect(() => {
     if (stateAudioUrl) {
       setAudioUrl(stateAudioUrl);
@@ -49,7 +77,9 @@ export default function Transcribe() {
       state: { 
         transcriptionData,
         transcriptionId,
-        audioUrl
+        audioUrl,
+        patientId: patientInfo.id,
+        patientName: patientInfo.name
       } 
     });
   };
@@ -65,6 +95,14 @@ export default function Transcribe() {
           title="Transcription Review"
           description="Review your transcription before continuing to structured notes"
         />
+        
+        {patientInfo.name && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-100 rounded-md">
+            <p className="text-sm text-green-800">
+              <span className="font-medium">Current Patient:</span> {patientInfo.name}
+            </p>
+          </div>
+        )}
         
         <div className="mb-6 flex items-center justify-between">
           <Button 

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { useTranscriptionEdit } from '@/hooks/useTranscriptionEdit';
 import { useTranscriptionRecovery } from '@/hooks/useTranscriptionRecovery';
@@ -9,6 +9,8 @@ import PendingTranscription from '@/components/transcription/PendingTranscriptio
 import TranscriptionError from '@/components/transcription/TranscriptionError';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { Card, CardContent } from '@/components/ui/card';
+import { UserRound } from 'lucide-react';
 
 export default function EditTranscriptPage() {
   const { user } = useAuth();
@@ -24,6 +26,37 @@ export default function EditTranscriptPage() {
     location,
     navigate
   } = useTranscriptionRecovery();
+  
+  // Extract patient information
+  const patientId = location.state?.patientId;
+  const patientName = location.state?.patientName;
+  
+  // State for fallback patient info
+  const [displayPatientInfo, setDisplayPatientInfo] = useState<{
+    id: string | null,
+    name: string | null
+  }>({
+    id: patientId || null,
+    name: patientName || null
+  });
+  
+  // Try to get patient info from session storage if not in location state
+  useEffect(() => {
+    if (!patientId) {
+      try {
+        const storedPatient = sessionStorage.getItem('selectedPatient');
+        if (storedPatient) {
+          const patientData = JSON.parse(storedPatient);
+          setDisplayPatientInfo({
+            id: patientData.id,
+            name: `${patientData.first_name} ${patientData.last_name}`
+          });
+        }
+      } catch (error) {
+        console.error('Error retrieving patient from sessionStorage:', error);
+      }
+    }
+  }, [patientId]);
   
   // Verify authentication first to prevent unwanted redirects
   useEffect(() => {
@@ -146,6 +179,20 @@ export default function EditTranscriptPage() {
         <p className="text-muted-foreground mb-6">
           Review and edit your transcription
         </p>
+
+        {displayPatientInfo.name && (
+          <Card className="mb-6 border-green-100 shadow-sm">
+            <CardContent className="py-3 flex items-center">
+              <UserRound className="h-5 w-5 mr-2 text-green-600" />
+              <div>
+                <p className="font-medium">Patient: {displayPatientInfo.name}</p>
+                {displayPatientInfo.id && (
+                  <p className="text-xs text-muted-foreground">ID: {displayPatientInfo.id}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <EditStep
           audioUrl={audioUrl}

@@ -11,6 +11,7 @@ interface ActionButtonsProps {
   structuredText?: string;
   transcriptionId?: string;
   patientId?: string | null;
+  patientName?: string | null;
 }
 
 const ActionButtons = ({ 
@@ -20,9 +21,11 @@ const ActionButtons = ({
   sections, 
   structuredText,
   transcriptionId,
-  patientId
+  patientId,
+  patientName
 }: ActionButtonsProps) => {
   console.log('ActionButtons patientId:', patientId); // Debug log
+  console.log('ActionButtons patientName:', patientName); // Debug log
   
   return (
     <ButtonGroup
@@ -32,6 +35,7 @@ const ActionButtons = ({
       structuredText={structuredText}
       transcriptionId={transcriptionId}
       patientId={patientId}
+      patientName={patientName}
     />
   );
 };
