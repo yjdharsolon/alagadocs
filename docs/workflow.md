@@ -61,7 +61,7 @@ Here's the **final refined version** of your **"Workflow"** document, incorporat
 8. **Template Generation**  
 9. **Review & Confirm Data** *(No edits allowed after saving.)*  
 10. **Save / Copy / Export to PDF**  
-11. **End Consultation → Automatically return to Select Patient Page**  
+11. **End Consultation** → Automatically return to Select Patient Page*  
 
 ---
 
