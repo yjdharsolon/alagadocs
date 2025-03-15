@@ -9,9 +9,19 @@ interface ActionButtonsProps {
   user?: any;
   sections?: MedicalSections;
   structuredText?: string;
+  transcriptionId?: string;
+  patientId?: string | null;
 }
 
-const ActionButtons = ({ onCopy, onEdit, user, sections, structuredText }: ActionButtonsProps) => {
+const ActionButtons = ({ 
+  onCopy, 
+  onEdit, 
+  user, 
+  sections, 
+  structuredText,
+  transcriptionId,
+  patientId
+}: ActionButtonsProps) => {
   // We're maintaining the onCopy prop for backward compatibility, although individual buttons now handle their logic
   const handleCopy = () => {
     if (onCopy) {
@@ -25,6 +35,8 @@ const ActionButtons = ({ onCopy, onEdit, user, sections, structuredText }: Actio
       user={user}
       sections={sections}
       structuredText={structuredText}
+      transcriptionId={transcriptionId}
+      patientId={patientId}
     />
   );
 };

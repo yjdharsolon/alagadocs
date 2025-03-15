@@ -12,6 +12,8 @@ interface ButtonGroupProps {
   user?: any;
   sections?: MedicalSections;
   structuredText?: string;
+  transcriptionId?: string;
+  patientId?: string | null;
 }
 
 export function ButtonGroup({
@@ -19,6 +21,8 @@ export function ButtonGroup({
   user,
   sections,
   structuredText,
+  transcriptionId = '',
+  patientId = null
 }: ButtonGroupProps) {
   return (
     <div className="flex flex-wrap gap-2">
@@ -30,6 +34,8 @@ export function ButtonGroup({
           user={user}
           sections={sections}
           structuredText={structuredText || ''}
+          transcriptionId={transcriptionId}
+          patientId={patientId}
         />
       )}
       <ViewNotesButton />

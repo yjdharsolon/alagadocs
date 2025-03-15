@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -7,17 +6,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Clipboard, Download, Pencil } from 'lucide-react';
-import { StructuredOutputHeader } from '@/components/structured-output/StructuredOutputHeader';
-import { DocumentView } from '@/components/structured-output/DocumentView';
+import StructuredOutputHeader from '@/components/structured-output/StructuredOutputHeader';
+import DocumentView from '@/components/structured-output/DocumentView';
 import EditableDocumentView from '@/components/structured-output/EditableDocumentView';
 import { MedicalSections, StructuredNote } from '@/components/structured-output/types';
-import { LoadingState } from '@/components/structured-output/LoadingState';
-import { NoDataView } from '@/components/structured-output/NoDataView';
+import LoadingState from '@/components/structured-output/LoadingState';
+import NoDataView from '@/components/structured-output/NoDataView';
 import { SaveNoteButton } from '@/components/structured-output/buttons/SaveNoteButton';
-import { CopyButton } from '@/components/structured-output/buttons/CopyButton';
-import { ExportButton } from '@/components/structured-output/buttons/ExportButton';
-import { ViewNotesButton } from '@/components/structured-output/buttons/ViewNotesButton';
-import { EditButton } from '@/components/structured-output/buttons/EditButton';
+import CopyButton from '@/components/structured-output/buttons/CopyButton';
+import ExportButton from '@/components/structured-output/buttons/ExportButton';
+import ViewNotesButton from '@/components/structured-output/buttons/ViewNotesButton';
+import EditButton from '@/components/structured-output/buttons/EditButton';
 import { getStructuredNoteById } from '@/services/structuredNoteService';
 
 export default function StructuredOutputPage() {
@@ -31,7 +30,6 @@ export default function StructuredOutputPage() {
   const [structuredData, setStructuredData] = useState<MedicalSections | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Get data from location state if available (from transcription)
   const transcriptionData = location.state?.transcriptionData;
   const audioUrl = location.state?.audioUrl;
   const transcriptionId = location.state?.transcriptionId;
@@ -53,11 +51,9 @@ export default function StructuredOutputPage() {
           setLoading(false);
         }
       } else if (location.state?.structuredData) {
-        // If we have structuredData from navigation state
         setStructuredData(location.state.structuredData);
         setLoading(false);
       } else {
-        // No noteId or state data
         setLoading(false);
       }
     };
@@ -87,13 +83,11 @@ export default function StructuredOutputPage() {
     setIsEditMode(false);
   };
 
-  // Format structured data as text for copy/export
   const getStructuredText = () => {
     if (!structuredData) return '';
     
     return Object.entries(structuredData)
       .map(([key, value]) => {
-        // Convert camelCase to UPPERCASE with spaces
         const title = key
           .replace(/([A-Z])/g, ' $1')
           .replace(/^./, str => str.toUpperCase())
@@ -103,27 +97,17 @@ export default function StructuredOutputPage() {
       })
       .join('\n');
   };
-  
-  // Structured text for export
+
   const structuredText = getStructuredText();
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState message="Loading structured data..." />;
   }
 
   return (
     <Layout>
       <div className="container mx-auto py-6 px-4">
-        <StructuredOutputHeader title="Structured Medical Document" />
-        
-        <Button 
-          variant="outline"
-          className="mb-6"
-          onClick={handleBackClick}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
+        <StructuredOutputHeader onBack={handleBackClick} />
         
         {!structuredData ? (
           <NoDataView />
@@ -144,9 +128,9 @@ export default function StructuredOutputPage() {
                       patientId={patientId}
                       transcriptionId={transcriptionId || ''}
                     />
-                    <CopyButton text={structuredText} />
+                    <CopyButton sections={structuredData} />
                     <ExportButton sections={structuredData} />
-                    <EditButton onEdit={handleToggleEditMode} />
+                    <EditButton onClick={handleToggleEditMode} />
                   </>
                 ) : (
                   <Button 

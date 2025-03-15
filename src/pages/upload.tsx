@@ -25,7 +25,8 @@ export default function UploadPage() {
     <Layout>
       <div className="container mx-auto py-6 px-4">
         <UploadPageHeader title="Upload Audio" />
-        <UploadPageContent patient={patient} />
+        {/* We pass patient as a key to force re-render when it changes, not as a prop */}
+        <UploadPageContent key={patient?.id || 'no-patient'} />
       </div>
     </Layout>
   );
