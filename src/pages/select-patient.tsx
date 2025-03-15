@@ -8,14 +8,26 @@ import { Search, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
+import { supabase } from '@/integrations/supabase/client';
+
+type Patient = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth?: string;
+  email?: string;
+  phone?: string;
+  patient_id?: string;
+};
 
 export default function SelectPatientPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<Patient[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   
-  // This would typically fetch patients from your backend
   const handleSearchPatient = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -24,31 +36,49 @@ export default function SelectPatientPage() {
       return;
     }
     
+    if (!user) {
+      toast.error("You must be logged in to search for patients");
+      return;
+    }
+    
     setIsSearching(true);
+    setHasSearched(true);
+    
     try {
-      // In a real app, this would search for patients in the database
-      // For now, we'll simulate a search and navigate to upload
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
+      // Search for patients in the database
+      const { data, error } = await supabase
+        .from('patients')
+        .select('*')
+        .or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,patient_id.ilike.%${searchQuery}%`)
+        .order('created_at', { ascending: false });
       
-      // Mock patient found - in a real implementation, this would check the database
-      const patientFound = searchQuery.toLowerCase().includes('test');
-      
-      if (patientFound) {
-        toast.success(`Patient "${searchQuery}" found! Starting consultation.`);
-        
-        // Navigate to upload as next step in workflow
-        setTimeout(() => {
-          navigate('/upload');
-        }, 1000);
-      } else {
-        toast.error(`No patient found with name or ID "${searchQuery}"`);
+      if (error) {
+        throw error;
       }
-    } catch (error) {
-      console.error('Error searching for patient:', error);
-      toast.error('An error occurred while searching for the patient');
+      
+      setSearchResults(data || []);
+      
+      if (data && data.length > 0) {
+        toast.success(`Found ${data.length} patient(s) matching "${searchQuery}"`);
+      } else {
+        toast.error(`No patients found matching "${searchQuery}"`);
+      }
+    } catch (error: any) {
+      console.error('Error searching for patients:', error);
+      toast.error(error.message || 'An error occurred while searching for patients');
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
+  };
+  
+  const handleSelectPatient = (patient: Patient) => {
+    // Store selected patient in session storage for use in next screens
+    sessionStorage.setItem('selectedPatient', JSON.stringify(patient));
+    toast.success(`Selected patient: ${patient.first_name} ${patient.last_name}`);
+    
+    // Navigate to upload as next step in workflow
+    navigate('/upload');
   };
   
   const handleCreatePatient = () => {
@@ -88,6 +118,40 @@ export default function SelectPatientPage() {
                 )}
               </Button>
             </form>
+            
+            {hasSearched && (
+              <div className="mt-4">
+                {searchResults.length > 0 ? (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Search Results</h3>
+                    <div className="border rounded-md divide-y">
+                      {searchResults.map((patient) => (
+                        <div 
+                          key={patient.id} 
+                          className="p-3 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+                          onClick={() => handleSelectPatient(patient)}
+                        >
+                          <div>
+                            <p className="font-medium">{patient.first_name} {patient.last_name}</p>
+                            <p className="text-sm text-gray-500">
+                              {patient.patient_id ? `ID: ${patient.patient_id}` : ''}
+                              {patient.date_of_birth ? ` • DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}` : ''}
+                            </p>
+                          </div>
+                          <Button size="sm" onClick={() => handleSelectPatient(patient)}>
+                            Select
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center p-4 border rounded-md bg-gray-50">
+                    <p className="text-gray-500">No patients found matching your search.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
         

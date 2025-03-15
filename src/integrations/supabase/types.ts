@@ -33,6 +33,45 @@ export type Database = {
         }
         Relationships: []
       }
+      patients: {
+        Row: {
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          patient_id: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          patient_id?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          patient_id?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

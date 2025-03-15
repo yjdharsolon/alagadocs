@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function RegisterPatientPage() {
   const { user } = useAuth();
@@ -48,21 +49,40 @@ export default function RegisterPatientPage() {
       return;
     }
     
+    if (!user) {
+      toast.error("You must be logged in to register a patient");
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
-      // Simulate API call to register patient
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Insert patient data into Supabase
+      const { data, error } = await supabase
+        .from('patients')
+        .insert({
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          date_of_birth: formData.dateOfBirth || null,
+          email: formData.email || null,
+          phone: formData.phone || null,
+          patient_id: formData.patientId || null,
+          user_id: user.id
+        })
+        .select();
       
-      // In a real app, this would save patient data to database
+      if (error) {
+        throw error;
+      }
+      
       toast.success(`Patient ${formData.firstName} ${formData.lastName} registered successfully!`);
       
       // Navigate to upload page to start consultation
       setTimeout(() => {
         navigate('/upload');
       }, 1500);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error registering patient:', error);
-      toast.error('Failed to register patient. Please try again.');
+      toast.error(error.message || 'Failed to register patient. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
