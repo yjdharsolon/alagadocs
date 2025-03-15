@@ -1,27 +1,29 @@
 
+import { useEffect, useState } from 'react';
 import { useUploadAuth } from './useUploadAuth';
 import { useFileHandling } from './useFileHandling';
 import { useUploadProcess } from './useUploadProcess';
-import { useAuthenticationCheck } from './useAuthenticationCheck';
-import { useUploadProgress } from './useUploadProgress';
-import { useUploadError } from './useUploadError';
 
-export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
-  const { 
-    error, 
-    sessionChecked, 
+export const useUploadForm = (user: any, signOut: () => Promise<void>, patientId?: string | null) => {
+  const [error, setError] = useState<string | null>(null);
+  
+  // Authentication handling
+  const {
     handleLogoutAndLogin,
-    setError
-  } = useUploadAuth(user, signOut);
-
+    sessionChecked,
+  } = useUploadAuth(user, signOut, setError);
+  
+  // File handling
   const {
     file,
+    setFile,
     isRecording,
     setIsRecording,
     handleFileSelect,
-    handleRecordingComplete
+    handleRecordingComplete,
   } = useFileHandling();
-
+  
+  // Upload process
   const {
     isUploading,
     uploadProgress,
@@ -29,15 +31,31 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
     handleSubmit: processUpload,
     getStepLabel
   } = useUploadProcess(setError);
-
-  // Combine the handleSubmit function with file and user
-  const handleSubmit = () => {
-    return processUpload(file, user);
+  
+  // Clear any errors when component mounts/unmounts
+  useEffect(() => {
+    setError(null);
+    return () => setError(null);
+  }, []);
+  
+  // Main submit handler that brings everything together
+  const handleSubmit = async () => {
+    if (!file) {
+      setError('Please select a file or record audio first');
+      return null;
+    }
+    
+    if (!user) {
+      setError('You must be logged in to upload audio');
+      return null;
+    }
+    
+    return processUpload(file, user, patientId || undefined);
   };
-
-  // Return all the values and methods from the hooks
+  
   return {
     file,
+    setFile,
     isUploading,
     isRecording,
     setIsRecording,
@@ -52,10 +70,3 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>) => {
     getStepLabel
   };
 };
-
-export * from './useUploadAuth';
-export * from './useFileHandling';
-export * from './useUploadProcess';
-export * from './useAuthenticationCheck';
-export * from './useUploadProgress';
-export * from './useUploadError';

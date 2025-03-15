@@ -25,7 +25,7 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
   const { handleUploadError } = useUploadError(setError);
 
   // We'll make this a useCallback to ensure stability
-  const handleSubmit = useCallback(async (file: File | null, user: any) => {
+  const handleSubmit = useCallback(async (file: File | null, user: any, patientId?: string) => {
     if (!file) {
       toast.error('Please upload or record an audio file first');
       return null;
@@ -39,7 +39,7 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
     }
 
     try {
-      console.log('Starting upload process...');
+      console.log('Starting upload process...', patientId ? `for patient: ${patientId}` : '');
       setIsUploading(true);
       setError(null);
       
@@ -53,8 +53,8 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       
       console.log('Starting audio upload process with file:', file.name);
       
-      // Upload the audio file to Supabase storage
-      const audioUrl = await uploadAudio(file);
+      // Upload the audio file to Supabase storage, passing the patient ID
+      const audioUrl = await uploadAudio(file, patientId);
       
       // Ensure session is verified before proceeding
       await sessionPromise;
@@ -65,7 +65,8 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
       const pendingData = {
         audioUrl,
         status: 'transcribing',
-        transcriptionId: Date.now().toString()
+        transcriptionId: Date.now().toString(),
+        patientId: patientId || null // Include patient ID in pending data
       };
       
       // Store this data for recovery
@@ -90,7 +91,8 @@ export const useUploadProcess = (setError: (error: string | null) => void) => {
         transcriptionData,
         audioUrl,
         transcriptionId,
-        duration: transcriptionData.duration || null
+        duration: transcriptionData.duration || null,
+        patientId: patientId || null // Include patient ID in result
       };
 
       // Update the session storage with completed data

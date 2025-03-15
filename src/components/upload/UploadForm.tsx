@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { ErrorAlert } from './ErrorAlert';
 import { UploadProgress } from './UploadProgress';
@@ -20,7 +20,21 @@ interface UploadFormProps {
 export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete }) => {
   const { user, signOut } = useAuth();
   const [navigating, setNavigating] = useState(false);
+  const [patientId, setPatientId] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  // Get patient ID from session storage
+  useEffect(() => {
+    const selectedPatientJson = sessionStorage.getItem('selectedPatient');
+    if (selectedPatientJson) {
+      try {
+        const patientData = JSON.parse(selectedPatientJson);
+        setPatientId(patientData.id);
+      } catch (error) {
+        console.error('Error parsing patient data:', error);
+      }
+    }
+  }, []);
   
   const {
     file,
@@ -36,7 +50,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
     handleLogoutAndLogin,
     handleSubmit: originalHandleSubmit,
     getStepLabel
-  } = useUploadForm(user, signOut);
+  } = useUploadForm(user, signOut, patientId);
 
   const handleSubmit = useCallback(async () => {
     try {
@@ -139,4 +153,3 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
     </div>
   );
 };
-

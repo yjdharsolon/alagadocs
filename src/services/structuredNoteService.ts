@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { MedicalSections } from '@/components/structured-output/types';
 import { Json } from '@/integrations/supabase/types';
@@ -9,12 +8,14 @@ import { ensureUuid } from '@/utils/uuidUtils';
  * @param userId The user ID associated with the note
  * @param transcriptionId The ID of the source transcription
  * @param content The structured note content
+ * @param patientId Optional patient ID to associate with the note
  * @returns The saved note data
  */
 export const saveStructuredNote = async (
   userId: string,
   transcriptionId: string,
-  content: MedicalSections
+  content: MedicalSections,
+  patientId?: string | null
 ): Promise<any> => {
   try {
     // Ensure transcriptionId is a valid UUID before inserting
@@ -28,7 +29,8 @@ export const saveStructuredNote = async (
         user_id: userId,
         transcription_id: validUuid,
         content: content as unknown as Json, // Type cast to satisfy TypeScript
-        original_id: transcriptionId // Store the original ID for reference
+        original_id: transcriptionId, // Store the original ID for reference
+        patient_id: patientId || null // Associate with patient if provided
       })
       .select()
       .single();
@@ -84,6 +86,7 @@ export const getStructuredNoteById = async (noteId: string): Promise<{
   id: string;
   content: MedicalSections;
   transcription_id: string;
+  patient_id?: string | null;
   created_at: string;
 }> => {
   try {
@@ -127,6 +130,7 @@ export const getUserStructuredNotes = async (): Promise<{
   id: string;
   content: MedicalSections;
   transcription_id: string;
+  patient_id?: string | null;
   created_at: string;
 }[]> => {
   try {

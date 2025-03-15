@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export const uploadAudio = async (file: File): Promise<string> => {
+export const uploadAudio = async (file: File, patientId?: string): Promise<string> => {
   try {
     // Get the current user session first to ensure authentication
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -42,7 +42,8 @@ export const uploadAudio = async (file: File): Promise<string> => {
       audio_url: publicUrl,
       user_id: userId,
       text: '', // Empty text initially, will be filled after transcription
-      status: 'pending'
+      status: 'pending',
+      patient_id: patientId || null // Associate with patient if provided
     };
     
     const { data: insertData, error: transcriptionError } = await supabase
