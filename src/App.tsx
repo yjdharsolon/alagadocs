@@ -18,6 +18,7 @@ import SignupPage from './pages/signup';
 import ProfilePage from './pages/profile';
 import RoleSelectionPage from './pages/role-selection';
 import SelectPatientPage from './pages/select-patient';
+import RegisterPatientPage from './pages/register-patient';
 import UploadPage from './pages/upload';
 import TranscriptionPage from './pages/transcribe';
 import EditTranscriptPage from './pages/edit-transcript';
@@ -48,6 +49,7 @@ function App() {
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/role-selection" element={<ProtectedRoute><RoleSelectionPage /></ProtectedRoute>} />
             <Route path="/select-patient" element={<ProtectedRoute><SelectPatientPage /></ProtectedRoute>} />
+            <Route path="/register-patient" element={<ProtectedRoute><RegisterPatientPage /></ProtectedRoute>} />
             
             {/* Original separate pages */}
             <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,24 +7,53 @@ import { Button } from '@/components/ui/button';
 import { Search, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import toast from 'react-hot-toast';
 
 export default function SelectPatientPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   
   // This would typically fetch patients from your backend
-  // For now, we'll use a placeholder implementation
-  const handleSearchPatient = (e: React.FormEvent) => {
+  const handleSearchPatient = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would search patients and display results
-    // For now, just navigate to upload as a next step in workflow
-    navigate('/upload');
+    
+    if (!searchQuery.trim()) {
+      toast.error("Please enter a patient name or ID");
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      // In a real app, this would search for patients in the database
+      // For now, we'll simulate a search and navigate to upload
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
+      
+      // Mock patient found - in a real implementation, this would check the database
+      const patientFound = searchQuery.toLowerCase().includes('test');
+      
+      if (patientFound) {
+        toast.success(`Patient "${searchQuery}" found! Starting consultation.`);
+        
+        // Navigate to upload as next step in workflow
+        setTimeout(() => {
+          navigate('/upload');
+        }, 1000);
+      } else {
+        toast.error(`No patient found with name or ID "${searchQuery}"`);
+      }
+    } catch (error) {
+      console.error('Error searching for patient:', error);
+      toast.error('An error occurred while searching for the patient');
+    } finally {
+      setIsSearching(false);
+    }
   };
   
   const handleCreatePatient = () => {
-    // In a real app, this would open a form to create a new patient
-    // For now, just navigate to upload as a next step in workflow
-    navigate('/upload');
+    // Navigate to the patient registration page
+    navigate('/register-patient');
   };
   
   return (
@@ -45,10 +74,18 @@ export default function SelectPatientPage() {
                 placeholder="Search patients..." 
                 className="flex-1"
                 aria-label="Search patients"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Button type="submit">
-                <Search className="h-4 w-4 mr-2" />
-                Search
+              <Button type="submit" disabled={isSearching}>
+                {isSearching ? (
+                  <>Searching...</>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4 mr-2" />
+                    Search
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>
