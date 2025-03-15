@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
-import { saveStructuredNote } from '@/services/structuredOutput';
+import { saveStructuredNote } from '@/services/structuredNoteService';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { MedicalSections } from '@/components/structured-output/types';

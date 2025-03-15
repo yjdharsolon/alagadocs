@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { MedicalSections } from '@/components/structured-output/types';
 import { structureText, saveStructuredNote } from '@/services/structuredTextService';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface UseNoteProcessingParams {
   userId: string | undefined;
