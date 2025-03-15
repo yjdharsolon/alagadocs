@@ -19,7 +19,6 @@ interface UploadFormProps {
 }
 
 export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete }) => {
-  const { user, signOut } = useAuth();
   const [navigating, setNavigating] = useState(false);
   const [patientId, setPatientId] = useState<string | null>(null);
   const [patientName, setPatientName] = useState<string | null>(null);
@@ -51,16 +50,17 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
     handleFileSelect,
     handleRecordingComplete,
     handleLogoutAndLogin,
-    handleSubmit: originalHandleSubmit,
-    getStepLabel
-  } = useUploadForm(user, signOut, patientId);
+    handleSubmit,
+    getStepLabel,
+    changePatient
+  } = useUploadForm(patientId);
 
-  const handleSubmit = useCallback(async () => {
+  const handleFormSubmit = useCallback(async () => {
     try {
       console.log("Submit button clicked, handling submission...");
       setNavigating(true);
       
-      const result = await originalHandleSubmit();
+      const result = await handleSubmit();
       
       if (result && result.transcriptionData) {
         console.log('Transcription completed, calling onTranscriptionComplete with results:', result);
@@ -114,7 +114,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       toast.error('Error completing transcription process');
       setNavigating(false);
     }
-  }, [originalHandleSubmit, onTranscriptionComplete, navigate, patientId, patientName]);
+  }, [handleSubmit, onTranscriptionComplete, navigate, patientId, patientName]);
   
   if (!sessionChecked) {
     return <AuthenticationCheck isLoading={true} />;
@@ -161,7 +161,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
             isUploading={isUploading}
             isRecording={isRecording}
             hasFile={!!file}
-            onSubmit={handleSubmit}
+            onSubmit={handleFormSubmit}
             getStepLabel={getStepLabel}
           />
         </div>

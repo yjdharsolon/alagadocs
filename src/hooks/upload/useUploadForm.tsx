@@ -35,28 +35,28 @@ export const useUploadForm = (patientId?: string) => {
     isUploading,
     uploadProgress,
     currentStep,
-    handleSubmit,
+    handleSubmit: processUpload,
     getStepLabel
   } = useUploadProcess(setError);
   
   // Wrap handleSubmit to include user and patientId
-  const handleFormSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async () => {
     try {
       if (!sessionChecked) {
         throw new Error('Session not verified yet. Please wait.');
       }
       
-      const result = await handleSubmit(file, user, patientId);
-      
-      if (result) {
-        // Handle successful transcription
-        navigate('/unified-transcription', { state: result });
+      if (!file) {
+        throw new Error('No file selected. Please upload or record audio first.');
       }
+      
+      return await processUpload(file, user, patientId);
     } catch (err) {
       console.error('Error submitting form:', err);
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      return null;
     }
-  }, [file, user, patientId, handleSubmit, navigate, sessionChecked]);
+  }, [file, user, patientId, processUpload, sessionChecked]);
   
   // Function to change the selected patient
   const changePatient = useCallback(() => {
@@ -75,7 +75,7 @@ export const useUploadForm = (patientId?: string) => {
     sessionChecked,
     handleFileSelect,
     handleRecordingComplete,
-    handleSubmit: handleFormSubmit,
+    handleSubmit,
     getStepLabel,
     handleLogoutAndLogin,
     changePatient
