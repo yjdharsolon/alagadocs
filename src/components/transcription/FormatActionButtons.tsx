@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Wand2, Loader2 } from 'lucide-react';
 
@@ -11,7 +11,8 @@ interface FormatActionButtonsProps {
   transcriptionText: string;
 }
 
-const FormatActionButtons: React.FC<FormatActionButtonsProps> = ({
+// Use memo to prevent unnecessary re-renders
+const FormatActionButtons: React.FC<FormatActionButtonsProps> = memo(({
   onSave,
   onFormat,
   isProcessing,
@@ -46,6 +47,8 @@ const FormatActionButtons: React.FC<FormatActionButtonsProps> = ({
       </Button>
     </div>
   );
-};
+});
+
+FormatActionButtons.displayName = 'FormatActionButtons';
 
 export default FormatActionButtons;

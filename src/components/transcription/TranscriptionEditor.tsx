@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,6 +7,7 @@ import { Save, FileText, Check, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MedicalTranscriptionFormatter from './MedicalTranscriptionFormatter';
+import { FixedSizeList as List } from 'react-window';
 
 interface TranscriptionEditorProps {
   transcriptionText: string;
@@ -27,25 +28,72 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
   saveError,
   saveSuccess
 }) => {
-  const [wordCount, setWordCount] = useState(countWords(transcriptionText));
   const [activeTab, setActiveTab] = useState('edit');
   const [formattedText, setFormattedText] = useState('');
   
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newText = e.target.value;
-    onTranscriptionChange(newText);
-    setWordCount(countWords(newText));
-  };
+  // Memoize expensive calculations
+  const wordCount = useMemo(() => countWords(transcriptionText), [transcriptionText]);
+  
+  const lines = useMemo(() => {
+    if (!transcriptionText) return [];
+    return transcriptionText.split('\n');
+  }, [transcriptionText]);
+  
+  const isLargeContent = lines.length > 200;
+  
+  // Optimize event handlers with useCallback
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onTranscriptionChange(e.target.value);
+  }, [onTranscriptionChange]);
+  
+  const handleSaveFormatted = useCallback((text: string) => {
+    setFormattedText(text);
+  }, []);
   
   function countWords(text: string): number {
     return text.trim().split(/\s+/).filter(word => word.length > 0).length;
   }
   
-  const handleSaveFormatted = (text: string) => {
-    setFormattedText(text);
-    // You can add logic here to save the formatted text to your database
-    // or pass it back to a parent component
+  // Render optimized view for large content
+  const renderOptimizedTextarea = () => {
+    return (
+      <div className="space-y-2">
+        <div className="border rounded-md">
+          <List
+            height={300}
+            itemCount={lines.length}
+            itemSize={20}
+            width="100%"
+            className="bg-background text-sm font-mono overflow-x-auto"
+          >
+            {({ index, style }) => (
+              <div style={style} className="px-3 py-0.5">
+                {lines[index]}
+              </div>
+            )}
+          </List>
+        </div>
+        <Textarea 
+          className="min-h-[100px] font-mono text-sm"
+          value={transcriptionText}
+          onChange={handleTextChange}
+          placeholder="Your transcription text will appear here for editing..."
+          aria-label="Transcription text editor"
+        />
+      </div>
+    );
   };
+  
+  // Standard rendering for smaller content
+  const renderStandardTextarea = () => (
+    <Textarea 
+      className="min-h-[300px] sm:min-h-[400px] font-mono text-sm resize-none"
+      value={transcriptionText}
+      onChange={handleTextChange}
+      placeholder="Your transcription text will appear here for editing..."
+      aria-label="Transcription text editor"
+    />
+  );
   
   return (
     <Card>
@@ -85,12 +133,7 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
               </Alert>
             )}
             
-            <Textarea 
-              className="min-h-[300px] sm:min-h-[400px] font-mono text-sm resize-none"
-              value={transcriptionText}
-              onChange={handleTextChange}
-              placeholder="Your transcription text will appear here for editing..."
-            />
+            {isLargeContent ? renderOptimizedTextarea() : renderStandardTextarea()}
             
             <div className="text-sm text-muted-foreground mt-2">
               Word count: {wordCount}
