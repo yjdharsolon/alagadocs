@@ -18,6 +18,8 @@ interface DocumentContainerProps {
   isEditMode: boolean;
   onToggleEditMode: () => void;
   onSaveEdit: (updatedData: MedicalSections) => void;
+  onNoteSaved?: () => void;
+  noteSaved?: boolean;
 }
 
 const DocumentContainer = ({
@@ -27,7 +29,9 @@ const DocumentContainer = ({
   transcriptionId,
   isEditMode,
   onToggleEditMode,
-  onSaveEdit
+  onSaveEdit,
+  onNoteSaved,
+  noteSaved = false
 }: DocumentContainerProps) => {
   const getStructuredText = () => {
     return Object.entries(structuredData)
@@ -60,6 +64,8 @@ const DocumentContainer = ({
           patientInfo={patientInfo}
           isEditMode={isEditMode}
           onToggleEditMode={onToggleEditMode}
+          onNoteSaved={onNoteSaved}
+          noteSaved={noteSaved}
         />
       </div>
       

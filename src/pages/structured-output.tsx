@@ -49,7 +49,9 @@ export default function StructuredOutputPage() {
     handleBackClick,
     handleToggleEditMode,
     handleSaveEdit,
-    handleRetry
+    handleRetry,
+    handleNoteSaved,
+    noteSaved
   } = useStructuredOutputPage({
     structuredData,
     setStructuredData,
@@ -189,6 +191,8 @@ export default function StructuredOutputPage() {
             isEditMode={isEditMode}
             onToggleEditMode={handleToggleEditMode}
             onSaveEdit={handleSaveEdit}
+            onNoteSaved={handleNoteSaved}
+            noteSaved={noteSaved}
           />
         )}
       </div>

@@ -13,6 +13,7 @@ export interface SaveNoteButtonProps {
   structuredText: string;
   patientId?: string | null;
   transcriptionId: string;
+  onNoteSaved?: () => void;
 }
 
 export function SaveNoteButton({ 
@@ -20,9 +21,11 @@ export function SaveNoteButton({
   sections, 
   structuredText, 
   patientId,
-  transcriptionId 
+  transcriptionId,
+  onNoteSaved
 }: SaveNoteButtonProps) {
   const [isSaving, setIsSaving] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
   const navigate = useNavigate();
 
   const handleSaveNote = async () => {
@@ -45,9 +48,12 @@ export function SaveNoteButton({
       );
       
       toast.success('Note saved successfully!');
+      setNoteSaved(true);
       
-      // Removed the setTimeout that navigated to select-patient
-      // User will now remain on the current page after saving
+      // Call the callback if provided
+      if (onNoteSaved) {
+        onNoteSaved();
+      }
       
     } catch (error) {
       console.error('Error saving note:', error);
@@ -61,10 +67,10 @@ export function SaveNoteButton({
     <Button 
       variant="outline" 
       onClick={handleSaveNote}
-      disabled={isSaving}
+      disabled={isSaving || noteSaved}
     >
       <Save className="mr-2 h-4 w-4" />
-      {isSaving ? 'Saving...' : 'Save Note'}
+      {isSaving ? 'Saving...' : noteSaved ? 'Note Saved' : 'Save Note'}
     </Button>
   );
 }

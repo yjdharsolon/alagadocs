@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface UseNavigationControlParams {
@@ -12,6 +12,7 @@ export const useNavigationControl = ({
   audioUrl
 }: UseNavigationControlParams) => {
   const navigate = useNavigate();
+  const [noteSaved, setNoteSaved] = useState(false);
 
   const handleBackClick = useCallback(() => {
     if (transcriptionData) {
@@ -41,8 +42,19 @@ export const useNavigationControl = ({
     return true;
   }, [navigate, transcriptionData, audioUrl]);
 
+  const handleNoteSaved = useCallback(() => {
+    setNoteSaved(true);
+  }, []);
+
+  const handleEndConsult = useCallback(() => {
+    navigate('/select-patient');
+  }, [navigate]);
+
   return {
     handleBackClick,
-    handleRetry
+    handleRetry,
+    handleNoteSaved,
+    handleEndConsult,
+    noteSaved
   };
 };

@@ -5,6 +5,7 @@ import { SaveNoteButton } from './buttons/SaveNoteButton';
 import CopyButton from './buttons/CopyButton';
 import ExportButton from './buttons/ExportButton';
 import EditButton from './buttons/EditButton';
+import EndConsultButton from './buttons/EndConsultButton';
 import { MedicalSections } from './types';
 
 interface DocumentActionsProps {
@@ -18,6 +19,8 @@ interface DocumentActionsProps {
   };
   isEditMode: boolean;
   onToggleEditMode: () => void;
+  onNoteSaved?: () => void;
+  noteSaved?: boolean;
 }
 
 const DocumentActions = ({
@@ -27,10 +30,12 @@ const DocumentActions = ({
   transcriptionId,
   patientInfo,
   isEditMode,
-  onToggleEditMode
+  onToggleEditMode,
+  onNoteSaved,
+  noteSaved = false
 }: DocumentActionsProps) => {
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       {!isEditMode ? (
         <>
           <SaveNoteButton 
@@ -39,10 +44,12 @@ const DocumentActions = ({
             structuredText={structuredText}
             patientId={patientInfo.id}
             transcriptionId={transcriptionId || ''}
+            onNoteSaved={onNoteSaved}
           />
           <CopyButton sections={structuredData} />
           <ExportButton sections={structuredData} />
           <EditButton onClick={onToggleEditMode} />
+          <EndConsultButton isVisible={noteSaved} />
         </>
       ) : (
         <Button 

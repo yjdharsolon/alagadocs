@@ -22,7 +22,10 @@ export const useStructuredOutputPage = ({
   // Use the navigation hook
   const { 
     handleBackClick, 
-    handleRetry 
+    handleRetry,
+    handleNoteSaved,
+    handleEndConsult,
+    noteSaved
   } = useNavigationControl({ 
     transcriptionData, 
     audioUrl 
@@ -50,6 +53,9 @@ export const useStructuredOutputPage = ({
     handleBackClick,
     handleToggleEditMode,
     handleSaveEdit,
-    handleRetry: retryProcessing
+    handleRetry: retryProcessing,
+    handleNoteSaved,
+    handleEndConsult,
+    noteSaved
   };
 };
