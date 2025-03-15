@@ -25,15 +25,16 @@ const AudioControls: React.FC<AudioControlsProps> = ({
   is403Error
 }) => {
   return (
-    <div className="flex justify-center items-center gap-2">
+    <div className="flex justify-center items-center gap-2" role="toolbar" aria-label="Audio playback controls">
       <Button 
         variant="outline" 
         size="icon" 
         onClick={skipBackward} 
         title="Skip backward 10s (Left arrow)" 
         disabled={disabled}
+        aria-label="Skip backward 10 seconds"
       >
-        <SkipBack className="h-4 w-4" />
+        <SkipBack className="h-4 w-4" aria-hidden="true" />
       </Button>
       <Button 
         size="icon" 
@@ -41,8 +42,9 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         onClick={togglePlayPause} 
         title="Play/Pause (Space)"
         disabled={disabled || hasError}
+        aria-label={isPlaying ? "Pause" : "Play"}
       >
-        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        {isPlaying ? <Pause className="h-4 w-4" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />}
       </Button>
       <Button 
         variant="outline" 
@@ -50,8 +52,9 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         onClick={skipForward} 
         title="Skip forward 10s (Right arrow)" 
         disabled={disabled}
+        aria-label="Skip forward 10 seconds"
       >
-        <SkipForward className="h-4 w-4" />
+        <SkipForward className="h-4 w-4" aria-hidden="true" />
       </Button>
       <Button 
         variant="outline" 
@@ -59,8 +62,9 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         onClick={downloadAudio} 
         title="Download audio" 
         disabled={disabled || is403Error}
+        aria-label="Download audio file"
       >
-        <Download className="h-4 w-4" />
+        <Download className="h-4 w-4" aria-hidden="true" />
       </Button>
     </div>
   );
