@@ -9,8 +9,8 @@ export const useUploadForm = (user: any, signOut: () => Promise<void>, patientId
   
   // Authentication handling
   const {
-    handleLogoutAndLogin,
     sessionChecked,
+    handleLogoutAndLogin,
   } = useUploadAuth(user, signOut, setError);
   
   // File handling

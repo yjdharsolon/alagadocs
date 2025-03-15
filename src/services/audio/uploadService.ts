@@ -46,6 +46,8 @@ export const uploadAudio = async (file: File, patientId?: string): Promise<strin
       patient_id: patientId || null // Associate with patient if provided
     };
     
+    console.log('Creating transcription with patient ID:', patientId || 'none');
+    
     const { data: insertData, error: transcriptionError } = await supabase
       .from('transcriptions')
       .insert(transcriptionData)

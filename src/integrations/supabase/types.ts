@@ -105,6 +105,7 @@ export type Database = {
           created_at: string
           id: string
           original_id: string | null
+          patient_id: string | null
           transcription_id: string
           updated_at: string
           user_id: string
@@ -114,6 +115,7 @@ export type Database = {
           created_at?: string
           id?: string
           original_id?: string | null
+          patient_id?: string | null
           transcription_id: string
           updated_at?: string
           user_id: string
@@ -123,11 +125,20 @@ export type Database = {
           created_at?: string
           id?: string
           original_id?: string | null
+          patient_id?: string | null
           transcription_id?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "structured_notes_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -231,6 +242,7 @@ export type Database = {
           error_message: string | null
           id: string
           language: string | null
+          patient_id: string | null
           status: string | null
           text: string
           updated_at: string
@@ -244,6 +256,7 @@ export type Database = {
           error_message?: string | null
           id?: string
           language?: string | null
+          patient_id?: string | null
           status?: string | null
           text: string
           updated_at?: string
@@ -257,12 +270,21 @@ export type Database = {
           error_message?: string | null
           id?: string
           language?: string | null
+          patient_id?: string | null
           status?: string | null
           text?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transcriptions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

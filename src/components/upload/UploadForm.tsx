@@ -12,6 +12,7 @@ import { AuthenticationCheck } from './AuthenticationCheck';
 import { Loader2 } from 'lucide-react';
 import LoadingTranscription from '../transcription/LoadingTranscription';
 import { useNavigate } from 'react-router-dom';
+import { PatientInfoCard } from './PatientInfoCard';
 
 interface UploadFormProps {
   onTranscriptionComplete?: (transcriptionData: any, audioUrl: string, transcriptionId: string) => void;
@@ -21,15 +22,17 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   const { user, signOut } = useAuth();
   const [navigating, setNavigating] = useState(false);
   const [patientId, setPatientId] = useState<string | null>(null);
+  const [patientName, setPatientName] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  // Get patient ID from session storage
+  // Get patient info from session storage
   useEffect(() => {
     const selectedPatientJson = sessionStorage.getItem('selectedPatient');
     if (selectedPatientJson) {
       try {
         const patientData = JSON.parse(selectedPatientJson);
         setPatientId(patientData.id);
+        setPatientName(`${patientData.first_name} ${patientData.last_name}`);
       } catch (error) {
         console.error('Error parsing patient data:', error);
       }
@@ -38,6 +41,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   
   const {
     file,
+    setFile,
     isUploading,
     isRecording,
     setIsRecording,
@@ -66,7 +70,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
         sessionStorage.setItem('lastTranscriptionResult', JSON.stringify({
           transcriptionData: result.transcriptionData,
           audioUrl: result.audioUrl || '',
-          transcriptionId: result.transcriptionId || ''
+          transcriptionId: result.transcriptionId || '',
+          patientId: patientId || null,
+          patientName: patientName || null
         }));
         
         // Force navigation to edit-transcript
@@ -82,7 +88,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
             state: {
               transcriptionData: result.transcriptionData,
               audioUrl: result.audioUrl || '',
-              transcriptionId: result.transcriptionId || ''
+              transcriptionId: result.transcriptionId || '',
+              patientId: patientId || null,
+              patientName: patientName || null
             }
           });
         }
@@ -90,6 +98,12 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
         // If no result, still attempt to navigate based on pending data
         const pendingData = sessionStorage.getItem('pendingTranscription');
         if (pendingData) {
+          // Add patient data to pending transcription
+          const pendingObj = JSON.parse(pendingData);
+          pendingObj.patientId = patientId;
+          pendingObj.patientName = patientName;
+          sessionStorage.setItem('pendingTranscription', JSON.stringify(pendingObj));
+          
           navigate('/edit-transcript?pending=true');
         } else {
           setNavigating(false);
@@ -101,7 +115,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       toast.error('Error completing transcription process');
       setNavigating(false);
     }
-  }, [originalHandleSubmit, onTranscriptionComplete, navigate]);
+  }, [originalHandleSubmit, onTranscriptionComplete, navigate, patientId, patientName]);
   
   if (!sessionChecked) {
     return <AuthenticationCheck isLoading={true} />;
@@ -121,6 +135,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       )}
       
       <div className="space-y-6">
+        {/* Display patient information if available */}
+        <PatientInfoCard patientName={patientName || undefined} patientId={patientId} />
+        
         <FileInputCard 
           file={file} 
           onFileSelect={handleFileSelect} 

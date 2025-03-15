@@ -1,11 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useUploadAuth = (user: any, signOut: () => Promise<void>) => {
-  const [error, setError] = useState<string | null>(null);
+export const useUploadAuth = (user: any, signOut: () => Promise<void>, setError: (error: string | null) => void) => {
   const [sessionChecked, setSessionChecked] = useState(false);
   const navigate = useNavigate();
 
@@ -84,7 +83,7 @@ export const useUploadAuth = (user: any, signOut: () => Promise<void>) => {
     return () => {
       isMounted = false;
     };
-  }, [user, navigate]);
+  }, [user, navigate, setError]);
 
   const handleLogoutAndLogin = async () => {
     try {
@@ -99,9 +98,7 @@ export const useUploadAuth = (user: any, signOut: () => Promise<void>) => {
   };
 
   return {
-    error,
     sessionChecked,
-    handleLogoutAndLogin,
-    setError
+    handleLogoutAndLogin
   };
 };
