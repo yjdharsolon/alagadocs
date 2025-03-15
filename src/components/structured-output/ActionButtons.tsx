@@ -22,13 +22,8 @@ const ActionButtons = ({
   transcriptionId,
   patientId
 }: ActionButtonsProps) => {
-  // We're maintaining the onCopy prop for backward compatibility, although individual buttons now handle their logic
-  const handleCopy = () => {
-    if (onCopy) {
-      onCopy();
-    }
-  };
-
+  console.log('ActionButtons patientId:', patientId); // Debug log
+  
   return (
     <ButtonGroup
       onEdit={onEdit}

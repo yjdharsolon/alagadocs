@@ -22,6 +22,7 @@ export const saveStructuredNote = async (
     // Ensure transcriptionId is a valid UUID before inserting
     const validUuid = ensureUuid(transcriptionId);
     console.log(`Original transcriptionId: ${transcriptionId}, converted to UUID: ${validUuid}`);
+    console.log('Saving note with patientId:', patientId);
     
     // Insert into structured_notes table with correct UUID format
     const { data, error } = await supabase
@@ -41,6 +42,7 @@ export const saveStructuredNote = async (
       throw new Error(`Error saving note: ${error.message}`);
     }
     
+    console.log('Structured note saved successfully:', data);
     return data;
   } catch (error) {
     console.error('Error in saveStructuredNote:', error);
@@ -113,6 +115,7 @@ export const getStructuredNoteById = async (noteId: string): Promise<{
       throw new Error('Structured note not found');
     }
     
+    console.log('Retrieved structured note by ID:', data);
     return {
       ...data,
       content: data.content as unknown as MedicalSections
@@ -151,6 +154,8 @@ export const getUserStructuredNotes = async (): Promise<{
       console.error('Error getting user structured notes:', error);
       throw new Error(`Error getting user structured notes: ${error.message}`);
     }
+    
+    console.log('All user structured notes:', data);
     
     return data.map(note => ({
       ...note,

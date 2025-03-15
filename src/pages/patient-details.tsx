@@ -12,7 +12,7 @@ import { getUserStructuredNotes } from '@/services/structuredNoteService';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { Stethoscope, File, Loader2 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function PatientDetailsPage() {
   const location = useLocation();
@@ -46,10 +46,18 @@ export default function PatientDetailsPage() {
       
       try {
         setLoading(true);
+        console.log('Fetching notes for patient ID:', patient.id);
         const notes = await getUserStructuredNotes();
+        console.log('All notes fetched:', notes);
+        
         // Filter notes that belong to this patient
-        const patientNotes = notes.filter(note => note.patient_id === patient.id);
-        setPatientNotes(patientNotes);
+        const filtered = notes.filter(note => {
+          console.log('Note patient_id:', note.patient_id, 'Patient id:', patient.id);
+          return note.patient_id === patient.id;
+        });
+        
+        console.log('Filtered patient notes:', filtered);
+        setPatientNotes(filtered);
       } catch (error) {
         console.error('Error fetching patient notes:', error);
         toast.error('Failed to load patient records');

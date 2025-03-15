@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -6,7 +5,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clipboard, Download, Pencil, RefreshCw } from 'lucide-react';
 import StructuredOutputHeader from '@/components/structured-output/StructuredOutputHeader';
 import DocumentView from '@/components/structured-output/DocumentView';
 import EditableDocumentView from '@/components/structured-output/EditableDocumentView';
@@ -16,7 +14,6 @@ import NoDataView from '@/components/structured-output/NoDataView';
 import { SaveNoteButton } from '@/components/structured-output/buttons/SaveNoteButton';
 import CopyButton from '@/components/structured-output/buttons/CopyButton';
 import ExportButton from '@/components/structured-output/buttons/ExportButton';
-import ViewNotesButton from '@/components/structured-output/buttons/ViewNotesButton';
 import EditButton from '@/components/structured-output/buttons/EditButton';
 import { getStructuredNoteById } from '@/services/structuredNoteService';
 import { structureText } from '@/services/structureService';
@@ -41,7 +38,10 @@ export default function StructuredOutputPage() {
   const patientId = location.state?.patientId || 
     (transcriptionData?.patient_id ? transcriptionData.patient_id : null);
 
-  // Load note by ID if provided
+  console.log('StructuredOutputPage patientId:', patientId);
+  console.log('Location state:', location.state);
+  console.log('Transcription data:', transcriptionData);
+
   useEffect(() => {
     const loadNote = async () => {
       if (noteId) {
@@ -73,7 +73,6 @@ export default function StructuredOutputPage() {
     loadNote();
   }, [noteId, location.state]);
 
-  // Process transcription text
   const processTranscription = async () => {
     if (!transcriptionData || !transcriptionData.text) {
       setError('Missing transcription text');
@@ -85,7 +84,6 @@ export default function StructuredOutputPage() {
       setProcessingText(true);
       console.log('Processing transcription:', transcriptionData.text);
       
-      // Structure the text using our service
       const structuredResult = await structureText(transcriptionData.text);
       
       if (structuredResult) {
@@ -150,7 +148,6 @@ export default function StructuredOutputPage() {
 
   const structuredText = getStructuredText();
   
-  // Display loading state
   if (loading) {
     return (
       <Layout>
@@ -179,7 +176,7 @@ export default function StructuredOutputPage() {
           <>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">
-                Medical Report
+                Medical Report {patientId ? `(Patient ID: ${patientId})` : ''}
               </h2>
               
               <div className="flex gap-2">

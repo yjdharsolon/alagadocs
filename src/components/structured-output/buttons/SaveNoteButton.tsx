@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
 import { saveStructuredNote } from '@/services/structuredNoteService';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { MedicalSections } from '@/components/structured-output/types';
 
@@ -33,6 +33,8 @@ export function SaveNoteButton({
 
     try {
       setIsSaving(true);
+      
+      console.log('Saving structured note with patient ID:', patientId);
       
       // Using the structuredNoteService to save the note with patient association
       await saveStructuredNote(
