@@ -47,6 +47,8 @@ export const useNavigationControl = ({
   }, []);
 
   const handleEndConsult = useCallback(() => {
+    // Ensure we navigate to the patient selection page
+    console.log('End consultation clicked, navigating to /select-patient');
     navigate('/select-patient');
   }, [navigate]);
 
