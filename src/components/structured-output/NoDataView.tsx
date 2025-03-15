@@ -2,11 +2,17 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, Upload, FileText, List } from 'lucide-react';
+import { AlertCircle, Upload, FileText, List, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
-const NoDataView = () => {
+interface NoDataViewProps {
+  error?: string | null;
+  onRetry?: () => void;
+}
+
+const NoDataView = ({ error, onRetry }: NoDataViewProps) => {
   const navigate = useNavigate();
   
   return (
@@ -15,7 +21,7 @@ const NoDataView = () => {
         <AlertCircle className="h-5 w-5" />
         <AlertTitle>No structured data available</AlertTitle>
         <AlertDescription>
-          There was an error processing your transcription or no transcription data was found.
+          {error || "There was an error processing your transcription or no transcription data was found."}
         </AlertDescription>
       </Alert>
       
@@ -26,6 +32,17 @@ const NoDataView = () => {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <h3 className="font-medium">You can try one of these options:</h3>
+            
+            {onRetry && (
+              <div className="flex justify-center my-4">
+                <Button onClick={onRetry} className="flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Retry Structuring
+                </Button>
+              </div>
+            )}
+            
+            <Separator className="my-4" />
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <div className="flex flex-col items-center p-4 border rounded-md bg-gray-50">

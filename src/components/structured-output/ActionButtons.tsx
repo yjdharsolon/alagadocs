@@ -4,8 +4,8 @@ import { MedicalSections } from './types';
 import { ButtonGroup } from './buttons/ButtonGroup';
 
 interface ActionButtonsProps {
-  onCopy: () => void;
-  onEdit: () => void;
+  onCopy?: () => void;
+  onEdit?: () => void;
   user?: any;
   sections?: MedicalSections;
   structuredText?: string;

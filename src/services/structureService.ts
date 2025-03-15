@@ -17,6 +17,10 @@ export const structureText = async (
   try {
     console.log('Structuring text with role:', role);
     
+    if (!text || typeof text !== 'string' || text.trim() === '') {
+      throw new Error('Invalid or empty text provided');
+    }
+    
     // Call the edge function to structure the medical text
     const { data, error } = await supabase.functions.invoke('structure-medical-text', {
       body: { 
@@ -30,6 +34,12 @@ export const structureText = async (
       console.error('Error structuring text:', error);
       throw new Error(`Error structuring text: ${error.message}`);
     }
+    
+    if (!data) {
+      throw new Error('No data returned from structuring service');
+    }
+    
+    console.log('Raw response from structure-medical-text:', data);
     
     // If the response is already a MedicalSections object
     if (data && typeof data === 'object' && data.chiefComplaint !== undefined) {
