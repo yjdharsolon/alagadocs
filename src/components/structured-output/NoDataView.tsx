@@ -2,10 +2,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, Upload, FileText, List, RefreshCw } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ArrowUp, List, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 
 interface NoDataViewProps {
   error?: string | null;
@@ -16,60 +14,48 @@ const NoDataView = ({ error, onRetry }: NoDataViewProps) => {
   const navigate = useNavigate();
   
   return (
-    <div className="text-center py-10 space-y-6">
-      <Alert variant="destructive" className="max-w-lg mx-auto">
-        <AlertCircle className="h-5 w-5" />
-        <AlertTitle>No structured data available</AlertTitle>
-        <AlertDescription>
-          {error || "There was an error processing your transcription or no transcription data was found."}
-        </AlertDescription>
-      </Alert>
-      
-      <Card className="max-w-2xl mx-auto">
+    <div className="text-center py-6 space-y-6 max-w-4xl mx-auto">
+      <Card className="mx-auto">
         <CardHeader>
-          <CardTitle>How to get structured medical notes</CardTitle>
+          <CardTitle className="text-center">How to get structured medical notes</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <h3 className="font-medium">You can try one of these options:</h3>
+            <p className="text-muted-foreground">You can try one of these options:</p>
             
             {onRetry && (
               <div className="flex justify-center my-4">
-                <Button onClick={onRetry} className="flex items-center gap-2">
+                <Button onClick={onRetry} className="flex items-center gap-2 bg-[#33C3F0] hover:bg-[#1EAEDB]">
                   <RefreshCw className="h-4 w-4" />
                   Retry Structuring
                 </Button>
               </div>
             )}
             
-            <Separator className="my-4" />
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-              <div className="flex flex-col items-center p-4 border rounded-md bg-gray-50">
-                <Upload className="h-10 w-10 text-primary mb-2" />
-                <h3 className="font-medium">Start a new transcription</h3>
-                <p className="text-sm text-muted-foreground mb-3">Upload a new audio file to transcribe</p>
-                <Button onClick={() => navigate('/upload')} className="mt-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+              <div className="flex flex-col items-center p-6 border rounded-md bg-[#F3F3F3]">
+                <ArrowUp className="h-10 w-10 text-[#33C3F0] mb-4" />
+                <h3 className="font-medium mb-2">Start a new transcription</h3>
+                <p className="text-sm text-muted-foreground mb-4">Upload a new audio file to transcribe</p>
+                <Button onClick={() => navigate('/upload')} className="bg-[#33C3F0] hover:bg-[#1EAEDB]">
                   Upload Audio
                 </Button>
               </div>
               
-              <div className="flex flex-col items-center p-4 border rounded-md bg-gray-50">
-                <List className="h-10 w-10 text-primary mb-2" />
-                <h3 className="font-medium">View your transcriptions</h3>
-                <p className="text-sm text-muted-foreground mb-3">Access your previous transcriptions</p>
-                <Button variant="outline" onClick={() => navigate('/transcribe')} className="mt-auto">
+              <div className="flex flex-col items-center p-6 border rounded-md bg-[#F3F3F3]">
+                <List className="h-10 w-10 text-[#33C3F0] mb-4" />
+                <h3 className="font-medium mb-2">View your transcriptions</h3>
+                <p className="text-sm text-muted-foreground mb-4">Access your previous transcriptions</p>
+                <Button onClick={() => navigate('/transcribe')} className="bg-white border border-[#33C3F0] text-[#33C3F0] hover:bg-[#F1F1F1]">
                   View Transcriptions
                 </Button>
               </div>
             </div>
           </div>
           
-          <div className="pt-4 border-t">
-            <p className="text-sm text-muted-foreground mb-3">
-              If you're experiencing persistent issues, please contact support for assistance.
-            </p>
-            <Button variant="link" onClick={() => window.history.back()} className="text-sm">
+          <div className="pt-4 text-sm text-muted-foreground">
+            <p>If you're experiencing persistent issues, please contact support for assistance.</p>
+            <Button variant="link" onClick={() => window.history.back()} className="text-[#33C3F0]">
               ← Go Back
             </Button>
           </div>

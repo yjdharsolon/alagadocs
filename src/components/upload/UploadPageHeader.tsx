@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface UploadPageHeaderProps {
   title: string;
@@ -14,11 +15,15 @@ export const UploadPageHeader: React.FC<UploadPageHeaderProps> = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className="mb-4">
-      <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold mb-2`}>{title}</h1>
+    <Card className="mb-6 border-none shadow-none bg-transparent">
+      <CardHeader className="text-center pb-2">
+        <CardTitle className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>{title}</CardTitle>
+      </CardHeader>
       {description && (
-        <p className="text-muted-foreground text-sm">{description}</p>
+        <CardContent className="text-center pt-0">
+          <p className="text-muted-foreground">{description}</p>
+        </CardContent>
       )}
-    </div>
+    </Card>
   );
 };
