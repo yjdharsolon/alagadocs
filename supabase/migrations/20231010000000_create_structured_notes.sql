@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS public.structured_notes (
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   transcription_id UUID NOT NULL,
   content JSONB NOT NULL,
+  original_id TEXT, -- Store original non-UUID ID if needed
+  patient_id TEXT,  -- Store associated patient ID
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

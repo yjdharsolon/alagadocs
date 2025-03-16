@@ -5,7 +5,7 @@ import { Save, Loader2 } from 'lucide-react';
 import { MedicalSections } from '../types';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { saveStructuredNote } from '@/services/structuredOutput';
+import { saveStructuredNote } from '@/services/structuredNote/saveNote';
 
 interface SaveNoteButtonProps {
   user: any;
@@ -40,7 +40,12 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
       setIsSaving(true);
       console.log('Saving note with data:', { userId: user.id, transcriptionId, sections, patientId });
       
-      const result = await saveStructuredNote(sections, transcriptionId);
+      const result = await saveStructuredNote(
+        user.id,
+        transcriptionId,
+        sections,
+        patientId
+      );
       
       toast.success('Note saved successfully');
       

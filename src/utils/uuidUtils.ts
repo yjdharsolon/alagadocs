@@ -11,8 +11,13 @@ const UUID_NAMESPACE = '1b671a64-40d5-491e-99b0-da01ff1f3341';
  * @returns Boolean indicating if the string is a valid UUID
  */
 export const isUUID = (str: string): boolean => {
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return uuidPattern.test(str) || isValidUuid(str);
+  try {
+    if (!str) return false;
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidPattern.test(str) || isValidUuid(str);
+  } catch (error) {
+    return false;
+  }
 };
 
 /**
@@ -21,10 +26,21 @@ export const isUUID = (str: string): boolean => {
  * @returns A valid UUID string
  */
 export const ensureUuid = (str: string): string => {
-  if (isUUID(str)) {
-    return str; // Already a valid UUID
+  if (!str) {
+    throw new Error('Empty string cannot be converted to UUID');
   }
   
-  // Generate a name-based UUID (v5) which will be consistent for the same input
-  return uuidv5(str, UUID_NAMESPACE);
+  try {
+    if (isUUID(str)) {
+      return str; // Already a valid UUID
+    }
+    
+    // Generate a name-based UUID (v5) which will be consistent for the same input
+    return uuidv5(str, UUID_NAMESPACE);
+  } catch (error) {
+    console.error('Error converting to UUID:', error);
+    // Fallback to a derived UUID if there's any error
+    const fallbackStr = `fallback-${str}-${Date.now()}`;
+    return uuidv5(fallbackStr, UUID_NAMESPACE);
+  }
 };
