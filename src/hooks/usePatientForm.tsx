@@ -91,6 +91,7 @@ export const usePatientForm = ({
     
     setIsSubmitting(true);
     try {
+      // Map form fields to database columns
       const patientDataToSave = {
         first_name: formData.firstName,
         middle_name: formData.middleName || null,
@@ -127,6 +128,12 @@ export const usePatientForm = ({
           console.error('Update error details:', response.error);
           throw response.error;
         }
+        
+        // Success notification for update
+        toast.success(`Patient ${formData.firstName} ${formData.lastName} updated successfully!`);
+        
+        // Navigate back to patient details page
+        navigate(`/patient-details?id=${patientData.id}`);
       } else {
         response = await supabase
           .from('patients')
@@ -137,14 +144,11 @@ export const usePatientForm = ({
           console.error('Insert error details:', response.error);
           throw response.error;
         }
-      }
-      
-      const actionText = isEditing ? 'updated' : 'registered';
-      toast.success(`Patient ${formData.firstName} ${formData.lastName} ${actionText} successfully!`);
-      
-      if (isEditing) {
-        navigate(`/patient-details?id=${patientData.id}`);
-      } else {
+        
+        // Success notification for new registration
+        toast.success(`Patient ${formData.firstName} ${formData.lastName} registered successfully!`);
+        
+        // Navigate to upload page for new patients
         navigate('/upload');
       }
     } catch (error: any) {

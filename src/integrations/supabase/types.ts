@@ -51,6 +51,7 @@ export type Database = {
           last_name: string
           medical_conditions: string | null
           middle_name: string | null
+          name_extension: string | null
           nationality: string | null
           patient_id: string | null
           phone: string | null
@@ -74,6 +75,7 @@ export type Database = {
           last_name: string
           medical_conditions?: string | null
           middle_name?: string | null
+          name_extension?: string | null
           nationality?: string | null
           patient_id?: string | null
           phone?: string | null
@@ -97,6 +99,7 @@ export type Database = {
           last_name?: string
           medical_conditions?: string | null
           middle_name?: string | null
+          name_extension?: string | null
           nationality?: string | null
           patient_id?: string | null
           phone?: string | null
