@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import MobileMenu from './MobileMenu';
-import { FileText, Star, CreditCard } from 'lucide-react';
+import { FileText, Star, Search } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -51,10 +51,11 @@ const Navbar: React.FC = () => {
                 <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
               </Link>
               <Link 
-                to="/role-selection" 
+                to="/select-patient" 
                 className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group"
               >
-                Role Selection
+                <Search className="h-4 w-4 inline mr-1" />
+                Search Patient
                 <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
               </Link>
               <Link 
@@ -65,29 +66,13 @@ const Navbar: React.FC = () => {
                 <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
               </Link>
               
-              {/* New links for Phase 3 completion */}
-              <Link 
-                to="/copy-to-emr" 
-                className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group flex items-center gap-1"
-              >
-                <FileText className="h-4 w-4" />
-                Copy to EMR
-                <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
-              </Link>
+              {/* Ratings link is kept */}
               <Link 
                 to="/ratings" 
                 className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group flex items-center gap-1"
               >
                 <Star className="h-4 w-4" />
                 Ratings
-                <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
-              </Link>
-              <Link 
-                to="/billing" 
-                className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group flex items-center gap-1"
-              >
-                <CreditCard className="h-4 w-4" />
-                Billing
                 <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
               </Link>
               

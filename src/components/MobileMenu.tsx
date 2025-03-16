@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { X, FileText, Star, CreditCard, FileEdit, Copy, LayoutTemplate } from 'lucide-react';
+import { X, FileText, Star, Search, FileEdit, Copy, LayoutTemplate } from 'lucide-react';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -63,11 +63,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
               Profile
             </Link>
             <Link 
-              to="/role-selection" 
+              to="/select-patient" 
               onClick={onClose}
-              className="font-medium hover:text-black/70 transition-colors"
+              className="font-medium hover:text-black/70 transition-colors flex items-center gap-2"
             >
-              Role Selection
+              <Search className="h-5 w-5" />
+              Search Patient
             </Link>
             <Link 
               to="/upload" 
@@ -101,28 +102,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
               Customize Templates
             </Link>
             <Link 
-              to="/copy-to-emr" 
-              onClick={onClose}
-              className="font-medium hover:text-black/70 transition-colors flex items-center gap-2"
-            >
-              <Copy className="h-5 w-5" />
-              Copy to EMR
-            </Link>
-            <Link 
               to="/ratings" 
               onClick={onClose}
               className="font-medium hover:text-black/70 transition-colors flex items-center gap-2"
             >
               <Star className="h-5 w-5" />
               Ratings
-            </Link>
-            <Link 
-              to="/billing" 
-              onClick={onClose}
-              className="font-medium hover:text-black/70 transition-colors flex items-center gap-2"
-            >
-              <CreditCard className="h-5 w-5" />
-              Billing
             </Link>
             
             <button 
