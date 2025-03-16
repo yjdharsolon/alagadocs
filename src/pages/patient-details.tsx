@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PatientDisplayCard } from '@/components/patient/PatientDisplayCard';
+import { PatientDisplayCard } from '@/components/upload/PatientDisplayCard';
 import { Patient } from '@/types/patient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getUserStructuredNotes } from '@/services/structuredNoteService';
@@ -13,6 +12,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { formatDistanceToNow } from 'date-fns';
 import { Stethoscope, File, Loader2, Edit, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function PatientDetailsPage() {
   const location = useLocation();
@@ -22,12 +22,10 @@ export default function PatientDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [patientNotes, setPatientNotes] = useState<any[]>([]);
   
-  // Extract patient ID from URL if present
   const searchParams = new URLSearchParams(location.search);
   const patientIdFromUrl = searchParams.get('id');
 
   useEffect(() => {
-    // Get patient from location state, session storage, or URL parameter
     const patientFromState = location.state?.patient;
     const patientFromStorage = sessionStorage.getItem('selectedPatient');
     
@@ -37,7 +35,6 @@ export default function PatientDetailsPage() {
     } else if (patientFromStorage) {
       setPatient(JSON.parse(patientFromStorage));
     } else if (patientIdFromUrl) {
-      // If we have an ID in the URL, fetch the patient data
       const fetchPatientById = async () => {
         try {
           const { data, error } = await supabase
@@ -63,14 +60,12 @@ export default function PatientDetailsPage() {
       
       fetchPatientById();
     } else {
-      // No patient selected, redirect back to select patient
       toast.error('No patient selected');
       navigate('/select-patient');
     }
   }, [location.state, navigate, patientIdFromUrl]);
 
   useEffect(() => {
-    // Fetch patient's structured notes when patient is loaded
     async function fetchPatientNotes() {
       if (!patient?.id) return;
       
@@ -80,7 +75,6 @@ export default function PatientDetailsPage() {
         const notes = await getUserStructuredNotes();
         console.log('All notes fetched:', notes);
         
-        // Filter notes that belong to this patient
         const filtered = notes.filter(note => {
           console.log('Note patient_id:', note.patient_id, 'Patient id:', patient.id);
           return note.patient_id === patient.id;
@@ -100,7 +94,6 @@ export default function PatientDetailsPage() {
   }, [patient]);
 
   const handleStartConsultation = () => {
-    // Navigate to upload page to start consultation
     navigate('/upload', { 
       state: { 
         patient: patient 
@@ -109,12 +102,10 @@ export default function PatientDetailsPage() {
   };
 
   const handleViewNote = (noteId: string) => {
-    // Navigate to structured output page with the note ID
     navigate(`/structured-output?noteId=${noteId}`);
   };
 
   const handleEditPatient = () => {
-    // Navigate to the edit patient page
     navigate(`/edit-patient?id=${patient?.id}`);
   };
 
@@ -140,7 +131,7 @@ export default function PatientDetailsPage() {
             Back to Patient Search
           </Button>
           <h1 className="text-2xl font-bold">Patient Details</h1>
-          <div className="w-[100px]"></div> {/* Spacer for flex alignment */}
+          <div className="w-[100px]"></div>
         </div>
 
         <PatientDisplayCard 
@@ -179,7 +170,6 @@ export default function PatientDetailsPage() {
                     </TableHeader>
                     <TableBody>
                       {patientNotes.map((note) => {
-                        // Get a preview of the content from the first section
                         const sections = note.content || {};
                         const firstSection = Object.values(sections)[0] as string || '';
                         const preview = firstSection.substring(0, 60) + (firstSection.length > 60 ? '...' : '');
