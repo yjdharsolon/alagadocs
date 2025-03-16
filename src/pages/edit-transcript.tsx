@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Layout from '@/components/Layout';
 import { useTranscriptionEdit } from '@/hooks/useTranscriptionEdit';
@@ -10,7 +9,7 @@ import EditStep from '@/components/transcription/EditStep';
 import LoadingTranscription from '@/components/transcription/LoadingTranscription';
 import PendingTranscription from '@/components/transcription/PendingTranscription';
 import TranscriptionError from '@/components/transcription/TranscriptionError';
-import PatientInfoCard from '@/components/transcription/PatientInfoCard';
+import { CompactPatientHeader } from '@/components/patient/CompactPatientHeader';
 
 export default function EditTranscriptPage() {
   const { user } = useAuth();
@@ -29,6 +28,29 @@ export default function EditTranscriptPage() {
   
   // Get patient information from location state or session storage
   const patientInfo = usePatientContext(location.state?.patientId, location.state?.patientName);
+  
+  // Attempt to get additional patient data from session storage
+  const [patientDetails, setPatientDetails] = React.useState<{
+    dateOfBirth?: string;
+    age?: number;
+    gender?: string;
+  }>({});
+  
+  React.useEffect(() => {
+    try {
+      const storedPatient = sessionStorage.getItem('selectedPatient');
+      if (storedPatient) {
+        const patientData = JSON.parse(storedPatient);
+        setPatientDetails({
+          dateOfBirth: patientData.date_of_birth,
+          age: patientData.age,
+          gender: patientData.gender
+        });
+      }
+    } catch (error) {
+      console.error('Error retrieving patient details:', error);
+    }
+  }, []);
   
   // Navigation utilities
   const { redirectToUpload } = useTranscriptionNavigation();
@@ -152,16 +174,22 @@ export default function EditTranscriptPage() {
   // Render normal edit view when transcription is available
   return (
     <Layout>
-      <div className="container mx-auto py-10 pt-24">
-        <h1 className="text-3xl font-bold mb-2">Edit Transcript</h1>
-        <p className="text-muted-foreground mb-6">
+      <div className="container mx-auto py-4 pt-12">
+        <h1 className="text-2xl font-bold mb-1">Edit Transcript</h1>
+        <p className="text-muted-foreground mb-3 text-sm">
           Review and edit your transcription
         </p>
 
-        <PatientInfoCard 
-          patientName={patientInfo.name} 
-          patientId={patientInfo.id} 
-        />
+        {patientInfo.name && (
+          <CompactPatientHeader 
+            firstName={patientInfo.name.split(' ')[0]}
+            lastName={patientInfo.name.split(' ').slice(1).join(' ')}
+            dateOfBirth={patientDetails.dateOfBirth}
+            age={patientDetails.age}
+            gender={patientDetails.gender}
+            patientId={patientInfo.id} 
+          />
+        )}
 
         <EditStep
           audioUrl={audioUrl}

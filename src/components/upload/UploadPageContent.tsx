@@ -25,7 +25,7 @@ export const UploadPageContent: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto max-w-4xl flex flex-col justify-center min-h-[calc(100vh-10rem)]">
+    <div className="container mx-auto max-w-4xl flex flex-col justify-center pt-2">
       <PatientDisplayHandler />
       
       {/* Initialize storage in the background */}

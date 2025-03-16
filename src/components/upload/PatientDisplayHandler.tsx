@@ -1,9 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PatientDisplayCard } from './PatientDisplayCard';
+import { CompactPatientHeader } from '@/components/patient/CompactPatientHeader';
 import { Patient } from '@/types/patient';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export const PatientDisplayHandler: React.FC = () => {
   const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
@@ -28,14 +28,16 @@ export const PatientDisplayHandler: React.FC = () => {
     }
   }, [navigate]);
 
-  const changePatient = () => {
-    navigate('/select-patient');
-  };
+  if (!currentPatient) return null;
 
-  return currentPatient ? (
-    <PatientDisplayCard 
-      patient={currentPatient} 
-      onChangePatient={changePatient} 
+  return (
+    <CompactPatientHeader
+      firstName={currentPatient.first_name}
+      lastName={currentPatient.last_name}
+      dateOfBirth={currentPatient.date_of_birth}
+      age={currentPatient.age}
+      gender={currentPatient.gender}
+      patientId={currentPatient.patient_id}
     />
-  ) : null;
+  );
 };

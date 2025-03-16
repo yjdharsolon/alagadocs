@@ -9,6 +9,8 @@ import { ArrowLeft, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
 import WorkflowHeader from '@/components/transcription/WorkflowHeader';
+import { CompactPatientHeader } from '@/components/patient/CompactPatientHeader';
+import { usePatientContext } from '@/hooks/usePatientContext';
 
 export default function Transcribe() {
   const { user } = useAuth();
@@ -25,29 +27,31 @@ export default function Transcribe() {
   const patientId = location.state?.patientId;
   const patientName = location.state?.patientName;
   
-  // Fallback to session storage if not in location state
-  const [patientInfo, setPatientInfo] = useState<{id: string | null, name: string | null}>({
-    id: patientId || null,
-    name: patientName || null
-  });
+  // Use our custom hook to get patient information
+  const patientInfo = usePatientContext(patientId, patientName);
+  
+  // Attempt to get additional patient data from session storage
+  const [patientDetails, setPatientDetails] = useState<{
+    dateOfBirth?: string;
+    age?: number;
+    gender?: string;
+  }>({});
   
   useEffect(() => {
-    // If we don't have patient info from location state, try session storage
-    if (!patientId) {
-      try {
-        const storedPatient = sessionStorage.getItem('selectedPatient');
-        if (storedPatient) {
-          const patientData = JSON.parse(storedPatient);
-          setPatientInfo({
-            id: patientData.id,
-            name: `${patientData.first_name} ${patientData.last_name}`
-          });
-        }
-      } catch (error) {
-        console.error('Error retrieving patient from sessionStorage:', error);
+    try {
+      const storedPatient = sessionStorage.getItem('selectedPatient');
+      if (storedPatient) {
+        const patientData = JSON.parse(storedPatient);
+        setPatientDetails({
+          dateOfBirth: patientData.date_of_birth,
+          age: patientData.age,
+          gender: patientData.gender
+        });
       }
+    } catch (error) {
+      console.error('Error retrieving patient details:', error);
     }
-  }, [patientId]);
+  }, []);
   
   useEffect(() => {
     if (stateAudioUrl) {
@@ -90,21 +94,24 @@ export default function Transcribe() {
   
   return (
     <Layout>
-      <div className="container mx-auto py-6 px-4">
+      <div className="container mx-auto px-4 pt-4">
         <WorkflowHeader
           title="Transcription Review"
           description="Review your transcription before continuing to structured notes"
         />
         
         {patientInfo.name && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-100 rounded-md">
-            <p className="text-sm text-green-800">
-              <span className="font-medium">Current Patient:</span> {patientInfo.name}
-            </p>
-          </div>
+          <CompactPatientHeader
+            firstName={patientInfo.name.split(' ')[0]}
+            lastName={patientInfo.name.split(' ').slice(1).join(' ')}
+            dateOfBirth={patientDetails.dateOfBirth}
+            age={patientDetails.age}
+            gender={patientDetails.gender}
+            patientId={patientInfo.id}
+          />
         )}
         
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between">
           <Button 
             variant="outline" 
             onClick={handleBackToUpload}

@@ -12,11 +12,11 @@ const PatientInfoCard: React.FC<PatientInfoCardProps> = ({ patientName, patientI
   if (!patientName) return null;
   
   return (
-    <Card className="mb-6 border-green-100 shadow-sm">
-      <CardContent className="py-3 flex items-center">
-        <UserRound className="h-5 w-5 mr-2 text-green-600" />
+    <Card className="mb-3 border-green-100 shadow-sm">
+      <CardContent className="py-2 px-3 flex items-center">
+        <UserRound className="h-4 w-4 mr-2 text-green-600" />
         <div>
-          <p className="font-medium">Patient: {patientName}</p>
+          <p className="font-medium text-sm">{patientName}</p>
           {patientId && (
             <p className="text-xs text-muted-foreground">ID: {patientId}</p>
           )}

@@ -6,6 +6,7 @@ import StructuredOutputHeader from '@/components/structured-output/StructuredOut
 import StructuredOutputContent from '@/components/structured-output/StructuredOutputContent';
 import { useStructuredOutputPage } from '@/hooks/useStructuredOutput/index';
 import { useStructuredOutputData } from '@/hooks/useStructuredOutputData';
+import { CompactPatientHeader } from '@/components/patient/CompactPatientHeader';
 
 export default function StructuredOutputPage() {
   const { user } = useAuth();
@@ -22,6 +23,29 @@ export default function StructuredOutputPage() {
     audioUrl,
     transcriptionId
   } = useStructuredOutputData();
+  
+  // Attempt to get additional patient data from session storage
+  const [patientDetails, setPatientDetails] = React.useState<{
+    dateOfBirth?: string;
+    age?: number;
+    gender?: string;
+  }>({});
+  
+  React.useEffect(() => {
+    try {
+      const storedPatient = sessionStorage.getItem('selectedPatient');
+      if (storedPatient) {
+        const patientData = JSON.parse(storedPatient);
+        setPatientDetails({
+          dateOfBirth: patientData.date_of_birth,
+          age: patientData.age,
+          gender: patientData.gender
+        });
+      }
+    } catch (error) {
+      console.error('Error retrieving patient details:', error);
+    }
+  }, []);
   
   // Use the navigation and edit mode hook
   const {
@@ -43,11 +67,22 @@ export default function StructuredOutputPage() {
 
   return (
     <Layout>
-      <div className="container mx-auto py-6 px-4">
+      <div className="container mx-auto py-4 px-4">
         <StructuredOutputHeader 
           onBack={handleBackClick} 
           subtitle={transcriptionData?.text ? `Based on transcription: "${transcriptionData.text.substring(0, 40)}${transcriptionData.text.length > 40 ? '...' : ''}"` : undefined}
         />
+        
+        {patientInfo.name && (
+          <CompactPatientHeader 
+            firstName={patientInfo.name.split(' ')[0]}
+            lastName={patientInfo.name.split(' ').slice(1).join(' ')}
+            dateOfBirth={patientDetails.dateOfBirth}
+            age={patientDetails.age}
+            gender={patientDetails.gender}
+            patientId={patientInfo.id}
+          />
+        )}
         
         <StructuredOutputContent
           loading={loading}

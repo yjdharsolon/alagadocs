@@ -10,7 +10,7 @@ const PatientInfoHeader = ({ patientName, patientId }: PatientInfoHeaderProps) =
   if (!patientName && !patientId) return null;
   
   return (
-    <h2 className="text-xl font-bold mb-4">
+    <h2 className="text-lg font-medium mb-3">
       Medical Report {patientName ? 
         `for ${patientName}` : 
         patientId ? `(Patient ID: ${patientId})` : ''}

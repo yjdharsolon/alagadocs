@@ -2,7 +2,6 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { UploadPageHeader } from '@/components/upload/UploadPageHeader';
 import { UploadPageContent } from '@/components/upload/UploadPageContent';
 import { Patient } from '@/types/patient';
 
@@ -23,12 +22,7 @@ export default function UploadPage() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4">
-        <UploadPageHeader 
-          title="Upload Audio" 
-          description="Upload audio or record your voice"
-        />
-        {/* We pass patient as a key to force re-render when it changes, not as a prop */}
+      <div className="container mx-auto px-4 pt-4">
         <UploadPageContent key={patient?.id || 'no-patient'} />
       </div>
     </Layout>
