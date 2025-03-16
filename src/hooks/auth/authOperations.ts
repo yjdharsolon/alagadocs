@@ -38,9 +38,9 @@ export const signInWithPassword = async (
 export const signUpNewUser = async (
   email: string, 
   password: string, 
-  userData?: Record<string, string>,
   setLoading: (isLoading: boolean) => void,
-  setUser: (user: any) => void
+  setUser: (user: any) => void,
+  userData?: Record<string, string>
 ) => {
   try {
     setLoading(true);

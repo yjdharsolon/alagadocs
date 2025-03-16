@@ -28,9 +28,9 @@ export function useAuth() {
     },
     
     signUp: async (email: string, password: string, userData?: Record<string, string>) => {
-      await signUpNewUser(email, password, userData, setLoading, (user) => {
+      await signUpNewUser(email, password, setLoading, (user) => {
         // This is a callback to update the user state if needed
-      });
+      }, userData);
     },
     
     signOut: async () => {

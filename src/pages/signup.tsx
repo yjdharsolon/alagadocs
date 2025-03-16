@@ -8,7 +8,6 @@ import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -85,6 +84,23 @@ export default function Signup() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="middleName">Middle Name</Label>
+                    <Input 
+                      id="middleName" 
+                      value={middleName}
+                      onChange={(e) => setMiddleName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input 
+                      id="lastName" 
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="nameExtension">Extension</Label>
                     <div className="relative">
                       <Input 
@@ -112,23 +128,6 @@ export default function Signup() {
                         </div>
                       )}
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="middleName">Middle Name</Label>
-                    <Input 
-                      id="middleName" 
-                      value={middleName}
-                      onChange={(e) => setMiddleName(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input 
-                      id="lastName" 
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                    />
                   </div>
                 </div>
                 
