@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,7 +23,6 @@ export const usePatientForm = ({
   const [activeTab, setActiveTab] = useState("personal");
   const [calculatedAge, setCalculatedAge] = useState<number | null>(null);
   
-  // Form state
   const [formData, setFormData] = useState<PatientFormData>({
     firstName: patientData?.first_name || '',
     middleName: patientData?.middle_name || '',
@@ -46,7 +44,6 @@ export const usePatientForm = ({
     medicalConditions: patientData?.medical_conditions || '',
   });
 
-  // Calculate age when date of birth changes
   useEffect(() => {
     if (formData.dateOfBirth) {
       const birthDate = new Date(formData.dateOfBirth);
@@ -81,7 +78,6 @@ export const usePatientForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
     if (!formData.firstName || !formData.lastName) {
       toast.error("First name and last name are required");
       return;
@@ -119,14 +115,12 @@ export const usePatientForm = ({
       let response;
       
       if (isEditing && patientData?.id) {
-        // Update existing patient
         response = await supabase
           .from('patients')
           .update(patientDataToSave)
           .eq('id', patientData.id)
           .select();
       } else {
-        // Insert new patient
         response = await supabase
           .from('patients')
           .insert(patientDataToSave)
@@ -140,14 +134,11 @@ export const usePatientForm = ({
       const actionText = isEditing ? 'updated' : 'registered';
       toast.success(`Patient ${formData.firstName} ${formData.lastName} ${actionText} successfully!`);
       
-      // Navigate based on action
-      setTimeout(() => {
-        if (isEditing) {
-          navigate(`/patient-details?id=${patientData.id}`);
-        } else {
-          navigate('/upload');
-        }
-      }, 1500);
+      if (isEditing) {
+        navigate(`/patient-details?id=${patientData.id}`);
+      } else {
+        navigate('/upload');
+      }
     } catch (error: any) {
       console.error('Error saving patient:', error);
       toast.error(error.message || `Failed to ${isEditing ? 'update' : 'register'} patient. Please try again.`);
