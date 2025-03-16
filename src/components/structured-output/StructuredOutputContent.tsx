@@ -24,6 +24,7 @@ interface StructuredOutputContentProps {
   onSaveEdit: (updatedData: MedicalSections) => void;
   onRetry: () => void;
   onNoteSaved: () => void;
+  onEndConsult: () => void;
   noteSaved: boolean;
 }
 
@@ -40,6 +41,7 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
   onSaveEdit,
   onRetry,
   onNoteSaved,
+  onEndConsult,
   noteSaved
 }) => {
   if (loading) {
@@ -65,6 +67,7 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
       onToggleEditMode={onToggleEditMode}
       onSaveEdit={onSaveEdit}
       onNoteSaved={onNoteSaved}
+      onEndConsult={onEndConsult}
       noteSaved={noteSaved}
     />
   );

@@ -22,6 +22,7 @@ interface DocumentContainerProps {
   onToggleEditMode: () => void;
   onSaveEdit: (updatedData: MedicalSections) => void;
   onNoteSaved?: () => void;
+  onEndConsult?: () => void;
   noteSaved?: boolean;
 }
 
@@ -34,6 +35,7 @@ const DocumentContainer = ({
   onToggleEditMode,
   onSaveEdit,
   onNoteSaved,
+  onEndConsult,
   noteSaved = false
 }: DocumentContainerProps) => {
   const getStructuredText = () => {
@@ -71,6 +73,7 @@ const DocumentContainer = ({
           isEditMode={isEditMode}
           onToggleEditMode={onToggleEditMode}
           onNoteSaved={onNoteSaved}
+          onEndConsult={onEndConsult}
           noteSaved={noteSaved}
         />
       </div>

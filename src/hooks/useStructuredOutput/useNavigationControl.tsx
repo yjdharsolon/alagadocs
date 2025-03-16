@@ -43,6 +43,7 @@ export const useNavigationControl = ({
   }, [navigate, transcriptionData, audioUrl]);
 
   const handleNoteSaved = useCallback(() => {
+    console.log('Note marked as saved');
     setNoteSaved(true);
   }, []);
 

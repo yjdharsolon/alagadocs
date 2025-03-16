@@ -36,6 +36,13 @@ const DocumentActions = ({
   onEndConsult,
   noteSaved = false
 }: DocumentActionsProps) => {
+  const handleEndConsult = () => {
+    console.log('End consultation triggered from DocumentActions');
+    if (onEndConsult) {
+      onEndConsult();
+    }
+  };
+
   return (
     <div className="flex flex-wrap gap-2">
       {!isEditMode ? (
@@ -53,7 +60,7 @@ const DocumentActions = ({
           <EditButton onClick={onToggleEditMode} />
           <EndConsultButton 
             isVisible={noteSaved} 
-            onEndConsult={onEndConsult}
+            onEndConsult={handleEndConsult}
           />
         </>
       ) : (

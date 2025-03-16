@@ -73,6 +73,9 @@ export default function StructuredOutputPage() {
     error
   });
 
+  console.log('noteSaved state:', noteSaved);
+  console.log('handleEndConsult is defined:', !!handleEndConsult);
+
   return (
     <Layout>
       <div className="container mx-auto py-4 px-4">
@@ -105,6 +108,7 @@ export default function StructuredOutputPage() {
           onSaveEdit={handleSaveEdit}
           onRetry={handleRetry}
           onNoteSaved={handleNoteSaved}
+          onEndConsult={handleEndConsult}
           noteSaved={noteSaved}
         />
       </div>

@@ -14,10 +14,17 @@ const EndConsultButton: React.FC<EndConsultButtonProps> = ({
 }) => {
   if (!isVisible) return null;
   
+  const handleClick = () => {
+    console.log('End Consultation button clicked');
+    if (onEndConsult) {
+      onEndConsult();
+    }
+  };
+  
   return (
     <Button 
       variant="secondary" 
-      onClick={onEndConsult}
+      onClick={handleClick}
       className="flex items-center gap-2"
     >
       <CheckCircle2 className="h-4 w-4" />
