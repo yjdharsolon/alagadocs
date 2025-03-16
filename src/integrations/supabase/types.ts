@@ -35,36 +35,66 @@ export type Database = {
       }
       patients: {
         Row: {
+          age: number | null
+          allergies: string | null
+          blood_type: string | null
+          civil_status: string | null
           created_at: string
           date_of_birth: string | null
           email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
           first_name: string
+          gender: string | null
           id: string
           last_name: string
+          medical_conditions: string | null
+          nationality: string | null
           patient_id: string | null
           phone: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          age?: number | null
+          allergies?: string | null
+          blood_type?: string | null
+          civil_status?: string | null
           created_at?: string
           date_of_birth?: string | null
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           first_name: string
+          gender?: string | null
           id?: string
           last_name: string
+          medical_conditions?: string | null
+          nationality?: string | null
           patient_id?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          age?: number | null
+          allergies?: string | null
+          blood_type?: string | null
+          civil_status?: string | null
           created_at?: string
           date_of_birth?: string | null
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           first_name?: string
+          gender?: string | null
           id?: string
           last_name?: string
+          medical_conditions?: string | null
+          nationality?: string | null
           patient_id?: string | null
           phone?: string | null
           updated_at?: string

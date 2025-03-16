@@ -5,13 +5,13 @@ import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PatientDisplayCard } from '@/components/upload/PatientDisplayCard';
+import { PatientDisplayCard } from '@/components/patient/PatientDisplayCard';
 import { Patient } from '@/types/patient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getUserStructuredNotes } from '@/services/structuredNoteService';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
-import { Stethoscope, File, Loader2 } from 'lucide-react';
+import { Stethoscope, File, Loader2, Edit, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function PatientDetailsPage() {
@@ -21,9 +21,13 @@ export default function PatientDetailsPage() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [patientNotes, setPatientNotes] = useState<any[]>([]);
+  
+  // Extract patient ID from URL if present
+  const searchParams = new URLSearchParams(location.search);
+  const patientIdFromUrl = searchParams.get('id');
 
   useEffect(() => {
-    // Get patient from location state or session storage
+    // Get patient from location state, session storage, or URL parameter
     const patientFromState = location.state?.patient;
     const patientFromStorage = sessionStorage.getItem('selectedPatient');
     
@@ -32,12 +36,38 @@ export default function PatientDetailsPage() {
       sessionStorage.setItem('selectedPatient', JSON.stringify(patientFromState));
     } else if (patientFromStorage) {
       setPatient(JSON.parse(patientFromStorage));
+    } else if (patientIdFromUrl) {
+      // If we have an ID in the URL, fetch the patient data
+      const fetchPatientById = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('patients')
+            .select('*')
+            .eq('id', patientIdFromUrl)
+            .single();
+            
+          if (error) throw error;
+          if (data) {
+            setPatient(data);
+            sessionStorage.setItem('selectedPatient', JSON.stringify(data));
+          } else {
+            toast.error('Patient not found');
+            navigate('/select-patient');
+          }
+        } catch (error: any) {
+          console.error('Error fetching patient:', error);
+          toast.error('Failed to load patient data');
+          navigate('/select-patient');
+        }
+      };
+      
+      fetchPatientById();
     } else {
       // No patient selected, redirect back to select patient
       toast.error('No patient selected');
       navigate('/select-patient');
     }
-  }, [location.state, navigate]);
+  }, [location.state, navigate, patientIdFromUrl]);
 
   useEffect(() => {
     // Fetch patient's structured notes when patient is loaded
@@ -81,6 +111,11 @@ export default function PatientDetailsPage() {
   const handleViewNote = (noteId: string) => {
     // Navigate to structured output page with the note ID
     navigate(`/structured-output?noteId=${noteId}`);
+  };
+
+  const handleEditPatient = () => {
+    // Navigate to the edit patient page
+    navigate(`/edit-patient?id=${patient?.id}`);
   };
 
   const handleBack = () => {
@@ -188,37 +223,128 @@ export default function PatientDetailsPage() {
           
           <TabsContent value="info" className="mt-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Patient Information</CardTitle>
+                <Button 
+                  variant="outline" 
+                  onClick={handleEditPatient}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Patient
+                </Button>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-6">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Full Name</p>
-                    <p>{patient.first_name} {patient.last_name}</p>
+                    <h3 className="text-lg font-medium flex items-center">
+                      <UserRound className="h-5 w-5 mr-2 text-primary" />
+                      Personal Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Full Name</p>
+                        <p>{patient.first_name} {patient.last_name}</p>
+                      </div>
+                      {patient.date_of_birth && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
+                          <p>{new Date(patient.date_of_birth).toLocaleDateString()}</p>
+                        </div>
+                      )}
+                      {patient.age && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Age</p>
+                          <p>{patient.age}</p>
+                        </div>
+                      )}
+                      {patient.gender && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Gender</p>
+                          <p>{patient.gender}</p>
+                        </div>
+                      )}
+                      {patient.civil_status && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Civil Status</p>
+                          <p>{patient.civil_status}</p>
+                        </div>
+                      )}
+                      {patient.nationality && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Nationality</p>
+                          <p>{patient.nationality}</p>
+                        </div>
+                      )}
+                      {patient.blood_type && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Blood Type</p>
+                          <p>{patient.blood_type}</p>
+                        </div>
+                      )}
+                      {patient.patient_id && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Patient ID</p>
+                          <p>{patient.patient_id}</p>
+                        </div>
+                      )}
+                      {patient.email && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Email</p>
+                          <p>{patient.email}</p>
+                        </div>
+                      )}
+                      {patient.phone && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                          <p>{patient.phone}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {patient.date_of_birth && (
+                  
+                  {(patient.emergency_contact_name || patient.emergency_contact_phone) && (
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
-                      <p>{new Date(patient.date_of_birth).toLocaleDateString()}</p>
+                      <h3 className="text-lg font-medium">Emergency Contact</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+                        {patient.emergency_contact_name && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Name</p>
+                            <p>{patient.emergency_contact_name}</p>
+                          </div>
+                        )}
+                        {patient.emergency_contact_relationship && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Relationship</p>
+                            <p>{patient.emergency_contact_relationship}</p>
+                          </div>
+                        )}
+                        {patient.emergency_contact_phone && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                            <p>{patient.emergency_contact_phone}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
-                  {patient.patient_id && (
+                  
+                  {(patient.allergies || patient.medical_conditions) && (
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Patient ID</p>
-                      <p>{patient.patient_id}</p>
-                    </div>
-                  )}
-                  {patient.email && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Email</p>
-                      <p>{patient.email}</p>
-                    </div>
-                  )}
-                  {patient.phone && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                      <p>{patient.phone}</p>
+                      <h3 className="text-lg font-medium">Medical Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                        {patient.allergies && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Allergies</p>
+                            <p className="whitespace-pre-line">{patient.allergies}</p>
+                          </div>
+                        )}
+                        {patient.medical_conditions && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Medical Conditions</p>
+                            <p className="whitespace-pre-line">{patient.medical_conditions}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
