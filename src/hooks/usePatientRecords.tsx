@@ -1,14 +1,18 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 import { Patient } from '@/types/patient';
 import { getUserStructuredNotes } from '@/services/structuredNoteService';
+import { usePatientNavigation } from './usePatientNavigation';
 
 export const usePatientRecords = (patient: Patient | null) => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [patientNotes, setPatientNotes] = useState<any[]>([]);
+  const { 
+    handleStartConsultation, 
+    handleEditPatient, 
+    handleBack 
+  } = usePatientNavigation(patient);
   
   useEffect(() => {
     async function fetchPatientNotes() {
@@ -37,22 +41,6 @@ export const usePatientRecords = (patient: Patient | null) => {
 
     fetchPatientNotes();
   }, [patient]);
-
-  const handleStartConsultation = () => {
-    navigate('/upload', { 
-      state: { 
-        patient: patient 
-      } 
-    });
-  };
-
-  const handleEditPatient = () => {
-    navigate(`/edit-patient?id=${patient?.id}`);
-  };
-
-  const handleBack = () => {
-    navigate('/select-patient');
-  };
 
   return {
     loading,
