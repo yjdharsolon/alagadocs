@@ -1,16 +1,16 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Layout from '@/components/Layout';
 import { useTranscriptionEdit } from '@/hooks/useTranscriptionEdit';
 import { useTranscriptionRecovery } from '@/hooks/useTranscriptionRecovery';
+import { useTranscriptionNavigation } from '@/hooks/useTranscriptionNavigation';
+import { usePatientContext } from '@/hooks/usePatientContext';
+import { useAuth } from '@/hooks/useAuth';
 import EditStep from '@/components/transcription/EditStep';
 import LoadingTranscription from '@/components/transcription/LoadingTranscription';
 import PendingTranscription from '@/components/transcription/PendingTranscription';
 import TranscriptionError from '@/components/transcription/TranscriptionError';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
-import { Card, CardContent } from '@/components/ui/card';
-import { UserRound } from 'lucide-react';
+import PatientInfoCard from '@/components/transcription/PatientInfoCard';
 
 export default function EditTranscriptPage() {
   const { user } = useAuth();
@@ -27,39 +27,14 @@ export default function EditTranscriptPage() {
     navigate
   } = useTranscriptionRecovery();
   
-  // Extract patient information
-  const patientId = location.state?.patientId;
-  const patientName = location.state?.patientName;
+  // Get patient information from location state or session storage
+  const patientInfo = usePatientContext(location.state?.patientId, location.state?.patientName);
   
-  // State for fallback patient info
-  const [displayPatientInfo, setDisplayPatientInfo] = useState<{
-    id: string | null,
-    name: string | null
-  }>({
-    id: patientId || null,
-    name: patientName || null
-  });
+  // Navigation utilities
+  const { redirectToUpload } = useTranscriptionNavigation();
   
-  // Try to get patient info from session storage if not in location state
-  useEffect(() => {
-    if (!patientId) {
-      try {
-        const storedPatient = sessionStorage.getItem('selectedPatient');
-        if (storedPatient) {
-          const patientData = JSON.parse(storedPatient);
-          setDisplayPatientInfo({
-            id: patientData.id,
-            name: `${patientData.first_name} ${patientData.last_name}`
-          });
-        }
-      } catch (error) {
-        console.error('Error retrieving patient from sessionStorage:', error);
-      }
-    }
-  }, [patientId]);
-  
-  // Verify authentication first to prevent unwanted redirects
-  useEffect(() => {
+  // Authentication check
+  React.useEffect(() => {
     // Check if we're in a redirect preservation state
     const preserveRedirect = sessionStorage.getItem('preserveAuthRedirect');
     
@@ -73,16 +48,16 @@ export default function EditTranscriptPage() {
   }, [user, navigate]);
   
   // Setup interval to check for transcription completion
-  useEffect(() => {
+  React.useEffect(() => {
     if (isPending) {
       const interval = setInterval(checkTranscriptionStatus, 1000);
       return () => clearInterval(interval);
     }
   }, [isPending, checkTranscriptionStatus]);
   
-  // Check for location state or pending transcription
-  useEffect(() => {
-    // If we have the isPending flag in location state, show the pending UI
+  // Check for recovery scenarios and handle redirections
+  React.useEffect(() => {
+    // Handle pending cases
     if (location.state?.isPending) {
       console.log('Detected pending transcription state');
       setIsPending(true);
@@ -90,33 +65,20 @@ export default function EditTranscriptPage() {
       return;
     }
     
-    // If we have complete transcription data
+    // Handle completed transcription
     if (location.state && location.state.transcriptionData) {
       console.log('Found complete transcription data in location state');
       setIsLoading(false);
       return;
     }
     
-    // Check URL parameters that might indicate pending status
+    // Check URL parameters for pending status
     const urlParams = new URLSearchParams(window.location.search);
     const isPendingParam = urlParams.get('pending');
     
     if (isPendingParam === 'true') {
-      console.log('Detected pending param in URL');
-      try {
-        const pendingTranscription = sessionStorage.getItem('pendingTranscription');
-        if (pendingTranscription) {
-          console.log('Found pending transcription in sessionStorage');
-          setIsPending(true);
-          setIsLoading(false);
-          
-          // Clean up the URL
-          window.history.replaceState({}, document.title, '/edit-transcript');
-          return;
-        }
-      } catch (pendingErr) {
-        console.error('Error checking pending transcription:', pendingErr);
-      }
+      handlePendingParam();
+      return;
     }
     
     // If no location state, try to recover from session storage
@@ -125,21 +87,37 @@ export default function EditTranscriptPage() {
       
       // If recovery failed and we're not pending, redirect to upload
       if (!recovered && !isPending && recoveryAttempted) {
-        toast.error('No transcription data found');
-        setTimeout(() => navigate('/upload'), 1500);
+        redirectToUpload();
       }
     } else {
       setIsLoading(false);
     }
-  }, [location.state, navigate, isPending, recoveryAttempted, setIsPending, setIsLoading, recoverFromSessionStorage]);
+  }, [location.state, isPending, recoveryAttempted, setIsPending, setIsLoading, recoverFromSessionStorage, redirectToUpload]);
+  
+  // Clean up URL parameters
+  const handlePendingParam = () => {
+    console.log('Detected pending param in URL');
+    try {
+      const pendingTranscription = sessionStorage.getItem('pendingTranscription');
+      if (pendingTranscription) {
+        console.log('Found pending transcription in sessionStorage');
+        setIsPending(true);
+        setIsLoading(false);
+        
+        // Clean up the URL
+        window.history.replaceState({}, document.title, '/edit-transcript');
+      }
+    } catch (pendingErr) {
+      console.error('Error checking pending transcription:', pendingErr);
+    }
+  };
   
   // Update loading state when we've recovered data
-  useEffect(() => {
+  React.useEffect(() => {
     if (locationStateRecovered && location.state) {
       setIsLoading(false);
     } else if (recoveryAttempted && !locationStateRecovered && !location.state && !isPending) {
       // If we tried recovery but failed and still don't have state, redirect
-      // but only if we're not in a pending state
       navigate('/upload');
     }
   }, [locationStateRecovered, location.state, recoveryAttempted, navigate, isPending, setIsLoading]);
@@ -180,19 +158,10 @@ export default function EditTranscriptPage() {
           Review and edit your transcription
         </p>
 
-        {displayPatientInfo.name && (
-          <Card className="mb-6 border-green-100 shadow-sm">
-            <CardContent className="py-3 flex items-center">
-              <UserRound className="h-5 w-5 mr-2 text-green-600" />
-              <div>
-                <p className="font-medium">Patient: {displayPatientInfo.name}</p>
-                {displayPatientInfo.id && (
-                  <p className="text-xs text-muted-foreground">ID: {displayPatientInfo.id}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <PatientInfoCard 
+          patientName={patientInfo.name} 
+          patientId={patientInfo.id} 
+        />
 
         <EditStep
           audioUrl={audioUrl}
