@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import MobileMenu from './MobileMenu';
-import { BookOpen, FileText, Star, CreditCard } from 'lucide-react';
+import { FileText, Star, CreditCard } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -41,15 +41,6 @@ const Navbar: React.FC = () => {
         </Link>
         
         <nav className="hidden md:flex items-center space-x-8">
-          <Link 
-            to="/documentation" 
-            className="text-sm font-medium tracking-wide hover:text-black/70 transition-colors relative group flex items-center gap-1"
-          >
-            <BookOpen className="h-4 w-4" />
-            Documentation
-            <span className="absolute left-0 bottom-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-300 ease-apple" />
-          </Link>
-          
           {user ? (
             <>
               <Link 

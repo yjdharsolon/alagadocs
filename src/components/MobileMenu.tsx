@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { X, BookOpen, FileText, Star, CreditCard, FileEdit, Copy, LayoutTemplate } from 'lucide-react';
+import { X, FileText, Star, CreditCard, FileEdit, Copy, LayoutTemplate } from 'lucide-react';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -51,15 +51,6 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
           className="font-medium hover:text-black/70 transition-colors"
         >
           Home
-        </Link>
-        
-        <Link 
-          to="/documentation" 
-          onClick={onClose}
-          className="font-medium hover:text-black/70 transition-colors flex items-center gap-2"
-        >
-          <BookOpen className="h-5 w-5" />
-          Documentation
         </Link>
         
         {user ? (
