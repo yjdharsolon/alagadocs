@@ -6,6 +6,7 @@ import { RecordingCard } from './RecordingCard';
 import { DirectInputCard } from './DirectInputCard';
 import { UploadProgress } from './UploadProgress';
 import { SubmitButton } from './SubmitButton';
+import { UploadStep } from '@/hooks/upload/useUploadProgress';
 
 interface UploadFormLayoutProps {
   patientName?: string;
@@ -19,7 +20,7 @@ interface UploadFormLayoutProps {
   setIsRecording: (isRecording: boolean) => void;
   isUploading: boolean;
   uploadProgress: number;
-  currentStep: string;
+  currentStep: UploadStep;
   getStepLabel: () => string;
   onSubmit: () => void;
   inputMethod: 'audio' | 'text';
