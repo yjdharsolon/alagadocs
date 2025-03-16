@@ -8,16 +8,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Layout from '@/components/Layout';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { FcGoogle } from 'react-icons/fc';
-import { FaFacebook, FaMicrosoft } from 'react-icons/fa';
-import { Separator } from '@/components/ui/separator';
 import toast from 'react-hot-toast';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const { signIn, signInWithGoogle, signInWithFacebook, signInWithMicrosoft, loading, user } = useAuth();
+  const { signIn, loading, user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,50 +102,6 @@ export default function Login() {
               >
                 {loading ? 'Signing in...' : 'Sign in'}
               </Button>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-3">
-                <Button 
-                  variant="outline" 
-                  type="button"
-                  onClick={() => signInWithGoogle()}
-                  disabled={loading}
-                  className="w-full"
-                >
-                  <FcGoogle className="mr-2 h-4 w-4" />
-                  Google
-                </Button>
-                <Button 
-                  variant="outline" 
-                  type="button"
-                  onClick={() => signInWithFacebook()}
-                  disabled={loading}
-                  className="w-full"
-                >
-                  <FaFacebook className="mr-2 h-4 w-4 text-blue-600" />
-                  Facebook
-                </Button>
-                <Button 
-                  variant="outline" 
-                  type="button"
-                  onClick={() => signInWithMicrosoft()}
-                  disabled={loading}
-                  className="w-full"
-                >
-                  <FaMicrosoft className="mr-2 h-4 w-4 text-blue-500" />
-                  Microsoft
-                </Button>
-              </div>
             </CardContent>
           </form>
           

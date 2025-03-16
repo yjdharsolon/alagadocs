@@ -8,16 +8,22 @@ import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Signup() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [nameExtension, setNameExtension] = useState('');
+  const [showExtensionSuggestions, setShowExtensionSuggestions] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const { signUp, loading, user } = useAuth();
+
+  const nameExtensionSuggestions = ['Jr.', 'Sr.', 'I', 'II', 'III', 'IV', 'V'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,8 +43,12 @@ export default function Signup() {
     setPasswordError('');
     
     try {
-      // We're simplifying the signup process for now
-      await signUp(email, password, { first_name: firstName, last_name: lastName });
+      await signUp(email, password, { 
+        first_name: firstName,
+        middle_name: middleName,
+        last_name: lastName,
+        name_extension: nameExtension
+      });
       toast.success('Account created successfully!');
       navigate('/role-selection');
     } catch (error: any) {
@@ -64,7 +74,7 @@ export default function Signup() {
           <form onSubmit={handleSubmit}>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-4 gap-2">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
                     <Input 
@@ -72,6 +82,43 @@ export default function Signup() {
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nameExtension">Extension</Label>
+                    <div className="relative">
+                      <Input 
+                        id="nameExtension" 
+                        value={nameExtension}
+                        onChange={(e) => setNameExtension(e.target.value)}
+                        onFocus={() => setShowExtensionSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowExtensionSuggestions(false), 200)}
+                        placeholder="Jr., Sr., etc."
+                      />
+                      {showExtensionSuggestions && (
+                        <div className="absolute z-10 w-full mt-1 bg-background border border-input rounded-md shadow-lg">
+                          {nameExtensionSuggestions.map((ext) => (
+                            <div 
+                              key={ext} 
+                              className="px-4 py-2 hover:bg-accent cursor-pointer"
+                              onClick={() => {
+                                setNameExtension(ext);
+                                setShowExtensionSuggestions(false);
+                              }}
+                            >
+                              {ext}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="middleName">Middle Name</Label>
+                    <Input 
+                      id="middleName" 
+                      value={middleName}
+                      onChange={(e) => setMiddleName(e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">

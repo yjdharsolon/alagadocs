@@ -2,7 +2,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Session, User, Provider } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 
 type AuthContextType = {
@@ -12,9 +12,6 @@ type AuthContextType = {
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   signUp: (email: string, password: string, userData?: Record<string, string>) => Promise<void>;
   signOut: () => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  signInWithFacebook: () => Promise<void>;
-  signInWithMicrosoft: () => Promise<void>;
   getUserRole: () => Promise<string | null>;
 };
 
@@ -112,7 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .from('profiles')
             .update({
               first_name: userData.first_name,
+              middle_name: userData.middle_name,
               last_name: userData.last_name,
+              name_extension: userData.name_extension
             })
             .eq('id', data.user.id);
             
@@ -130,30 +129,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
-
-  const signInWithProvider = async (provider: Provider) => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        },
-      });
-      
-      if (error) {
-        throw error;
-      }
-    } catch (error: any) {
-      toast.error(error.message || `Error signing in with ${provider}`);
-      console.error(`Error signing in with ${provider}:`, error);
-      setLoading(false);
-    }
-  };
-
-  const signInWithGoogle = () => signInWithProvider('google');
-  const signInWithFacebook = () => signInWithProvider('facebook');
-  const signInWithMicrosoft = () => signInWithProvider('azure');
 
   const signOut = async () => {
     try {
@@ -205,9 +180,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn, 
       signUp, 
       signOut,
-      signInWithGoogle,
-      signInWithFacebook,
-      signInWithMicrosoft,
       getUserRole
     }}>
       {children}
