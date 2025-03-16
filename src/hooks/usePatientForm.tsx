@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -115,20 +116,27 @@ export const usePatientForm = ({
       let response;
       
       if (isEditing && patientData?.id) {
+        console.log('Updating patient data:', patientDataToSave);
         response = await supabase
           .from('patients')
           .update(patientDataToSave)
           .eq('id', patientData.id)
           .select();
+          
+        if (response.error) {
+          console.error('Update error details:', response.error);
+          throw response.error;
+        }
       } else {
         response = await supabase
           .from('patients')
           .insert(patientDataToSave)
           .select();
-      }
-      
-      if (response.error) {
-        throw response.error;
+          
+        if (response.error) {
+          console.error('Insert error details:', response.error);
+          throw response.error;
+        }
       }
       
       const actionText = isEditing ? 'updated' : 'registered';
