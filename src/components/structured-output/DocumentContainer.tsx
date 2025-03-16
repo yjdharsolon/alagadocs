@@ -12,6 +12,9 @@ interface DocumentContainerProps {
   patientInfo: {
     id: string | null;
     name: string | null;
+    dateOfBirth?: string | null;
+    age?: number | null;
+    gender?: string | null;
   };
   user: any;
   transcriptionId: string;
@@ -53,7 +56,10 @@ const DocumentContainer = ({
       <div className="flex justify-between items-center mb-4">
         <PatientInfoHeader 
           patientName={patientInfo.name} 
-          patientId={patientInfo.id} 
+          patientId={patientInfo.id}
+          dateOfBirth={patientInfo.dateOfBirth}
+          age={patientInfo.age}
+          gender={patientInfo.gender}
         />
         
         <DocumentActions 

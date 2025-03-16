@@ -47,6 +47,14 @@ export default function StructuredOutputPage() {
     }
   }, []);
   
+  // Enhance patientInfo with demographic data
+  const enhancedPatientInfo = React.useMemo(() => ({
+    ...patientInfo,
+    dateOfBirth: patientDetails.dateOfBirth,
+    age: patientDetails.age,
+    gender: patientDetails.gender
+  }), [patientInfo, patientDetails]);
+  
   // Use the navigation and edit mode hook
   const {
     isEditMode,
@@ -89,7 +97,7 @@ export default function StructuredOutputPage() {
           processingText={processingText}
           structuredData={structuredData}
           error={error}
-          patientInfo={patientInfo}
+          patientInfo={enhancedPatientInfo}
           user={user}
           transcriptionId={transcriptionId || ''}
           isEditMode={isEditMode}

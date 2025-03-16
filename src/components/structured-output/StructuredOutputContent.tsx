@@ -13,6 +13,9 @@ interface StructuredOutputContentProps {
   patientInfo: {
     id: string | null;
     name: string | null;
+    dateOfBirth?: string | null;
+    age?: number | null;
+    gender?: string | null;
   };
   user: any;
   transcriptionId: string;
