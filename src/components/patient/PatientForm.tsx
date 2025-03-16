@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Card, 
@@ -24,10 +24,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import toast from 'react-hot-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { differenceInYears } from 'date-fns';
 
 type PatientFormData = {
   firstName: string;
+  middleName: string;
   lastName: string;
+  nameExtension: string;
   dateOfBirth: string;
   email: string;
   phone: string;
@@ -62,11 +65,14 @@ export const PatientForm: React.FC<PatientFormProps> = ({
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
+  const [calculatedAge, setCalculatedAge] = useState<number | null>(null);
   
   // Form state
   const [formData, setFormData] = useState<PatientFormData>({
     firstName: patientData?.first_name || '',
+    middleName: patientData?.middle_name || '',
     lastName: patientData?.last_name || '',
+    nameExtension: patientData?.name_extension || '',
     dateOfBirth: patientData?.date_of_birth || '',
     email: patientData?.email || '',
     phone: patientData?.phone || '',
@@ -83,6 +89,23 @@ export const PatientForm: React.FC<PatientFormProps> = ({
     allergies: patientData?.allergies || '',
     medicalConditions: patientData?.medical_conditions || '',
   });
+
+  // Calculate age when date of birth changes
+  useEffect(() => {
+    if (formData.dateOfBirth) {
+      const birthDate = new Date(formData.dateOfBirth);
+      const today = new Date();
+      const age = differenceInYears(today, birthDate);
+      
+      if (!isNaN(age) && age >= 0) {
+        setCalculatedAge(age);
+      } else {
+        setCalculatedAge(null);
+      }
+    } else {
+      setCalculatedAge(null);
+    }
+  }, [formData.dateOfBirth]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -117,14 +140,16 @@ export const PatientForm: React.FC<PatientFormProps> = ({
     try {
       const patientDataToSave = {
         first_name: formData.firstName,
+        middle_name: formData.middleName || null,
         last_name: formData.lastName,
+        name_extension: formData.nameExtension || null,
         date_of_birth: formData.dateOfBirth || null,
         email: formData.email || null,
         phone: formData.phone || null,
         patient_id: formData.patientId || null,
         user_id: user.id,
-        // New fields
-        age: formData.age ? parseInt(formData.age) : null,
+        // Use calculated age instead of form input
+        age: calculatedAge,
         gender: formData.gender || null,
         civil_status: formData.civilStatus || null,
         nationality: formData.nationality || null,
@@ -179,6 +204,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
   const bloodTypeOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   const genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
   const civilStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'];
+  const nameExtensionOptions = ['Jr.', 'Sr.', 'I', 'II', 'III', 'IV', 'V'];
 
   return (
     <Card className="max-w-4xl mx-auto">
@@ -191,7 +217,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
         </CardDescription>
       </CardHeader>
       
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} autoComplete="off">
         <Tabs 
           value={activeTab} 
           onValueChange={setActiveTab}
@@ -217,9 +243,24 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                     value={formData.firstName}
                     onChange={handleChange}
                     required
+                    autoComplete="off"
                   />
                 </div>
                 
+                <div className="space-y-2">
+                  <Label htmlFor="middleName">Middle Name</Label>
+                  <Input 
+                    id="middleName" 
+                    name="middleName" 
+                    placeholder="David"
+                    value={formData.middleName}
+                    onChange={handleChange}
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name*</Label>
                   <Input 
@@ -229,7 +270,26 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                     value={formData.lastName}
                     onChange={handleChange}
                     required
+                    autoComplete="off"
                   />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="nameExtension">Name Extension</Label>
+                  <Select
+                    value={formData.nameExtension}
+                    onValueChange={(value) => handleSelectChange('nameExtension', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select extension" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {nameExtensionOptions.map(option => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               
@@ -242,18 +302,19 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                     type="date"
                     value={formData.dateOfBirth}
                     onChange={handleChange}
+                    autoComplete="off"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="age">Age</Label>
+                  <Label htmlFor="age">Age (Calculated)</Label>
                   <Input 
                     id="age" 
-                    name="age" 
-                    type="number"
-                    placeholder="35"
-                    value={formData.age}
-                    onChange={handleChange}
+                    name="age"
+                    value={calculatedAge !== null ? calculatedAge.toString() : ''}
+                    readOnly
+                    className="bg-gray-100"
+                    autoComplete="off"
                   />
                 </div>
                 
@@ -301,6 +362,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                     placeholder="Filipino"
                     value={formData.nationality}
                     onChange={handleChange}
+                    autoComplete="off"
                   />
                 </div>
                 
@@ -332,6 +394,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                     placeholder="john.doe@example.com"
                     value={formData.email}
                     onChange={handleChange}
+                    autoComplete="off"
                   />
                 </div>
                 
@@ -343,6 +406,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                     placeholder="+1 (555) 123-4567"
                     value={formData.phone}
                     onChange={handleChange}
+                    autoComplete="off"
                   />
                 </div>
               </div>
@@ -355,6 +419,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   placeholder="e.g., PAT-12345"
                   value={formData.patientId}
                   onChange={handleChange}
+                  autoComplete="off"
                 />
               </div>
             </TabsContent>
@@ -368,6 +433,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   placeholder="Jane Doe"
                   value={formData.emergencyContactName}
                   onChange={handleChange}
+                  autoComplete="off"
                 />
               </div>
               
@@ -380,6 +446,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                     placeholder="Spouse, Parent, etc."
                     value={formData.emergencyContactRelationship}
                     onChange={handleChange}
+                    autoComplete="off"
                   />
                 </div>
                 
@@ -391,6 +458,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                     placeholder="+1 (555) 987-6543"
                     value={formData.emergencyContactPhone}
                     onChange={handleChange}
+                    autoComplete="off"
                   />
                 </div>
               </div>
@@ -406,6 +474,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   value={formData.allergies}
                   onChange={handleChange}
                   className="min-h-24"
+                  autoComplete="off"
                 />
               </div>
               
@@ -418,6 +487,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   value={formData.medicalConditions}
                   onChange={handleChange}
                   className="min-h-24"
+                  autoComplete="off"
                 />
               </div>
             </TabsContent>

@@ -2,7 +2,9 @@
 export type Patient = {
   id: string;
   first_name: string;
+  middle_name?: string;
   last_name: string;
+  name_extension?: string;
   date_of_birth?: string;
   email?: string;
   phone?: string;
