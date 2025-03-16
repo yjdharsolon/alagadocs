@@ -14,7 +14,6 @@ import LoadingTranscription from '../transcription/LoadingTranscription';
 import { useNavigate } from 'react-router-dom';
 import { PatientInfoCard } from './PatientInfoCard';
 import { DirectInputCard } from './DirectInputCard';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TextPreviewModal } from './TextPreviewModal';
 
 interface UploadFormProps {
@@ -64,7 +63,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   const handleFormSubmit = useCallback(async () => {
     try {
       // If using direct text input, show preview first
-      if (inputMethod === 'text' && directInput.trim() !== '') {
+      if (directInput.trim() !== '' && inputMethod === 'text') {
         if (!showPreview) {
           setShowPreview(true);
           return;
@@ -75,7 +74,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       setNavigating(true);
       
       // Handle direct text input separately
-      if (inputMethod === 'text' && directInput.trim() !== '') {
+      if (directInput.trim() !== '' && inputMethod === 'text') {
         // Create a transcription-like object with the direct input
         const directInputResult = {
           transcriptionData: {
@@ -167,6 +166,18 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
     setTimeout(() => handleFormSubmit(), 100);
   };
   
+  // Determine which input method is active based on whether there's a file or direct input text
+  const determineActiveInputMethod = () => {
+    if (file) return 'audio';
+    if (directInput.trim().length > 0) return 'text';
+    return inputMethod; // Default to the selected input method
+  };
+  
+  // Update the input method based on user interaction
+  useEffect(() => {
+    setInputMethod(determineActiveInputMethod());
+  }, [file, directInput]);
+  
   if (!sessionChecked) {
     return <AuthenticationCheck isLoading={true} />;
   }
@@ -176,7 +187,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   }
   
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       {error && (
         <ErrorAlert 
           error={error} 
@@ -188,14 +199,10 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
         {/* Display patient information if available */}
         <PatientInfoCard patientName={patientName || undefined} patientId={patientId} />
         
-        {/* Input method tabs */}
-        <Tabs defaultValue="audio" onValueChange={(value) => setInputMethod(value as 'audio' | 'text')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="audio">Audio Upload/Recording</TabsTrigger>
-            <TabsTrigger value="text">Direct Text Input</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="audio" className="space-y-6 mt-4">
+        {/* Side-by-side layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Audio input section (left side) */}
+          <div className="space-y-6">
             <FileInputCard 
               file={file} 
               onFileSelect={handleFileSelect} 
@@ -207,15 +214,16 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
               setIsRecording={setIsRecording}
               isUploading={isUploading}
             />
-          </TabsContent>
+          </div>
           
-          <TabsContent value="text" className="space-y-6 mt-4">
+          {/* Direct text input section (right side) */}
+          <div>
             <DirectInputCard 
               value={directInput}
               onChange={setDirectInput}
             />
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
         
         {isUploading && (
           <UploadProgress 
@@ -228,10 +236,10 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
           <SubmitButton
             isUploading={isUploading}
             isRecording={isRecording}
-            hasFile={inputMethod === 'audio' ? !!file : directInput.trim().length > 0}
+            hasFile={file !== null || directInput.trim().length > 0}
             onSubmit={handleFormSubmit}
             getStepLabel={getStepLabel}
-            label={inputMethod === 'audio' ? 'Continue to Transcription' : 'Continue to Text Editing'}
+            label={determineActiveInputMethod() === 'audio' ? 'Continue to Transcription' : 'Continue to Text Editing'}
           />
         </div>
       </div>

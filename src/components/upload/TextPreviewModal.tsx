@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { FileText } from 'lucide-react';
 
 interface TextPreviewModalProps {
   isOpen: boolean;
@@ -28,7 +29,10 @@ export const TextPreviewModal: React.FC<TextPreviewModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Preview Your Text</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Preview Your Text
+          </DialogTitle>
           <DialogDescription>
             Review your text before proceeding to the next step
           </DialogDescription>

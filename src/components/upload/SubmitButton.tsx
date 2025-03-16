@@ -39,13 +39,13 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       return false;
     }
     
-    // Check if we have a file
+    // Check if we have a file or text input
     if (!hasFile) {
-      console.log('Button clicked without a file, ignoring');
+      console.log('Button clicked without a file or text input, ignoring');
       return false;
     }
     
-    console.log('Submit button clicked, initiating upload process');
+    console.log('Submit button clicked, initiating process');
     
     // Use requestAnimationFrame to ensure UI updates before heavy processing
     requestAnimationFrame(() => {
