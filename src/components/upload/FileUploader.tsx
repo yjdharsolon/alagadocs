@@ -63,7 +63,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ file, onFileSelect }
     <div className="space-y-2">
       <div 
         className={`border-2 border-dashed rounded-lg ${isMobile ? 'p-4' : 'p-8'} text-center cursor-pointer transition-colors
-          ${isDragging ? 'bg-accent/50 border-primary' : 'hover:bg-accent/50'}`}
+          ${isDragging ? 'bg-[#33C3F0]/10 border-[#33C3F0]' : 'hover:bg-[#33C3F0]/5 border-[#E0E0E0]'}`}
         onClick={handleUploadClick}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -76,8 +76,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ file, onFileSelect }
           accept="audio/*" 
           onChange={handleFileChange}
         />
-        <Upload className={`${isMobile ? 'h-8 w-8' : 'h-12 w-12'} mx-auto mb-2 text-muted-foreground`} />
-        <p className={`${isMobile ? 'text-sm' : 'text-lg'} font-medium`}>
+        <Upload className={`${isMobile ? 'h-8 w-8' : 'h-12 w-12'} mx-auto mb-2 text-[#33C3F0]`} />
+        <p className={`${isMobile ? 'text-sm' : 'text-lg'} font-medium text-[#403E43]`}>
           {isMobile ? "Tap to upload audio" : "Drag and drop or click to browse"}
         </p>
         <p className="text-xs text-muted-foreground mt-1">
@@ -86,8 +86,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ file, onFileSelect }
       </div>
       
       {file && (
-        <div className="bg-accent/30 p-2 rounded-lg flex items-center">
-          <FileAudio className="h-6 w-6 mr-2" />
+        <div className="bg-[#F6F6F7] p-2 rounded-lg flex items-center">
+          <FileAudio className="h-6 w-6 mr-2 text-[#33C3F0]" />
           <div className="flex-1 truncate">
             <p className="font-medium truncate text-sm">{file.name}</p>
             <p className="text-xs text-muted-foreground">

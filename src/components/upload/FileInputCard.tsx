@@ -14,10 +14,10 @@ export const FileInputCard: React.FC<FileInputCardProps> = ({ file, onFileSelect
   const isMobile = useIsMobile();
   
   return (
-    <Card className="mb-4">
-      <CardHeader className={isMobile ? "px-3 py-2" : "py-4"}>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <FileAudio className="h-4 w-4" />
+    <Card className="mb-4 border-[#33C3F0]/10 shadow-sm">
+      <CardHeader className={`bg-gradient-to-r from-[#F6F6F7] to-[#F1F1F1] rounded-t-md ${isMobile ? "px-3 py-2" : "py-4"}`}>
+        <CardTitle className="flex items-center gap-2 text-[#403E43] text-base">
+          <FileAudio className="h-4 w-4 text-[#1EAEDB]" />
           Audio File
         </CardTitle>
       </CardHeader>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { RecordingControls } from './RecordingControls';
 import { AudioPreview } from './AudioPreview';
@@ -19,12 +18,10 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   isRecording: externalIsRecording,
   setIsRecording: externalSetIsRecording
 }) => {
-  // Use internal state if external state is not provided
   const [internalIsRecording, setInternalIsRecording] = useState(false);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const isMobile = useIsMobile();
   
-  // Determine which state to use
   const isRecording = externalIsRecording !== undefined ? externalIsRecording : internalIsRecording;
   const setIsRecording = externalSetIsRecording || setInternalIsRecording;
 
@@ -50,7 +47,6 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     setIsPlayingPreview
   });
 
-  // Effect for controlling audio preview playback
   useEffect(() => {
     if (audioPreviewRef.current) {
       audioPreviewRef.current.onended = () => {
@@ -85,7 +81,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
               <span>{formatTime(recordingTime)}</span>
               <span>{formatTime(maxRecordingTime)}</span>
             </div>
-            <Progress value={(recordingTime / maxRecordingTime) * 100} />
+            <Progress value={(recordingTime / maxRecordingTime) * 100} className="h-2 bg-[#E0E0E0]">
+              <div className="h-full bg-[#33C3F0] rounded-full" />
+            </Progress>
           </div>
           <RecordingControls 
             isRecording={isRecording} 
@@ -103,7 +101,6 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         />
       )}
 
-      {/* Name recording dialog */}
       <RecordingNameDialog
         isOpen={showNameDialog}
         onClose={closeNameDialog}
