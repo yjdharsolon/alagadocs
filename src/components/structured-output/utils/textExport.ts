@@ -1,48 +1,33 @@
 
 import { MedicalSections } from '../types';
-import toast from 'react-hot-toast';
+import { formatClipboardText } from './clipboardUtils';
 
-export const exportAsText = (sections: MedicalSections) => {
-  const blob = new Blob(
-    [
-      `MEDICAL DOCUMENTATION
-      
-CHIEF COMPLAINT:
-${sections?.chiefComplaint || 'None documented'}
-
-HISTORY OF PRESENT ILLNESS:
-${sections?.historyOfPresentIllness || 'None documented'}
-
-PAST MEDICAL HISTORY:
-${sections?.pastMedicalHistory || 'None documented'}
-
-MEDICATIONS:
-${sections?.medications || 'None documented'}
-
-ALLERGIES:
-${sections?.allergies || 'None documented'}
-
-PHYSICAL EXAMINATION:
-${sections?.physicalExamination || 'None documented'}
-
-ASSESSMENT:
-${sections?.assessment || 'None documented'}
-
-PLAN:
-${sections?.plan || 'None documented'}
-      `
-    ], 
-    { type: 'text/plain' }
-  );
+/**
+ * Exports structured data as a text file
+ * @param sections The structured data to export
+ * @param patientName Optional patient name for the filename
+ */
+export const exportAsText = (sections: MedicalSections, patientName?: string | null): void => {
+  const formattedText = formatClipboardText(sections);
   
+  // Create a blob with the formatted text
+  const blob = new Blob([formattedText], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `medical_note_${new Date().toISOString().slice(0, 10)}.txt`;
-  document.body.appendChild(a);
-  a.click();
   
+  // Create a link element to trigger the download
+  const link = document.createElement('a');
+  link.href = url;
+  
+  // Generate filename
+  const fileName = patientName 
+    ? `medical_notes_${patientName.toLowerCase().replace(/\s+/g, '_')}.txt`
+    : 'medical_notes.txt';
+  
+  link.download = fileName;
+  
+  // Append to the document, click, and clean up
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
   URL.revokeObjectURL(url);
-  document.body.removeChild(a);
-  toast.success('Document exported as text file (fallback mode)');
 };

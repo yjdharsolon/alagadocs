@@ -1,60 +1,52 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save } from 'lucide-react';
-import { saveStructuredNote } from '@/services/structuredNote/saveNote';
+import { Save, Loader2 } from 'lucide-react';
+import { MedicalSections } from '../types';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import { MedicalSections } from '@/components/structured-output/types';
+import { useAuth } from '@/hooks/useAuth';
+import { saveStructuredNote } from '@/services/structuredOutput';
 
-export interface SaveNoteButtonProps {
-  user: any; 
+interface SaveNoteButtonProps {
+  user: any;
   sections: MedicalSections;
   structuredText: string;
-  patientId?: string | null;
   transcriptionId: string;
+  patientId?: string | null;
   onNoteSaved?: () => void;
+  variant?: 'default' | 'outline' | 'secondary';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
 }
 
-export function SaveNoteButton({ 
-  user, 
-  sections, 
-  structuredText, 
-  patientId,
+export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
+  user,
+  sections,
+  structuredText,
   transcriptionId,
-  onNoteSaved
-}: SaveNoteButtonProps) {
+  patientId = null,
+  onNoteSaved,
+  variant = 'default',
+  size = 'default'
+}) => {
   const [isSaving, setIsSaving] = useState(false);
-  const [noteSaved, setNoteSaved] = useState(false);
-  const navigate = useNavigate();
 
-  const handleSaveNote = async () => {
-    if (!user?.id) {
-      toast.error('You must be logged in to save notes');
+  const handleSave = async () => {
+    if (!user?.id || !transcriptionId) {
+      toast.error('Missing required information to save note');
       return;
     }
-
+    
     try {
       setIsSaving(true);
+      console.log('Saving note with data:', { userId: user.id, transcriptionId, sections, patientId });
       
-      console.log('Saving structured note with patient ID:', patientId);
+      const result = await saveStructuredNote(sections, transcriptionId);
       
-      // Using the structuredNoteService to save the note with patient association
-      await saveStructuredNote(
-        user.id,
-        transcriptionId,
-        sections,
-        patientId
-      );
+      toast.success('Note saved successfully');
       
-      toast.success('Note saved successfully!');
-      setNoteSaved(true);
-      
-      // Call the callback if provided
       if (onNoteSaved) {
         onNoteSaved();
       }
-      
     } catch (error) {
       console.error('Error saving note:', error);
       toast.error('Failed to save note');
@@ -65,12 +57,18 @@ export function SaveNoteButton({
 
   return (
     <Button 
-      variant="outline" 
-      onClick={handleSaveNote}
-      disabled={isSaving || noteSaved}
+      variant={variant} 
+      size={size} 
+      onClick={handleSave}
+      disabled={isSaving}
+      className="flex items-center gap-2"
     >
-      <Save className="mr-2 h-4 w-4" />
-      {isSaving ? 'Saving...' : noteSaved ? 'Note Saved' : 'Save Note'}
+      {isSaving ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <Save className="h-4 w-4" />
+      )}
+      Save Note
     </Button>
   );
-}
+};

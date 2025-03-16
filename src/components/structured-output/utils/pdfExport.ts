@@ -1,150 +1,65 @@
 
 import { MedicalSections } from '../types';
-import toast from 'react-hot-toast';
+import { jsPDF } from 'jspdf';
 
-export const exportAsPDF = (sections: MedicalSections) => {
-  if (!sections) {
-    toast.error('No data to export');
-    return;
-  }
+/**
+ * Exports structured data as PDF
+ * @param sections The structured data to export
+ * @param patientName Optional patient name for the PDF title
+ */
+export const exportAsPDF = (sections: MedicalSections, patientName?: string | null): void => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  const contentWidth = pageWidth - (margin * 2);
   
-  try {
-    // Create a hidden iframe to generate the PDF-like document
-    const printFrame = document.createElement('iframe');
-    printFrame.style.position = 'absolute';
-    printFrame.style.top = '-9999px';
-    printFrame.style.left = '-9999px';
-    document.body.appendChild(printFrame);
+  // Set up document
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  
+  // Add title
+  const title = patientName ? `Medical Notes: ${patientName}` : 'Medical Notes';
+  doc.text(title, pageWidth / 2, margin, { align: 'center' });
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12);
+  
+  let yPosition = margin + 10;
+  
+  // Add each section
+  Object.entries(sections).forEach(([key, value]) => {
+    if (!value || value.trim() === '') return;
     
-    // Generate HTML content with proper styling for PDF
-    const content = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Medical Documentation</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              line-height: 1.6;
-              margin: 30px;
-              color: #333;
-            }
-            h1 {
-              text-align: center;
-              color: #2563eb;
-              margin-bottom: 20px;
-            }
-            h2 {
-              color: #1d4ed8;
-              border-bottom: 1px solid #e5e7eb;
-              padding-bottom: 5px;
-              margin-top: 20px;
-            }
-            .date {
-              text-align: right;
-              margin-bottom: 20px;
-              color: #666;
-            }
-            .section {
-              margin-bottom: 15px;
-            }
-            .content {
-              white-space: pre-line;
-              padding-left: 10px;
-            }
-            @media print {
-              body {
-                margin: 0;
-                padding: 15px;
-              }
-              h1, h2 {
-                page-break-after: avoid;
-              }
-              .section {
-                page-break-inside: avoid;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <h1>Medical Documentation</h1>
-          <div class="date">Date: ${new Date().toLocaleDateString()}</div>
-          
-          <div class="section">
-            <h2>CHIEF COMPLAINT</h2>
-            <div class="content">${sections.chiefComplaint || 'None documented'}</div>
-          </div>
-          
-          <div class="section">
-            <h2>HISTORY OF PRESENT ILLNESS</h2>
-            <div class="content">${sections.historyOfPresentIllness || 'None documented'}</div>
-          </div>
-          
-          <div class="section">
-            <h2>PAST MEDICAL HISTORY</h2>
-            <div class="content">${sections.pastMedicalHistory || 'None documented'}</div>
-          </div>
-          
-          <div class="section">
-            <h2>MEDICATIONS</h2>
-            <div class="content">${sections.medications || 'None documented'}</div>
-          </div>
-          
-          <div class="section">
-            <h2>ALLERGIES</h2>
-            <div class="content">${sections.allergies || 'None documented'}</div>
-          </div>
-          
-          <div class="section">
-            <h2>PHYSICAL EXAMINATION</h2>
-            <div class="content">${sections.physicalExamination || 'None documented'}</div>
-          </div>
-          
-          <div class="section">
-            <h2>ASSESSMENT</h2>
-            <div class="content">${sections.assessment || 'None documented'}</div>
-          </div>
-          
-          <div class="section">
-            <h2>PLAN</h2>
-            <div class="content">${sections.plan || 'None documented'}</div>
-          </div>
-        </body>
-      </html>
-    `;
+    // Format section title
+    const sectionTitle = key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
     
-    // Write the HTML content to the iframe
-    const frameDoc = printFrame.contentWindow?.document;
-    if (frameDoc) {
-      frameDoc.open();
-      frameDoc.write(content);
-      frameDoc.close();
-      
-      // Wait for content to load then print
-      setTimeout(() => {
-        printFrame.contentWindow?.focus();
-        printFrame.contentWindow?.print();
-        
-        // Clean up after printing is done
-        printFrame.onload = () => {
-          document.body.removeChild(printFrame);
-          toast.success('Document exported for printing/saving as PDF');
-        };
-      }, 500);
-    } else {
-      throw new Error('Could not access frame document');
+    // Add section header
+    doc.setFont('helvetica', 'bold');
+    yPosition += 10;
+    doc.text(`${sectionTitle}:`, margin, yPosition);
+    doc.setFont('helvetica', 'normal');
+    
+    // Add section content with word wrapping
+    const textLines = doc.splitTextToSize(value, contentWidth);
+    yPosition += 5;
+    
+    // Check if we need a new page
+    if (yPosition + (textLines.length * 5) > doc.internal.pageSize.getHeight() - margin) {
+      doc.addPage();
+      yPosition = margin;
     }
-  } catch (error) {
-    console.error('Export error:', error);
     
-    // Fallback to text export if print fails
-    importTextExport().then(module => {
-      module.exportAsText(sections);
-    });
-  }
-};
-
-// Dynamically import the text export module to avoid circular dependencies
-const importTextExport = async () => {
-  return await import('./textExport');
+    doc.text(textLines, margin, yPosition);
+    yPosition += textLines.length * 5;
+  });
+  
+  // Save the PDF
+  const fileName = patientName 
+    ? `medical_notes_${patientName.toLowerCase().replace(/\s+/g, '_')}.pdf`
+    : 'medical_notes.pdf';
+    
+  doc.save(fileName);
 };

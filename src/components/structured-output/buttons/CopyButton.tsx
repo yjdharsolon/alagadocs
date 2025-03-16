@@ -1,50 +1,41 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Clipboard, CheckCircle2 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { Copy } from 'lucide-react';
 import { MedicalSections } from '../types';
-import { formatClipboardText } from '../utils/exportUtils';
+import { formatClipboardText } from '../utils/clipboardUtils';
+import { toast } from 'sonner';
 
-export interface CopyButtonProps {
-  sections?: MedicalSections;
+interface CopyButtonProps {
+  sections: MedicalSections;
+  variant?: 'default' | 'outline' | 'secondary';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
 }
 
-const CopyButton = ({ sections }: CopyButtonProps) => {
-  const [copied, setCopied] = useState(false);
-  
+const CopyButton: React.FC<CopyButtonProps> = ({ 
+  sections, 
+  variant = 'outline',
+  size = 'default'
+}) => {
   const handleCopy = () => {
-    if (!sections) return;
-    
     const formattedText = formatClipboardText(sections);
     
     navigator.clipboard.writeText(formattedText)
       .then(() => {
-        setCopied(true);
         toast.success('Copied to clipboard');
-        // Reset copied state after a delay
-        setTimeout(() => setCopied(false), 2000);
       })
       .catch(() => toast.error('Failed to copy to clipboard'));
   };
-  
+
   return (
-    <Button
+    <Button 
+      variant={variant} 
+      size={size} 
       onClick={handleCopy}
-      className="flex items-center gap-1"
-      disabled={!sections}
+      className="flex items-center gap-2"
     >
-      {copied ? (
-        <>
-          <CheckCircle2 className="h-4 w-4" />
-          Copied!
-        </>
-      ) : (
-        <>
-          <Clipboard className="h-4 w-4" />
-          Copy to EMR
-        </>
-      )}
+      <Copy className="h-4 w-4" />
+      Copy
     </Button>
   );
 };
