@@ -13,6 +13,9 @@ import { Loader2 } from 'lucide-react';
 import LoadingTranscription from '../transcription/LoadingTranscription';
 import { useNavigate } from 'react-router-dom';
 import { PatientInfoCard } from './PatientInfoCard';
+import { DirectInputCard } from './DirectInputCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TextPreviewModal } from './TextPreviewModal';
 
 interface UploadFormProps {
   onTranscriptionComplete?: (transcriptionData: any, audioUrl: string, transcriptionId: string) => void;
@@ -22,6 +25,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
   const [navigating, setNavigating] = useState(false);
   const [patientId, setPatientId] = useState<string | null>(null);
   const [patientName, setPatientName] = useState<string | null>(null);
+  const [inputMethod, setInputMethod] = useState<'audio' | 'text'>('audio');
+  const [directInput, setDirectInput] = useState<string>('');
+  const [showPreview, setShowPreview] = useState(false);
   const navigate = useNavigate();
   
   // Get patient info from session storage
@@ -57,9 +63,42 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
 
   const handleFormSubmit = useCallback(async () => {
     try {
+      // If using direct text input, show preview first
+      if (inputMethod === 'text' && directInput.trim() !== '') {
+        if (!showPreview) {
+          setShowPreview(true);
+          return;
+        }
+      }
+
       console.log("Submit button clicked, handling submission...");
       setNavigating(true);
       
+      // Handle direct text input separately
+      if (inputMethod === 'text' && directInput.trim() !== '') {
+        // Create a transcription-like object with the direct input
+        const directInputResult = {
+          transcriptionData: {
+            text: directInput,
+            duration: null // No duration for direct input
+          },
+          audioUrl: '', // No audio for direct input
+          transcriptionId: `direct-${Date.now()}`, // Generate an ID
+          patientId: patientId || null,
+          patientName: patientName || null
+        };
+        
+        // Store in session storage for recovery
+        sessionStorage.setItem('lastTranscriptionResult', JSON.stringify(directInputResult));
+        
+        // Navigate to edit transcript
+        navigate('/edit-transcript', {
+          state: directInputResult
+        });
+        return;
+      }
+      
+      // Handle audio upload/recording
       const result = await handleSubmit();
       
       if (result && result.transcriptionData) {
@@ -114,7 +153,19 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
       toast.error('Error completing transcription process');
       setNavigating(false);
     }
-  }, [handleSubmit, onTranscriptionComplete, navigate, patientId, patientName]);
+  }, [handleSubmit, onTranscriptionComplete, navigate, patientId, patientName, inputMethod, directInput, showPreview]);
+  
+  // Close preview and continue
+  const handlePreviewClose = () => {
+    setShowPreview(false);
+  };
+  
+  // Close preview and continue
+  const handlePreviewContinue = () => {
+    setShowPreview(false);
+    // Re-trigger submit after preview is closed
+    setTimeout(() => handleFormSubmit(), 100);
+  };
   
   if (!sessionChecked) {
     return <AuthenticationCheck isLoading={true} />;
@@ -137,17 +188,34 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
         {/* Display patient information if available */}
         <PatientInfoCard patientName={patientName || undefined} patientId={patientId} />
         
-        <FileInputCard 
-          file={file} 
-          onFileSelect={handleFileSelect} 
-        />
-        
-        <RecordingCard 
-          onRecordingComplete={handleRecordingComplete} 
-          isRecording={isRecording}
-          setIsRecording={setIsRecording}
-          isUploading={isUploading}
-        />
+        {/* Input method tabs */}
+        <Tabs defaultValue="audio" onValueChange={(value) => setInputMethod(value as 'audio' | 'text')} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="audio">Audio Upload/Recording</TabsTrigger>
+            <TabsTrigger value="text">Direct Text Input</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="audio" className="space-y-6 mt-4">
+            <FileInputCard 
+              file={file} 
+              onFileSelect={handleFileSelect} 
+            />
+            
+            <RecordingCard 
+              onRecordingComplete={handleRecordingComplete} 
+              isRecording={isRecording}
+              setIsRecording={setIsRecording}
+              isUploading={isUploading}
+            />
+          </TabsContent>
+          
+          <TabsContent value="text" className="space-y-6 mt-4">
+            <DirectInputCard 
+              value={directInput}
+              onChange={setDirectInput}
+            />
+          </TabsContent>
+        </Tabs>
         
         {isUploading && (
           <UploadProgress 
@@ -160,12 +228,21 @@ export const UploadForm: React.FC<UploadFormProps> = ({ onTranscriptionComplete 
           <SubmitButton
             isUploading={isUploading}
             isRecording={isRecording}
-            hasFile={!!file}
+            hasFile={inputMethod === 'audio' ? !!file : directInput.trim().length > 0}
             onSubmit={handleFormSubmit}
             getStepLabel={getStepLabel}
+            label={inputMethod === 'audio' ? 'Continue to Transcription' : 'Continue to Text Editing'}
           />
         </div>
       </div>
+      
+      {/* Text preview modal */}
+      <TextPreviewModal
+        isOpen={showPreview}
+        content={directInput}
+        onClose={handlePreviewClose}
+        onContinue={handlePreviewContinue}
+      />
     </div>
   );
 };

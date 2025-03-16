@@ -9,6 +9,7 @@ interface SubmitButtonProps {
   hasFile: boolean;
   onSubmit: () => void;
   getStepLabel: () => string;
+  label?: string;
 }
 
 export const SubmitButton: React.FC<SubmitButtonProps> = ({
@@ -16,7 +17,8 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   isRecording,
   hasFile,
   onSubmit,
-  getStepLabel
+  getStepLabel,
+  label = 'Continue to Transcription'
 }) => {
   // Use useCallback to memoize the handler with improved event prevention
   const handleClick = useCallback((e: React.MouseEvent) => {
@@ -62,7 +64,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       disabled={!hasFile || isUploading || isRecording}
       type="button" // Explicitly set as button, not submit
       role="button"
-      aria-label={isUploading ? getStepLabel() : 'Continue to Transcription'}
+      aria-label={isUploading ? getStepLabel() : label}
       data-prevent-default="true" // Extra attribute to signal event handling
       className="transition-all"
     >
@@ -72,7 +74,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
           {getStepLabel()}
         </>
       ) : (
-        'Continue to Transcription'
+        label
       )}
     </Button>
   );

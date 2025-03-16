@@ -6,6 +6,11 @@ export const usePatientNavigation = (patient: Patient | null) => {
   const navigate = useNavigate();
 
   const handleStartConsultation = () => {
+    // Store patient in session storage to ensure it's available on the upload page
+    if (patient) {
+      sessionStorage.setItem('selectedPatient', JSON.stringify(patient));
+    }
+    
     navigate('/upload', { 
       state: { 
         patient: patient 
