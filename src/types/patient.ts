@@ -9,7 +9,7 @@ export type Patient = {
   email?: string;
   phone?: string;
   patient_id?: string;
-  // New personal information fields
+  // Personal information fields
   age?: number;
   gender?: string;
   civil_status?: string;

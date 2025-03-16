@@ -9,24 +9,17 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import toast from 'react-hot-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { differenceInYears } from 'date-fns';
+import { PersonalInfoForm } from './form-sections/PersonalInfoForm';
+import { EmergencyContactForm } from './form-sections/EmergencyContactForm';
+import { MedicalInfoForm } from './form-sections/MedicalInfoForm';
+import { TabSelector } from './form-sections/TabSelector';
 
-type PatientFormData = {
+export type PatientFormData = {
   firstName: string;
   middleName: string;
   lastName: string;
@@ -201,11 +194,6 @@ export const PatientForm: React.FC<PatientFormProps> = ({
     }
   };
 
-  const bloodTypeOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-  const genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
-  const civilStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed', 'Separated'];
-  const nameExtensionOptions = ['Jr.', 'Sr.', 'I', 'II', 'III', 'IV', 'V'];
-
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
@@ -218,281 +206,35 @@ export const PatientForm: React.FC<PatientFormProps> = ({
       </CardHeader>
       
       <form onSubmit={handleSubmit} autoComplete="off">
-        <Tabs 
-          value={activeTab} 
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
-          <div className="px-6">
-            <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="personal">Personal Information</TabsTrigger>
-              <TabsTrigger value="emergency">Emergency Contact</TabsTrigger>
-              <TabsTrigger value="medical">Medical Information</TabsTrigger>
-            </TabsList>
-          </div>
+        <TabSelector
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+        
+        <CardContent className="pt-6">
+          {activeTab === "personal" && (
+            <PersonalInfoForm
+              formData={formData}
+              handleChange={handleChange}
+              handleSelectChange={handleSelectChange}
+              calculatedAge={calculatedAge}
+            />
+          )}
           
-          <CardContent className="pt-6">
-            <TabsContent value="personal" className="space-y-4 mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name*</Label>
-                  <Input 
-                    id="firstName" 
-                    name="firstName" 
-                    placeholder="John"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    required
-                    autoComplete="off"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="middleName">Middle Name</Label>
-                  <Input 
-                    id="middleName" 
-                    name="middleName" 
-                    placeholder="David"
-                    value={formData.middleName}
-                    onChange={handleChange}
-                    autoComplete="off"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name*</Label>
-                  <Input 
-                    id="lastName" 
-                    name="lastName" 
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    required
-                    autoComplete="off"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="nameExtension">Name Extension</Label>
-                  <Select
-                    value={formData.nameExtension}
-                    onValueChange={(value) => handleSelectChange('nameExtension', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select extension" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">None</SelectItem>
-                      {nameExtensionOptions.map(option => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input 
-                    id="dateOfBirth" 
-                    name="dateOfBirth" 
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={handleChange}
-                    autoComplete="off"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="age">Age (Calculated)</Label>
-                  <Input 
-                    id="age" 
-                    name="age"
-                    value={calculatedAge !== null ? calculatedAge.toString() : ''}
-                    readOnly
-                    className="bg-gray-100"
-                    autoComplete="off"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
-                  <Select
-                    value={formData.gender}
-                    onValueChange={(value) => handleSelectChange('gender', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {genderOptions.map(option => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="civilStatus">Civil Status</Label>
-                  <Select
-                    value={formData.civilStatus}
-                    onValueChange={(value) => handleSelectChange('civilStatus', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {civilStatusOptions.map(option => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="nationality">Nationality</Label>
-                  <Input 
-                    id="nationality" 
-                    name="nationality" 
-                    placeholder="Filipino"
-                    value={formData.nationality}
-                    onChange={handleChange}
-                    autoComplete="off"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="bloodType">Blood Type</Label>
-                  <Select
-                    value={formData.bloodType}
-                    onValueChange={(value) => handleSelectChange('bloodType', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select blood type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {bloodTypeOptions.map(option => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    name="email" 
-                    type="email"
-                    placeholder="john.doe@example.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    autoComplete="off"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input 
-                    id="phone" 
-                    name="phone" 
-                    placeholder="+1 (555) 123-4567"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    autoComplete="off"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="patientId">Patient ID (Optional)</Label>
-                <Input 
-                  id="patientId" 
-                  name="patientId" 
-                  placeholder="e.g., PAT-12345"
-                  value={formData.patientId}
-                  onChange={handleChange}
-                  autoComplete="off"
-                />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="emergency" className="space-y-4 mt-0">
-              <div className="space-y-2">
-                <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
-                <Input 
-                  id="emergencyContactName" 
-                  name="emergencyContactName" 
-                  placeholder="Jane Doe"
-                  value={formData.emergencyContactName}
-                  onChange={handleChange}
-                  autoComplete="off"
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="emergencyContactRelationship">Relationship to Patient</Label>
-                  <Input 
-                    id="emergencyContactRelationship" 
-                    name="emergencyContactRelationship" 
-                    placeholder="Spouse, Parent, etc."
-                    value={formData.emergencyContactRelationship}
-                    onChange={handleChange}
-                    autoComplete="off"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="emergencyContactPhone">Emergency Contact Phone</Label>
-                  <Input 
-                    id="emergencyContactPhone" 
-                    name="emergencyContactPhone" 
-                    placeholder="+1 (555) 987-6543"
-                    value={formData.emergencyContactPhone}
-                    onChange={handleChange}
-                    autoComplete="off"
-                  />
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="medical" className="space-y-4 mt-0">
-              <div className="space-y-2">
-                <Label htmlFor="allergies">Allergies</Label>
-                <Textarea 
-                  id="allergies" 
-                  name="allergies" 
-                  placeholder="List any allergies the patient has..."
-                  value={formData.allergies}
-                  onChange={handleChange}
-                  className="min-h-24"
-                  autoComplete="off"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="medicalConditions">Medical Conditions</Label>
-                <Textarea 
-                  id="medicalConditions" 
-                  name="medicalConditions" 
-                  placeholder="List any pre-existing medical conditions..."
-                  value={formData.medicalConditions}
-                  onChange={handleChange}
-                  className="min-h-24"
-                  autoComplete="off"
-                />
-              </div>
-            </TabsContent>
-          </CardContent>
-        </Tabs>
+          {activeTab === "emergency" && (
+            <EmergencyContactForm
+              formData={formData}
+              handleChange={handleChange}
+            />
+          )}
+          
+          {activeTab === "medical" && (
+            <MedicalInfoForm
+              formData={formData}
+              handleChange={handleChange}
+            />
+          )}
+        </CardContent>
         
         <CardFooter className="flex justify-between">
           <Button 
