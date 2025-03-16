@@ -6,3 +6,4 @@ export * from './useUploadError';
 export * from './useUploadProcess';
 export * from './useAuthenticationCheck';
 export * from './useUploadAuth';
+export * from './useInputMethod';
