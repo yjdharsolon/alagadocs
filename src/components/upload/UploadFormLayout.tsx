@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { PatientInfoCard } from './PatientInfoCard';
 import { FileInputCard } from './FileInputCard';
 import { RecordingCard } from './RecordingCard';
 import { DirectInputCard } from './DirectInputCard';
@@ -27,8 +26,6 @@ interface UploadFormLayoutProps {
 }
 
 export const UploadFormLayout: React.FC<UploadFormLayoutProps> = ({
-  patientName,
-  patientId,
   file,
   directInput,
   onFileSelect,
@@ -44,10 +41,7 @@ export const UploadFormLayout: React.FC<UploadFormLayoutProps> = ({
   inputMethod
 }) => {
   return (
-    <div className="space-y-6">
-      {/* Display patient information if available */}
-      <PatientInfoCard patientName={patientName} patientId={patientId} />
-      
+    <div className="space-y-6 mt-4">
       {/* Side-by-side layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Audio input section (left side) */}

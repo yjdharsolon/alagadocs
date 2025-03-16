@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UploadPageHeader } from '@/components/upload/UploadPageHeader';
 import { UploadForm } from '@/components/upload/UploadForm';
 import { StorageInitializer } from '@/components/upload/StorageInitializer';
 import { PermissionsManager } from '@/components/upload/PermissionsManager'; 
@@ -26,12 +25,7 @@ export const UploadPageContent: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto py-6 px-4 pt-20">
-      <UploadPageHeader 
-        title="Upload Audio" 
-        description="Upload audio or record your voice"
-      />
-      
+    <div className="container mx-auto max-w-4xl flex flex-col justify-center min-h-[calc(100vh-10rem)]">
       <PatientDisplayHandler />
       
       {/* Initialize storage in the background */}
