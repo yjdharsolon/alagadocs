@@ -19,7 +19,7 @@ interface TemplateSectionProps {
   isLast: boolean;
 }
 
-const TemplateSection = ({ 
+const TemplateSectionItem = ({ 
   index, 
   sectionId, 
   form, 
@@ -103,4 +103,4 @@ const TemplateSection = ({
   );
 };
 
-export default TemplateSection;
+export default TemplateSectionItem;

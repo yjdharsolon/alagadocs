@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { TemplateFormValues, TemplateSection } from '../../types';
-import TemplateSection from './TemplateSection';
+import TemplateSectionItem from './TemplateSection';
 
 interface TemplateSectionsProps {
   form: UseFormReturn<TemplateFormValues>;
@@ -40,7 +40,7 @@ const TemplateSections = ({
       </div>
 
       {sections.map((section, index) => (
-        <TemplateSection
+        <TemplateSectionItem
           key={section.id}
           index={index}
           sectionId={section.id}
