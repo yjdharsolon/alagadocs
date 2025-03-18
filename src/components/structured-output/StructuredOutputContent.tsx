@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { MedicalSections } from './types';
 import DocumentContainer from './DocumentContainer';
-import LoadingState from './LoadingState';
 import NoDataView from './NoDataView';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import FormatSelectionTab from './FormatSelectionTab';
@@ -40,8 +39,6 @@ interface StructuredOutputContentProps {
 }
 
 const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
-  loading,
-  processingText,
   structuredData,
   error,
   patientInfo,
@@ -59,15 +56,9 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
   onFormatTypeChange,
   onToggleFormatSelection
 }) => {
-  if (loading) {
-    return (
-      <LoadingState 
-        message={processingText ? "Processing transcription..." : "Loading structured data..."} 
-        subMessage={processingText ? "Converting your transcription into multiple format types. This may take a moment." : undefined}
-      />
-    );
-  }
-
+  // The loading states are now handled at the page level, 
+  // so this component only needs to handle the data or error cases
+  
   if (!structuredData) {
     return <NoDataView error={error} onRetry={onRetry} />;
   }

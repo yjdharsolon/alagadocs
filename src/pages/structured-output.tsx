@@ -7,6 +7,7 @@ import StructuredOutputContent from '@/components/structured-output/StructuredOu
 import { useStructuredOutputPage } from '@/hooks/useStructuredOutput/index';
 import { useStructuredOutputData } from '@/hooks/useStructuredOutputData';
 import { CompactPatientHeader } from '@/components/patient/CompactPatientHeader';
+import LoadingState from '@/components/structured-output/LoadingState';
 
 export default function StructuredOutputPage() {
   const { user } = useAuth();
@@ -78,6 +79,36 @@ export default function StructuredOutputPage() {
     error
   });
 
+  // Display appropriate loading state based on what's happening
+  if (loading || processingText) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-4 px-4">
+          <StructuredOutputHeader 
+            onBack={handleBackClick} 
+            subtitle="Processing your transcription..."
+          />
+          
+          {patientInfo.name && (
+            <CompactPatientHeader 
+              firstName={patientInfo.name.split(' ')[0]}
+              lastName={patientInfo.name.split(' ').slice(1).join(' ')}
+              dateOfBirth={patientDetails.dateOfBirth}
+              age={patientDetails.age}
+              gender={patientDetails.gender}
+              patientId={patientInfo.id}
+            />
+          )}
+          
+          <LoadingState 
+            message={processingText ? "Converting your transcription into structured medical notes..." : "Preparing your medical documentation"} 
+            subMessage={processingText ? "Our AI is analyzing your transcription and creating multiple format options. This typically takes 30-60 seconds." : "Loading your structured data..."}
+          />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="container mx-auto py-4 px-4">
@@ -98,8 +129,8 @@ export default function StructuredOutputPage() {
         )}
         
         <StructuredOutputContent
-          loading={loading}
-          processingText={processingText}
+          loading={false}
+          processingText={false}
           structuredData={structuredData}
           error={error}
           patientInfo={enhancedPatientInfo}

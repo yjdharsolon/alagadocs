@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, FileText } from 'lucide-react';
+import { Save, FileText, Loader2 } from 'lucide-react';
 
 interface EditorFooterProps {
   onSave: () => void;
@@ -24,8 +24,17 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
         disabled={isSaving || !transcriptionText.trim()}
         className="w-full sm:w-auto border-[#33C3F0] text-[#33C3F0] hover:bg-[#33C3F0]/10 transition-colors duration-200"
       >
-        <Save className="h-4 w-4 mr-2" />
-        {isSaving ? 'Saving...' : 'Save Changes'}
+        {isSaving ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          <>
+            <Save className="h-4 w-4 mr-2" />
+            Save Changes
+          </>
+        )}
       </Button>
       <Button
         onClick={onContinueToStructured}
