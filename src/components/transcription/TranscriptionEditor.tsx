@@ -8,7 +8,7 @@ interface TranscriptionEditorProps {
   transcriptionText: string;
   onTranscriptionChange: (text: string) => void;
   onSave: () => void;
-  onContinueToStructured: () => void;
+  onContinueToStructured: (formatType?: string, formattedText?: string) => void;
   isSaving: boolean;
   saveError?: string | null;
   saveSuccess?: boolean;
@@ -25,9 +25,15 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('edit');
   const [formattedText, setFormattedText] = useState('');
+  const [currentFormatType, setCurrentFormatType] = useState('');
   
-  const handleSaveFormatted = (text: string) => {
+  const handleSaveFormatted = (text: string, formatType: string) => {
     setFormattedText(text);
+    setCurrentFormatType(formatType);
+  };
+  
+  const handleContinueToStructured = () => {
+    onContinueToStructured(currentFormatType, formattedText);
   };
   
   return (
@@ -49,14 +55,14 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
           onSaveFormatted={handleSaveFormatted}
           isSaving={isSaving}
           onSave={onSave}
-          onContinueToStructured={onContinueToStructured}
+          onContinueToStructured={handleContinueToStructured}
         />
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-4">
         <EditorFooter
           activeTab={activeTab}
           onSave={onSave}
-          onContinueToStructured={onContinueToStructured}
+          onContinueToStructured={handleContinueToStructured}
           setActiveTab={setActiveTab}
           isSaving={isSaving}
           transcriptionText={transcriptionText}

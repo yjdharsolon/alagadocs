@@ -1,129 +1,135 @@
+
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { MedicalSections } from '@/components/structured-output/types';
-import { getStructuredNoteById } from '@/services/structuredOutput';
-import { structureText } from '@/services/structureService';
-import { toast } from 'sonner';
-import { useLocation, useSearchParams } from 'react-router-dom';
 
 export const useStructuredOutputData = () => {
   const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const noteId = searchParams.get('noteId');
+  const { user } = useAuth();
   
-  const [loading, setLoading] = useState(true);
-  const [processingText, setProcessingText] = useState(false);
+  // State for loading and processing indicators
+  const [loading, setLoading] = useState<boolean>(true);
+  const [processingText, setProcessingText] = useState<boolean>(false);
+  
+  // State for structured data
   const [structuredData, setStructuredData] = useState<MedicalSections | null>(null);
+  const [formattedVersions, setFormattedVersions] = useState<Array<{
+    formatType: string;
+    formattedText: string;
+  }>>([]);
+  const [activeFormatType, setActiveFormatType] = useState<string>('');
+  
+  // State for transcription data and error
+  const [transcriptionData, setTranscriptionData] = useState<any>(null);
+  const [audioUrl, setAudioUrl] = useState<string>('');
+  const [transcriptionId, setTranscriptionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  const transcriptionData = location.state?.transcriptionData;
-  const audioUrl = location.state?.audioUrl;
-  const transcriptionId = location.state?.transcriptionId;
-  
-  const statePatientId = location.state?.patientId;
-  const statePatientName = location.state?.patientName;
-  
-  const transcriptionPatientId = transcriptionData?.patient_id;
-  
-  const [patientInfo, setPatientInfo] = useState<{id: string | null, name: string | null}>({
+  // Patient information
+  const [patientInfo, setPatientInfo] = useState<{
+    id: string | null;
+    name: string | null;
+  }>({
     id: null,
     name: null
   });
-
-  // Initialize patient info from various sources
+  
+  // On mount, check if we have data in location state
   useEffect(() => {
-    if (statePatientId) {
-      setPatientInfo({
-        id: statePatientId,
-        name: statePatientName || null
-      });
-      return;
-    }
-    
-    if (transcriptionPatientId) {
-      setPatientInfo({
-        id: transcriptionPatientId,
-        name: null
-      });
-      return;
-    }
-    
-    try {
-      const storedPatient = sessionStorage.getItem('selectedPatient');
-      if (storedPatient) {
-        const patientData = JSON.parse(storedPatient);
-        setPatientInfo({
-          id: patientData.id,
-          name: `${patientData.first_name} ${patientData.last_name}`
-        });
+    if (location.state) {
+      // Set transcription data
+      if (location.state.transcriptionData) {
+        setTranscriptionData(location.state.transcriptionData);
       }
-    } catch (error) {
-      console.error('Error retrieving patient from sessionStorage:', error);
+      
+      // Set audio URL if available
+      if (location.state.audioUrl) {
+        setAudioUrl(location.state.audioUrl);
+      }
+      
+      // Set transcription ID if available
+      if (location.state.transcriptionId) {
+        setTranscriptionId(location.state.transcriptionId);
+      }
+      
+      // Set patient information if available
+      if (location.state.patientId) {
+        setPatientInfo(prev => ({
+          ...prev,
+          id: location.state.patientId
+        }));
+      }
+      
+      if (location.state.patientName) {
+        setPatientInfo(prev => ({
+          ...prev,
+          name: location.state.patientName
+        }));
+      }
+      
+      // Set formatted versions if available
+      if (location.state.formattedVersions && location.state.formattedVersions.length > 0) {
+        setFormattedVersions(location.state.formattedVersions);
+        
+        // Set active format type to the first one
+        setActiveFormatType(location.state.formattedVersions[0].formatType);
+        
+        // Convert first formatted text to structured data
+        convertFormattedTextToData(location.state.formattedVersions[0].formattedText);
+      }
+      
+      setLoading(false);
+    } else {
+      // If no location state, we're done loading but have no data
+      setLoading(false);
+      setError('No transcription data available');
     }
-  }, [statePatientId, statePatientName, transcriptionPatientId]);
-
-  // Load data on component mount
-  useEffect(() => {
-    const loadNote = async () => {
-      if (noteId) {
-        try {
-          setLoading(true);
-          const note = await getStructuredNoteById(noteId);
-          if (note?.content) {
-            setStructuredData(note.content);
-          } else {
-            setError('Note not found');
-          }
-        } catch (error) {
-          console.error('Error loading note:', error);
-          setError('Error loading note');
-        } finally {
-          setLoading(false);
+  }, [location]);
+  
+  // Function to convert formatted text to structured data
+  const convertFormattedTextToData = (text: string) => {
+    try {
+      const sections: Record<string, string> = {};
+      
+      // Split by sections (# Section name)
+      const sectionMatches = text.split(/^# /m).filter(Boolean);
+      
+      sectionMatches.forEach(section => {
+        const lines = section.split('\n');
+        if (lines.length > 0) {
+          const title = lines[0].trim();
+          const content = lines.slice(1).join('\n').trim();
+          
+          // Convert title to camelCase for the key
+          const key = title
+            .toLowerCase()
+            .replace(/(?:^\w|[A-Z]|\b\w)/g, (letter, index) => 
+              index === 0 ? letter.toLowerCase() : letter.toUpperCase()
+            )
+            .replace(/\s+/g, '');
+          
+          sections[key] = content;
         }
-      } else if (location.state?.structuredData) {
-        setStructuredData(location.state.structuredData);
-        setLoading(false);
-      } else if (transcriptionData && transcriptionData.text) {
-        processTranscription();
-      } else {
-        setLoading(false);
-        setError('No transcription data found');
-      }
-    };
-
-    loadNote();
-  }, [noteId, location.state, transcriptionData]);
-
-  // Process transcription data
-  const processTranscription = async () => {
-    if (!transcriptionData || !transcriptionData.text) {
-      setError('Missing transcription text');
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      setProcessingText(true);
-      console.log('Processing transcription:', transcriptionData.text);
+      });
       
-      const structuredResult = await structureText(transcriptionData.text);
-      
-      if (structuredResult) {
-        console.log('Structured result received:', structuredResult);
-        setStructuredData(structuredResult);
-        toast.success('Medical notes structured successfully');
-      } else {
-        throw new Error('No structured data returned');
-      }
-    } catch (error: any) {
-      console.error('Error processing transcription:', error);
-      setError(`Failed to structure the transcription: ${error.message}`);
-      toast.error('Failed to structure the transcription');
-    } finally {
-      setProcessingText(false);
-      setLoading(false);
+      setStructuredData(sections as unknown as MedicalSections);
+    } catch (error) {
+      console.error('Error converting formatted text to structured data:', error);
+      setError('Failed to parse formatted text');
     }
   };
-
+  
+  // Function to switch between formatted versions
+  const switchFormatType = (formatType: string) => {
+    const selectedVersion = formattedVersions.find(v => v.formatType === formatType);
+    
+    if (selectedVersion) {
+      setActiveFormatType(formatType);
+      convertFormattedTextToData(selectedVersion.formattedText);
+    }
+  };
+  
   return {
     loading,
     processingText,
@@ -133,6 +139,12 @@ export const useStructuredOutputData = () => {
     patientInfo,
     transcriptionData,
     audioUrl,
-    transcriptionId
+    transcriptionId,
+    formattedVersions,
+    activeFormatType,
+    switchFormatType,
+    setLoading,
+    setProcessingText,
+    setError
   };
 };

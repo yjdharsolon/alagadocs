@@ -1,56 +1,77 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import EditorContent from './EditorContent';
+import { Edit, FileText, AlertTriangle, CheckCircle } from 'lucide-react';
+import EditorTextArea from './EditorTextArea';
 import MedicalTranscriptionFormatter from '../MedicalTranscriptionFormatter';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface EditorTabsProps {
   activeTab: string;
-  setActiveTab: (value: string) => void;
+  setActiveTab: (tab: string) => void;
   transcriptionText: string;
   onTranscriptionChange: (text: string) => void;
-  saveSuccess?: boolean;
-  saveError?: string | null;
-  onSaveFormatted: (text: string) => void;
+  onSaveFormatted: (text: string, formatType: string) => void;
   isSaving: boolean;
   onSave: () => void;
   onContinueToStructured: () => void;
+  saveSuccess?: boolean;
+  saveError?: string | null;
 }
 
-const EditorTabs: React.FC<EditorTabsProps> = ({
+const EditorTabs = ({
   activeTab,
   setActiveTab,
   transcriptionText,
   onTranscriptionChange,
-  saveSuccess,
-  saveError,
   onSaveFormatted,
   isSaving,
   onSave,
-  onContinueToStructured
-}) => {
+  onContinueToStructured,
+  saveSuccess,
+  saveError
+}: EditorTabsProps) => {
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-2 mb-6">
-        <TabsTrigger value="edit" className="text-xs sm:text-sm md:text-base px-1 truncate">
-          Edit Transcription
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4">
+      <TabsList className="w-full grid grid-cols-2">
+        <TabsTrigger value="edit" className="flex items-center gap-2">
+          <Edit className="h-4 w-4" />
+          <span>Edit Text</span>
         </TabsTrigger>
-        <TabsTrigger value="format" className="text-xs sm:text-sm md:text-base px-1 truncate">
-          Format Note
+        <TabsTrigger value="format" className="flex items-center gap-2">
+          <FileText className="h-4 w-4" />
+          <span>Format</span>
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="edit" className="pt-4">
-        <EditorContent
-          transcriptionText={transcriptionText}
-          onTranscriptionChange={onTranscriptionChange}
-          saveSuccess={saveSuccess}
-          saveError={saveError}
+      <TabsContent value="edit">
+        {saveSuccess && (
+          <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>
+              Transcription saved successfully!
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {saveError && (
+          <Alert className="mb-4 bg-red-50 text-red-800 border-red-200">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {saveError}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        <EditorTextArea 
+          value={transcriptionText}
+          onChange={onTranscriptionChange}
+          placeholder="Edit transcription text here..."
         />
       </TabsContent>
       
-      <TabsContent value="format" className="pt-4">
-        <MedicalTranscriptionFormatter
+      <TabsContent value="format">
+        <MedicalTranscriptionFormatter 
           transcriptionText={transcriptionText}
           onSaveFormatted={onSaveFormatted}
         />

@@ -4,6 +4,7 @@ import { MedicalSections } from './types';
 import DocumentContainer from './DocumentContainer';
 import LoadingState from './LoadingState';
 import NoDataView from './NoDataView';
+import FormatTypeSelector from '../transcription/FormatTypeSelector';
 
 interface StructuredOutputContentProps {
   loading: boolean;
@@ -26,6 +27,9 @@ interface StructuredOutputContentProps {
   onNoteSaved: () => void;
   onEndConsult: () => void;
   noteSaved: boolean;
+  formattedVersions?: Array<{ formatType: string; formattedText: string; }>;
+  activeFormatType?: string;
+  onFormatTypeChange?: (formatType: string) => void;
 }
 
 const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
@@ -42,7 +46,10 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
   onRetry,
   onNoteSaved,
   onEndConsult,
-  noteSaved
+  noteSaved,
+  formattedVersions = [],
+  activeFormatType = '',
+  onFormatTypeChange
 }) => {
   if (loading) {
     return (
@@ -57,19 +64,40 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
     return <NoDataView error={error} onRetry={onRetry} />;
   }
 
+  // Format types for selector
+  const formatTypes = formattedVersions.map(v => ({
+    id: v.formatType,
+    name: v.formatType === 'history' ? 'History & Physical' : 
+          v.formatType === 'consultation' ? 'Consultation' :
+          v.formatType === 'prescription' ? 'Prescription' : v.formatType
+  }));
+
   return (
-    <DocumentContainer 
-      structuredData={structuredData}
-      patientInfo={patientInfo}
-      user={user}
-      transcriptionId={transcriptionId || ''}
-      isEditMode={isEditMode}
-      onToggleEditMode={onToggleEditMode}
-      onSaveEdit={onSaveEdit}
-      onNoteSaved={onNoteSaved}
-      onEndConsult={onEndConsult}
-      noteSaved={noteSaved}
-    />
+    <div>
+      {formattedVersions.length > 0 && onFormatTypeChange && (
+        <div className="mb-4">
+          <FormatTypeSelector
+            formatType={activeFormatType}
+            onFormatTypeChange={onFormatTypeChange}
+            formatTypes={formatTypes}
+            autoFormat={false}
+          />
+        </div>
+      )}
+      
+      <DocumentContainer 
+        structuredData={structuredData}
+        patientInfo={patientInfo}
+        user={user}
+        transcriptionId={transcriptionId || ''}
+        isEditMode={isEditMode}
+        onToggleEditMode={onToggleEditMode}
+        onSaveEdit={onSaveEdit}
+        onNoteSaved={onNoteSaved}
+        onEndConsult={onEndConsult}
+        noteSaved={noteSaved}
+      />
+    </div>
   );
 };
 

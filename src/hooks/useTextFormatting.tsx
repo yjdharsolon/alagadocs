@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UseTextFormattingProps {
@@ -10,32 +10,33 @@ export const useTextFormatting = ({ transcriptionText }: UseTextFormattingProps)
   const [formattedText, setFormattedText] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [formatError, setFormatError] = useState<string | null>(null);
-  const [formatType, setFormatType] = useState<string>('soap');
+  const [formatType, setFormatType] = useState<string>('history');
   
   const formatTypes = [
-    { id: 'soap', name: 'SOAP Note' },
-    { id: 'clinical', name: 'Clinical Progress Note' },
+    { id: 'history', name: 'History & Physical' },
     { id: 'consultation', name: 'Consultation' },
-    { id: 'discharge', name: 'Discharge Summary' },
-    { id: 'history', name: 'History & Physical' }
+    { id: 'prescription', name: 'Prescription' }
   ];
   
   const getTemplateSections = (type: string): string[] => {
     switch (type) {
-      case 'soap':
-        return ['Subjective', 'Objective', 'Assessment', 'Plan'];
-      case 'clinical':
-        return ['Chief Complaint', 'History of Present Illness', 'Review of Systems', 'Physical Examination', 'Assessment', 'Plan'];
-      case 'consultation':
-        return ['Reason for Consultation', 'History', 'Findings', 'Impression', 'Recommendations'];
-      case 'discharge':
-        return ['Admission Date', 'Discharge Date', 'Discharge Diagnosis', 'Hospital Course', 'Discharge Medications', 'Follow-up Instructions'];
       case 'history':
         return ['Chief Complaint', 'History of Present Illness', 'Past Medical History', 'Social History', 'Family History', 'Allergies', 'Medications', 'Review of Systems', 'Physical Examination', 'Assessment', 'Plan'];
+      case 'consultation':
+        return ['Reason for Consultation', 'History', 'Findings', 'Impression', 'Recommendations'];
+      case 'prescription':
+        return ['Patient Information', 'Medication', 'Dosage', 'Instructions', 'Duration', 'Refills', 'Special Instructions', 'Prescriber Information'];
       default:
-        return ['Subjective', 'Objective', 'Assessment', 'Plan'];
+        return ['Chief Complaint', 'History of Present Illness', 'Assessment', 'Plan'];
     }
   };
+  
+  // Automatically format text when format type changes
+  useEffect(() => {
+    if (transcriptionText && formatType) {
+      restructureText();
+    }
+  }, [formatType]);
   
   const restructureText = async () => {
     if (!transcriptionText.trim()) {

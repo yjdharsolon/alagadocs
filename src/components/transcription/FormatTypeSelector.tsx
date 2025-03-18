@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -12,19 +12,25 @@ interface FormatTypeSelectorProps {
   formatType: string;
   onFormatTypeChange: (value: string) => void;
   formatTypes: FormatType[];
+  autoFormat?: boolean;
 }
 
 const FormatTypeSelector: React.FC<FormatTypeSelectorProps> = ({
   formatType,
   onFormatTypeChange,
-  formatTypes
+  formatTypes,
+  autoFormat = true
 }) => {
+  const handleFormatChange = (value: string) => {
+    onFormatTypeChange(value);
+  };
+
   return (
     <div className="flex items-center justify-between">
       <Label className="text-md font-medium">Format Type</Label>
       <Select
         value={formatType}
-        onValueChange={onFormatTypeChange}
+        onValueChange={handleFormatChange}
       >
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder="Select format type" />

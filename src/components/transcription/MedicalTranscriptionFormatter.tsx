@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
 import FormatTypeSelector from './FormatTypeSelector';
@@ -9,7 +9,7 @@ import { useTextFormatting } from '@/hooks/useTextFormatting';
 
 interface MedicalTranscriptionFormatterProps {
   transcriptionText: string;
-  onSaveFormatted: (formattedText: string) => void;
+  onSaveFormatted: (formattedText: string, formatType: string) => void;
 }
 
 const MedicalTranscriptionFormatter: React.FC<MedicalTranscriptionFormatterProps> = ({
@@ -29,7 +29,7 @@ const MedicalTranscriptionFormatter: React.FC<MedicalTranscriptionFormatterProps
   
   const handleSave = () => {
     if (formattedText.trim()) {
-      onSaveFormatted(formattedText);
+      onSaveFormatted(formattedText, formatType);
     }
   };
   

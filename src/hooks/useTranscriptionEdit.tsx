@@ -13,6 +13,10 @@ export const useTranscriptionEdit = (locationState: any) => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [formattedVersions, setFormattedVersions] = useState<Array<{
+    formatType: string;
+    formattedText: string;
+  }>>([]);
   
   const navigate = useNavigate();
   
@@ -83,8 +87,29 @@ export const useTranscriptionEdit = (locationState: any) => {
     }
   }, [transcriptionData, transcriptionText]);
   
+  // Add a formatted version
+  const addFormattedVersion = (formatType: string, formattedText: string) => {
+    // Check if we already have a version with this format type
+    const existingIndex = formattedVersions.findIndex(v => v.formatType === formatType);
+    
+    if (existingIndex >= 0) {
+      // Replace existing format
+      const updatedVersions = [...formattedVersions];
+      updatedVersions[existingIndex] = { formatType, formattedText };
+      setFormattedVersions(updatedVersions);
+    } else {
+      // Add new format
+      setFormattedVersions([...formattedVersions, { formatType, formattedText }]);
+    }
+  };
+  
   // Continue to structured output
-  const handleContinueToStructured = useCallback(() => {
+  const handleContinueToStructured = useCallback((formatType?: string, formattedText?: string) => {
+    // Add the formatted version if provided
+    if (formatType && formattedText) {
+      addFormattedVersion(formatType, formattedText);
+    }
+    
     // Setup data for next page
     const updatedTranscriptionData = transcriptionData ? {
       ...transcriptionData,
@@ -99,10 +124,11 @@ export const useTranscriptionEdit = (locationState: any) => {
         audioUrl,
         transcriptionId,
         patientId, // Pass patient ID separately as well
-        patientName // Pass patient name
+        patientName, // Pass patient name
+        formattedVersions: formattedVersions.length > 0 ? formattedVersions : undefined
       }
     });
-  }, [navigate, transcriptionData, transcriptionText, audioUrl, transcriptionId, patientId, patientName]);
+  }, [navigate, transcriptionData, transcriptionText, audioUrl, transcriptionId, patientId, patientName, formattedVersions]);
   
   return {
     transcriptionText,
@@ -111,8 +137,10 @@ export const useTranscriptionEdit = (locationState: any) => {
     isSaving,
     error,
     saveSuccess,
+    formattedVersions,
     setTranscriptionText,
     handleSave,
-    handleContinueToStructured
+    handleContinueToStructured,
+    addFormattedVersion
   };
 };
