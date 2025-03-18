@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -10,7 +11,13 @@ const alertVariants = cva(
       variant: {
         default: "bg-background text-foreground",
         destructive:
-          "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+          "border-red-500/50 bg-red-50 text-red-900 dark:border-red-500 [&>svg]:text-red-500",
+        success: 
+          "border-green-500/50 bg-green-50 text-green-900 [&>svg]:text-green-500",
+        warning:
+          "border-yellow-500/50 bg-yellow-50 text-yellow-900 [&>svg]:text-yellow-500",
+        info:
+          "border-[#33C3F0]/50 bg-[#E6F7FC] text-[#0C7A9E] [&>svg]:text-[#33C3F0]",
       },
     },
     defaultVariants: {
