@@ -1,23 +1,13 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Card, CardContent } from '@/components/ui/card';
-import { Plus, X, Trash2, MoveUp, MoveDown } from 'lucide-react';
+import { Form } from '@/components/ui/form';
 import { TemplateFormValues, TemplateSection } from '../types';
+import TemplateHeader from './form/TemplateHeader';
+import TemplateSections from './form/TemplateSections';
+import TemplateFormActions from './form/TemplateFormActions';
 
 // Define validation schema
 const templateFormSchema = z.object({
@@ -62,7 +52,7 @@ const TemplateForm = ({ initialValues, onSubmit, onCancel }: TemplateFormProps) 
     }
   });
 
-  const { control, handleSubmit, formState: { errors }, watch, setValue } = form;
+  const { handleSubmit, formState: { errors }, watch, setValue } = form;
   const sections = watch('sections');
 
   const addSection = () => {
@@ -95,162 +85,21 @@ const TemplateForm = ({ initialValues, onSubmit, onCancel }: TemplateFormProps) 
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Template Title</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter template title" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={control}
-            name="isDefault"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between space-x-2 rounded-md border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel>Default Template</FormLabel>
-                  <p className="text-sm text-muted-foreground">
-                    Set this as your default template
-                  </p>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description (Optional)</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Enter a description for this template..." 
-                  {...field} 
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <TemplateHeader form={form} />
+        
+        <TemplateSections 
+          form={form}
+          sections={sections}
+          addSection={addSection}
+          removeSection={removeSection}
+          moveSection={moveSection}
+          errors={errors}
         />
 
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Template Sections</h3>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm" 
-              onClick={addSection}
-              className="flex items-center gap-1"
-            >
-              <Plus className="h-4 w-4" />
-              Add Section
-            </Button>
-          </div>
-
-          {sections.map((section, index) => (
-            <Card key={section.id} className="relative">
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-8">
-                    <FormField
-                      control={control}
-                      name={`sections.${index}.name`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Section Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter section name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="md:col-span-4 flex items-end justify-end gap-2 pb-2">
-                    <FormField
-                      control={control}
-                      name={`sections.${index}.required`}
-                      render={({ field }) => (
-                        <FormItem className="flex items-center gap-2">
-                          <FormLabel className="!mt-0">Required</FormLabel>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="flex gap-1">
-                      <Button 
-                        type="button" 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => moveSection(section.id, 'up')}
-                        disabled={index === 0}
-                      >
-                        <MoveUp className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        type="button" 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => moveSection(section.id, 'down')}
-                        disabled={index === sections.length - 1}
-                      >
-                        <MoveDown className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        type="button" 
-                        size="icon" 
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive/80"
-                        onClick={() => removeSection(section.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {errors.sections && (
-            <p className="text-sm font-medium text-destructive">
-              {errors.sections.message}
-            </p>
-          )}
-        </div>
-
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {initialValues?.title ? 'Update Template' : 'Create Template'}
-          </Button>
-        </div>
+        <TemplateFormActions 
+          onCancel={onCancel} 
+          isEditing={!!initialValues?.title} 
+        />
       </form>
     </Form>
   );
