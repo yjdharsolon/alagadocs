@@ -31,7 +31,7 @@ const NoDataView = ({ error, onRetry }: NoDataViewProps) => {
             
             {onRetry && (
               <div className="flex justify-center my-4">
-                <Button onClick={onRetry} className="flex items-center gap-2 bg-[#33C3F0] hover:bg-[#1EAEDB]">
+                <Button onClick={onRetry} className="flex items-center gap-2">
                   <RefreshCw className="h-4 w-4" />
                   Retry Structuring
                 </Button>
@@ -39,20 +39,20 @@ const NoDataView = ({ error, onRetry }: NoDataViewProps) => {
             )}
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-              <div className="flex flex-col items-center p-6 border rounded-md bg-[#F3F3F3]">
-                <ArrowUp className="h-10 w-10 text-[#33C3F0] mb-4" />
+              <div className="flex flex-col items-center p-6 border rounded-md bg-secondary">
+                <ArrowUp className="h-10 w-10 text-primary mb-4" />
                 <h3 className="font-medium mb-2">Start a new transcription</h3>
                 <p className="text-sm text-muted-foreground mb-4">Upload a new audio file to transcribe</p>
-                <Button onClick={() => navigate('/upload')} className="bg-[#33C3F0] hover:bg-[#1EAEDB]">
+                <Button onClick={() => navigate('/upload')}>
                   Upload Audio
                 </Button>
               </div>
               
-              <div className="flex flex-col items-center p-6 border rounded-md bg-[#F3F3F3]">
-                <List className="h-10 w-10 text-[#33C3F0] mb-4" />
+              <div className="flex flex-col items-center p-6 border rounded-md bg-secondary">
+                <List className="h-10 w-10 text-primary mb-4" />
                 <h3 className="font-medium mb-2">View your transcriptions</h3>
                 <p className="text-sm text-muted-foreground mb-4">Access your previous transcriptions</p>
-                <Button onClick={() => navigate('/transcribe')} className="bg-white border border-[#33C3F0] text-[#33C3F0] hover:bg-[#F1F1F1]">
+                <Button variant="outline" onClick={() => navigate('/transcribe')} className="border-primary text-primary hover:bg-primary/10">
                   View Transcriptions
                 </Button>
               </div>
@@ -61,7 +61,7 @@ const NoDataView = ({ error, onRetry }: NoDataViewProps) => {
           
           <div className="pt-4 text-sm text-muted-foreground">
             <p>If you're experiencing persistent issues, please contact support for assistance.</p>
-            <Button variant="link" onClick={() => window.history.back()} className="text-[#33C3F0]">
+            <Button variant="link" onClick={() => window.history.back()} className="text-primary">
               ← Go Back
             </Button>
           </div>
