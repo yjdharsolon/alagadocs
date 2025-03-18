@@ -10,6 +10,27 @@ interface DocumentTabsProps {
 }
 
 const DocumentTabs = ({ structuredData }: DocumentTabsProps) => {
+  // Helper function to format content that might be an array or object
+  const formatContent = (content: any): string => {
+    if (content === undefined || content === null) {
+      return '';
+    }
+    
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // Handle arrays
+    if (Array.isArray(content)) {
+      return content.map(item => 
+        typeof item === 'string' ? item : JSON.stringify(item, null, 2)
+      ).join('\n');
+    }
+    
+    // Handle objects
+    return JSON.stringify(content, null, 2);
+  };
+
   return (
     <Tabs defaultValue="document" className="w-full">
       <TabsList className="grid w-full grid-cols-6 mb-6 border border-[#E0E0E0] p-1 rounded-md">
@@ -56,34 +77,34 @@ const DocumentTabs = ({ structuredData }: DocumentTabsProps) => {
       </TabsContent>
       
       <TabsContent value="all" className="space-y-6">
-        <SectionContent title="CHIEF COMPLAINT" content={structuredData.chiefComplaint} />
-        <SectionContent title="HISTORY OF PRESENT ILLNESS" content={structuredData.historyOfPresentIllness} />
-        <SectionContent title="PAST MEDICAL HISTORY" content={structuredData.pastMedicalHistory} />
-        <SectionContent title="MEDICATIONS" content={structuredData.medications} />
-        <SectionContent title="ALLERGIES" content={structuredData.allergies} />
-        <SectionContent title="PHYSICAL EXAMINATION" content={structuredData.physicalExamination} />
-        <SectionContent title="ASSESSMENT" content={structuredData.assessment} />
-        <SectionContent title="PLAN" content={structuredData.plan} />
+        <SectionContent title="CHIEF COMPLAINT" content={formatContent(structuredData.chiefComplaint)} />
+        <SectionContent title="HISTORY OF PRESENT ILLNESS" content={formatContent(structuredData.historyOfPresentIllness)} />
+        <SectionContent title="PAST MEDICAL HISTORY" content={formatContent(structuredData.pastMedicalHistory)} />
+        <SectionContent title="MEDICATIONS" content={formatContent(structuredData.medications)} />
+        <SectionContent title="ALLERGIES" content={formatContent(structuredData.allergies)} />
+        <SectionContent title="PHYSICAL EXAMINATION" content={formatContent(structuredData.physicalExamination)} />
+        <SectionContent title="ASSESSMENT" content={formatContent(structuredData.assessment)} />
+        <SectionContent title="PLAN" content={formatContent(structuredData.plan)} />
       </TabsContent>
       
       <TabsContent value="cc-hpi">
-        <SectionContent title="CHIEF COMPLAINT" content={structuredData.chiefComplaint} />
-        <SectionContent title="HISTORY OF PRESENT ILLNESS" content={structuredData.historyOfPresentIllness} />
+        <SectionContent title="CHIEF COMPLAINT" content={formatContent(structuredData.chiefComplaint)} />
+        <SectionContent title="HISTORY OF PRESENT ILLNESS" content={formatContent(structuredData.historyOfPresentIllness)} />
       </TabsContent>
       
       <TabsContent value="medical-info">
-        <SectionContent title="PAST MEDICAL HISTORY" content={structuredData.pastMedicalHistory} />
-        <SectionContent title="MEDICATIONS" content={structuredData.medications} />
-        <SectionContent title="ALLERGIES" content={structuredData.allergies} />
-        <SectionContent title="PHYSICAL EXAMINATION" content={structuredData.physicalExamination} />
+        <SectionContent title="PAST MEDICAL HISTORY" content={formatContent(structuredData.pastMedicalHistory)} />
+        <SectionContent title="MEDICATIONS" content={formatContent(structuredData.medications)} />
+        <SectionContent title="ALLERGIES" content={formatContent(structuredData.allergies)} />
+        <SectionContent title="PHYSICAL EXAMINATION" content={formatContent(structuredData.physicalExamination)} />
       </TabsContent>
       
       <TabsContent value="assessment">
-        <SectionContent title="ASSESSMENT" content={structuredData.assessment} />
+        <SectionContent title="ASSESSMENT" content={formatContent(structuredData.assessment)} />
       </TabsContent>
       
       <TabsContent value="plan">
-        <SectionContent title="PLAN" content={structuredData.plan} />
+        <SectionContent title="PLAN" content={formatContent(structuredData.plan)} />
       </TabsContent>
     </Tabs>
   );

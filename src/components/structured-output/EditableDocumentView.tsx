@@ -31,6 +31,27 @@ const EditableDocumentView = ({
     { id: 'plan', title: 'PLAN', content: editableData.plan }
   ];
 
+  // Helper function to format content
+  const formatContent = (content: any): string => {
+    if (content === undefined || content === null) {
+      return '';
+    }
+    
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // Handle arrays
+    if (Array.isArray(content)) {
+      return content.map(item => 
+        typeof item === 'string' ? item : JSON.stringify(item, null, 2)
+      ).join('\n');
+    }
+    
+    // Handle objects
+    return JSON.stringify(content, null, 2);
+  };
+
   const handleContentChange = (sectionId: keyof MedicalSections, content: string) => {
     setEditableData(prev => ({
       ...prev,
@@ -111,6 +132,7 @@ const EditableDocumentView = ({
         {sections.map((section) => {
           const sectionId = section.id as keyof MedicalSections;
           const isEditing = currentlyEditingId === section.id;
+          const formattedContent = formatContent(section.content);
           
           return (
             <div key={section.id} className="mb-6">
@@ -131,11 +153,11 @@ const EditableDocumentView = ({
                 onKeyDown={(e) => handleKeyDown(e, sectionId)}
                 dangerouslySetInnerHTML={{ 
                   __html: viewFormat === 'bullets' 
-                    ? section.content?.split('\n')
+                    ? formattedContent.split('\n')
                         .filter(line => line.trim() !== '')
                         .map(line => `<li>${line}</li>`)
                         .join('') || ''
-                    : section.content?.replace(/\n/g, '<br>') || ''
+                    : formattedContent.replace(/\n/g, '<br>') || ''
                 }}
                 aria-labelledby={`${section.id}-heading`}
                 role="textbox"

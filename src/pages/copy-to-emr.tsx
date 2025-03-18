@@ -19,6 +19,27 @@ export default function CopyToEMRPage() {
   // Get the structured data from location state
   const sections = location.state?.sections as MedicalSections;
   
+  // Helper function to format content that might be an array or object
+  const formatContent = (content: any): string => {
+    if (content === undefined || content === null) {
+      return '';
+    }
+    
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // Handle arrays
+    if (Array.isArray(content)) {
+      return content.map(item => 
+        typeof item === 'string' ? item : JSON.stringify(item, null, 2)
+      ).join('\n');
+    }
+    
+    // Handle objects
+    return JSON.stringify(content, null, 2);
+  };
+  
   const handleCopy = () => {
     if (!sections) {
       toast.error('No content available to copy');
@@ -109,14 +130,14 @@ export default function CopyToEMRPage() {
                 <CardContent className="space-y-4">
                   {sections ? (
                     <>
-                      <SectionContent title="Chief Complaint" content={sections.chiefComplaint} />
-                      <SectionContent title="History of Present Illness" content={sections.historyOfPresentIllness} />
-                      <SectionContent title="Past Medical History" content={sections.pastMedicalHistory} />
-                      <SectionContent title="Medications" content={sections.medications} />
-                      <SectionContent title="Allergies" content={sections.allergies} />
-                      <SectionContent title="Physical Examination" content={sections.physicalExamination} />
-                      <SectionContent title="Assessment" content={sections.assessment} />
-                      <SectionContent title="Plan" content={sections.plan} />
+                      <SectionContent title="Chief Complaint" content={formatContent(sections.chiefComplaint)} />
+                      <SectionContent title="History of Present Illness" content={formatContent(sections.historyOfPresentIllness)} />
+                      <SectionContent title="Past Medical History" content={formatContent(sections.pastMedicalHistory)} />
+                      <SectionContent title="Medications" content={formatContent(sections.medications)} />
+                      <SectionContent title="Allergies" content={formatContent(sections.allergies)} />
+                      <SectionContent title="Physical Examination" content={formatContent(sections.physicalExamination)} />
+                      <SectionContent title="Assessment" content={formatContent(sections.assessment)} />
+                      <SectionContent title="Plan" content={formatContent(sections.plan)} />
                     </>
                   ) : (
                     <div className="text-center py-6 text-muted-foreground">
