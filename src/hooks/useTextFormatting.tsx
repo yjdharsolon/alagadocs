@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -20,18 +19,17 @@ export const useTextFormatting = ({ transcriptionText }: UseTextFormattingProps)
   
   const getTemplateSections = (type: string): string[] => {
     switch (type) {
+      case 'prescription':
+        return ['Patient Information', 'Medications', 'Prescriber Information'];
       case 'history':
-        return ['Chief Complaint', 'History of Present Illness', 'Past Medical History', 'Social History', 'Family History', 'Allergies', 'Medications', 'Review of Systems', 'Physical Examination', 'Assessment', 'Plan'];
+        return ['Chief Complaint', 'History of Present Illness', 'Past Medical History', 'Physical Examination', 'Assessment', 'Plan'];
       case 'consultation':
         return ['Reason for Consultation', 'History', 'Findings', 'Impression', 'Recommendations'];
-      case 'prescription':
-        return ['Patient Information', 'Medication', 'Dosage', 'Instructions', 'Duration', 'Refills', 'Special Instructions', 'Prescriber Information'];
       default:
-        return ['Chief Complaint', 'History of Present Illness', 'Assessment', 'Plan'];
+        return ['Chief Complaint', 'History', 'Assessment', 'Plan'];
     }
   };
   
-  // Automatically format text when format type changes
   useEffect(() => {
     if (transcriptionText && formatType) {
       restructureText();
@@ -48,7 +46,6 @@ export const useTextFormatting = ({ transcriptionText }: UseTextFormattingProps)
       setIsProcessing(true);
       setFormatError(null);
       
-      // Call the OpenAI API through our Supabase edge function
       const { data, error } = await supabase.functions.invoke('openai-structure-text', {
         body: {
           text: transcriptionText,
@@ -63,12 +60,9 @@ export const useTextFormatting = ({ transcriptionText }: UseTextFormattingProps)
         throw new Error(`Error invoking edge function: ${error.message}`);
       }
       
-      // If the response is already in JSON format
       if (typeof data === 'object') {
-        // Format the structured data into text
         const formattedContent = Object.entries(data)
           .map(([key, value]) => {
-            // Convert camelCase to Title Case (e.g., chiefComplaint → Chief Complaint)
             const title = key
               .replace(/([A-Z])/g, ' $1')
               .replace(/^./, str => str.toUpperCase());
@@ -79,7 +73,6 @@ export const useTextFormatting = ({ transcriptionText }: UseTextFormattingProps)
         
         setFormattedText(formattedContent);
       } else if (data?.content) {
-        // If data has content property
         setFormattedText(data.content);
       } else {
         setFormattedText('No structured data returned from the API');

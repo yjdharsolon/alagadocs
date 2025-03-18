@@ -1,4 +1,3 @@
-
 /**
  * Converts a string to camelCase format
  */
@@ -17,7 +16,59 @@ export function toCamelCase(str: string): string {
 /**
  * Generates a system prompt for OpenAI based on the user's role and template
  */
-export function getSystemPrompt(role: string, template?: { sections: string[] }): string {
+export const getSystemPrompt = (role: string, template?: { sections: string[] }): string => {
+  if (template?.sections && template.sections.includes('Prescription')) {
+    return `You are a medical assistant helping to format prescription information from transcribed medical conversations. 
+Format the provided transcription into a structured prescription with these exact sections:
+
+1. Patient Information:
+   - Patient Name
+   - Sex/Gender
+   - Age
+   - Date
+
+2. Medication Details (for each medication):
+   - Medication Name and Strength
+   - Dosage Form (tablets, capsules, etc.)
+   - Sig (Instructions)
+   - Quantity
+   - Refills
+   - Special Instructions
+
+3. Prescriber Information:
+   - Name
+   - License/Registration Number
+   - Signature (indicate [SIGNATURE])
+
+Return the structured information in this exact JSON format:
+{
+  "patientInformation": {
+    "name": "",
+    "sex": "",
+    "age": "",
+    "date": ""
+  },
+  "medications": [
+    {
+      "name": "",
+      "strength": "",
+      "dosageForm": "",
+      "sigInstructions": "",
+      "quantity": "",
+      "refills": "",
+      "specialInstructions": ""
+    }
+  ],
+  "prescriberInformation": {
+    "name": "",
+    "licenseNumber": "",
+    "signature": "[SIGNATURE]"
+  }
+}
+
+Extract all relevant information from the transcription. If any information is not present, use "Not specified" as the value. Be accurate and maintain medical terminology.`;
+  }
+
   const standardSections = [
     "Chief Complaint",
     "History of Present Illness",
