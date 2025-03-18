@@ -1,0 +1,16 @@
+
+/* Improve mobile UI */
+@media (max-width: 640px) {
+  .tabs-mobile-fix [role="tablist"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+  
+  .tabs-mobile-fix [role="tab"] {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
