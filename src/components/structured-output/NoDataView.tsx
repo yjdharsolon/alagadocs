@@ -21,6 +21,12 @@ const NoDataView = ({ error, onRetry }: NoDataViewProps) => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
+            {error && (
+              <div className="text-destructive mb-4 p-4 border border-destructive/30 rounded bg-destructive/10">
+                <p>Error: {error}</p>
+              </div>
+            )}
+            
             <p className="text-muted-foreground">You can try one of these options:</p>
             
             {onRetry && (
