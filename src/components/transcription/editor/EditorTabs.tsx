@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit, FileText, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Edit, FileText } from 'lucide-react';
 import EditorTextArea from './EditorTextArea';
 import MedicalTranscriptionFormatter from '../MedicalTranscriptionFormatter';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface EditorTabsProps {
   activeTab: string;
@@ -64,9 +65,8 @@ const EditorTabs = ({
         )}
         
         <EditorTextArea 
-          value={transcriptionText}
-          onChange={onTranscriptionChange}
-          placeholder="Edit transcription text here..."
+          transcriptionText={transcriptionText}
+          onTranscriptionChange={onTranscriptionChange}
         />
       </TabsContent>
       
