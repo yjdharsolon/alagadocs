@@ -17,10 +17,10 @@ export const useTranscriptionEdit = (locationState: any) => {
     formatType: string;
     formattedText: string;
   }>>([]);
-  
+
   const navigate = useNavigate();
-  
-  // Initialize state from location state or session storage
+
+  // Initialize state from location state
   useEffect(() => {
     if (locationState) {
       if (locationState.transcriptionData) {
@@ -36,7 +36,6 @@ export const useTranscriptionEdit = (locationState: any) => {
         setTranscriptionId(locationState.transcriptionId);
       }
       
-      // Get patient information
       if (locationState.patientId) {
         setPatientId(locationState.patientId);
       }
@@ -60,14 +59,12 @@ export const useTranscriptionEdit = (locationState: any) => {
       }
     }
   }, [locationState]);
-  
-  // Save the edited transcription
+
   const handleSave = useCallback(async () => {
     try {
       setIsSaving(true);
       setError(null);
       
-      // For now, just update the local state since we don't have a persistence mechanism yet
       if (transcriptionData) {
         const updatedData = {
           ...transcriptionData,
@@ -87,49 +84,34 @@ export const useTranscriptionEdit = (locationState: any) => {
     }
   }, [transcriptionData, transcriptionText]);
   
-  // Add a formatted version
-  const addFormattedVersion = (formatType: string, formattedText: string) => {
-    // Check if we already have a version with this format type
-    const existingIndex = formattedVersions.findIndex(v => v.formatType === formatType);
-    
-    if (existingIndex >= 0) {
-      // Replace existing format
-      const updatedVersions = [...formattedVersions];
-      updatedVersions[existingIndex] = { formatType, formattedText };
-      setFormattedVersions(updatedVersions);
-    } else {
-      // Add new format
-      setFormattedVersions([...formattedVersions, { formatType, formattedText }]);
-    }
-  };
-  
-  // Continue to structured output
-  const handleContinueToStructured = useCallback((formatType?: string, formattedText?: string) => {
-    // Add the formatted version if provided
+  const handleContinueToStructured = (formatType?: string, formattedText?: string) => {
+    // Add the new formatted version if provided
     if (formatType && formattedText) {
-      addFormattedVersion(formatType, formattedText);
+      const newVersion = { formatType, formattedText };
+      setFormattedVersions(prev => [...prev, newVersion]);
     }
     
     // Setup data for next page
     const updatedTranscriptionData = transcriptionData ? {
       ...transcriptionData,
-      text: transcriptionText,
-      patient_id: patientId // Include patient ID in the transcription data
+      text: transcriptionText
     } : null;
     
-    // Navigate to structured output with all the necessary data
+    // Navigate with all necessary data
     navigate('/structured-output', {
       state: {
         transcriptionData: updatedTranscriptionData,
         audioUrl,
         transcriptionId,
-        patientId, // Pass patient ID separately as well
-        patientName, // Pass patient name
-        formattedVersions: formattedVersions.length > 0 ? formattedVersions : undefined
+        patientId,
+        patientName,
+        formattedVersions: formattedVersions.length > 0 
+          ? [...formattedVersions, ...(formatType && formattedText ? [{ formatType, formattedText }] : [])]
+          : (formatType && formattedText ? [{ formatType, formattedText }] : undefined)
       }
     });
-  }, [navigate, transcriptionData, transcriptionText, audioUrl, transcriptionId, patientId, patientName, formattedVersions]);
-  
+  };
+
   return {
     transcriptionText,
     transcriptionData,
@@ -141,6 +123,6 @@ export const useTranscriptionEdit = (locationState: any) => {
     setTranscriptionText,
     handleSave,
     handleContinueToStructured,
-    addFormattedVersion
+    setFormattedVersions
   };
 };
