@@ -24,6 +24,10 @@ interface DocumentContainerProps {
   onNoteSaved?: () => void;
   onEndConsult?: () => void;
   noteSaved?: boolean;
+  selectedFormats?: Array<{
+    formatType: string;
+    structuredData: MedicalSections;
+  }>;
 }
 
 const DocumentContainer = ({
@@ -36,7 +40,8 @@ const DocumentContainer = ({
   onSaveEdit,
   onNoteSaved,
   onEndConsult,
-  noteSaved = false
+  noteSaved = false,
+  selectedFormats = []
 }: DocumentContainerProps) => {
   const getStructuredText = () => {
     return Object.entries(structuredData)
@@ -75,6 +80,7 @@ const DocumentContainer = ({
           onNoteSaved={onNoteSaved}
           onEndConsult={onEndConsult}
           noteSaved={noteSaved}
+          selectedFormats={selectedFormats}
         />
       </div>
       

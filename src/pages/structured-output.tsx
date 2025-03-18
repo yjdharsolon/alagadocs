@@ -21,7 +21,12 @@ export default function StructuredOutputPage() {
     patientInfo,
     transcriptionData,
     audioUrl,
-    transcriptionId
+    transcriptionId,
+    formattedVersions,
+    activeFormatType,
+    handleFormatTypeChange,
+    toggleFormatSelection,
+    getSelectedFormats
   } = useStructuredOutputData();
   
   // Attempt to get additional patient data from session storage
@@ -73,9 +78,6 @@ export default function StructuredOutputPage() {
     error
   });
 
-  console.log('noteSaved state:', noteSaved);
-  console.log('handleEndConsult is defined:', !!handleEndConsult);
-
   return (
     <Layout>
       <div className="container mx-auto py-4 px-4">
@@ -110,6 +112,10 @@ export default function StructuredOutputPage() {
           onNoteSaved={handleNoteSaved}
           onEndConsult={handleEndConsult}
           noteSaved={noteSaved}
+          formattedVersions={formattedVersions}
+          activeFormatType={activeFormatType}
+          onFormatTypeChange={handleFormatTypeChange}
+          onToggleFormatSelection={toggleFormatSelection}
         />
       </div>
     </Layout>

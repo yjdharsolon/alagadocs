@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { MedicalSections } from './types';
 import DocumentContainer from './DocumentContainer';
 import LoadingState from './LoadingState';
 import NoDataView from './NoDataView';
-import FormatTypeSelector from '../transcription/FormatTypeSelector';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import FormatSelectionTab from './FormatSelectionTab';
 
 interface StructuredOutputContentProps {
   loading: boolean;
@@ -27,9 +28,15 @@ interface StructuredOutputContentProps {
   onNoteSaved: () => void;
   onEndConsult: () => void;
   noteSaved: boolean;
-  formattedVersions?: Array<{ formatType: string; formattedText: string; }>;
+  formattedVersions?: Array<{
+    formatType: string;
+    formattedText: string;
+    structuredData: MedicalSections;
+    selected: boolean;
+  }>;
   activeFormatType?: string;
   onFormatTypeChange?: (formatType: string) => void;
+  onToggleFormatSelection?: (formatType: string) => void;
 }
 
 const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
@@ -49,13 +56,14 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
   noteSaved,
   formattedVersions = [],
   activeFormatType = '',
-  onFormatTypeChange
+  onFormatTypeChange,
+  onToggleFormatSelection
 }) => {
   if (loading) {
     return (
       <LoadingState 
         message={processingText ? "Processing transcription..." : "Loading structured data..."} 
-        subMessage={processingText ? "Converting your transcription into structured medical notes. This may take a moment." : undefined}
+        subMessage={processingText ? "Converting your transcription into multiple format types. This may take a moment." : undefined}
       />
     );
   }
@@ -64,39 +72,80 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
     return <NoDataView error={error} onRetry={onRetry} />;
   }
 
-  // Format types for selector
-  const formatTypes = formattedVersions.map(v => ({
-    id: v.formatType,
-    name: v.formatType === 'history' ? 'History & Physical' : 
-          v.formatType === 'consultation' ? 'Consultation' :
-          v.formatType === 'prescription' ? 'Prescription' : v.formatType
-  }));
+  const getFormatDisplayName = (formatType: string) => {
+    switch (formatType) {
+      case 'history': return 'History & Physical';
+      case 'consultation': return 'Consultation';
+      case 'prescription': return 'Prescription';
+      default: return formatType.charAt(0).toUpperCase() + formatType.slice(1);
+    }
+  };
+
+  // Get selected formats for saving
+  const selectedFormats = formattedVersions
+    .filter(format => format.selected)
+    .map(format => ({
+      formatType: format.formatType,
+      structuredData: format.structuredData
+    }));
 
   return (
     <div>
       {formattedVersions.length > 0 && onFormatTypeChange && (
-        <div className="mb-4">
-          <FormatTypeSelector
-            formatType={activeFormatType}
-            onFormatTypeChange={onFormatTypeChange}
-            formatTypes={formatTypes}
-            autoFormat={false}
-          />
-        </div>
+        <Tabs defaultValue={activeFormatType || formattedVersions[0].formatType} value={activeFormatType} onValueChange={onFormatTypeChange} className="mb-6">
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${formattedVersions.length + 1}, 1fr)` }}>
+            {formattedVersions.map(format => (
+              <TabsTrigger key={format.formatType} value={format.formatType}>
+                {getFormatDisplayName(format.formatType)}
+              </TabsTrigger>
+            ))}
+            <TabsTrigger value="selection">Selection</TabsTrigger>
+          </TabsList>
+          
+          {formattedVersions.map(format => (
+            <TabsContent key={format.formatType} value={format.formatType} className="mt-4">
+              <DocumentContainer 
+                structuredData={format.structuredData}
+                patientInfo={patientInfo}
+                user={user}
+                transcriptionId={transcriptionId || ''}
+                isEditMode={isEditMode}
+                onToggleEditMode={onToggleEditMode}
+                onSaveEdit={onSaveEdit}
+                onNoteSaved={onNoteSaved}
+                onEndConsult={onEndConsult}
+                noteSaved={noteSaved}
+                selectedFormats={selectedFormats}
+              />
+            </TabsContent>
+          ))}
+          
+          <TabsContent value="selection" className="mt-4">
+            {onToggleFormatSelection && (
+              <FormatSelectionTab 
+                formats={formattedVersions}
+                onToggleSelection={onToggleFormatSelection}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
       )}
       
-      <DocumentContainer 
-        structuredData={structuredData}
-        patientInfo={patientInfo}
-        user={user}
-        transcriptionId={transcriptionId || ''}
-        isEditMode={isEditMode}
-        onToggleEditMode={onToggleEditMode}
-        onSaveEdit={onSaveEdit}
-        onNoteSaved={onNoteSaved}
-        onEndConsult={onEndConsult}
-        noteSaved={noteSaved}
-      />
+      {/* Fallback when no formattedVersions available */}
+      {formattedVersions.length === 0 && (
+        <DocumentContainer 
+          structuredData={structuredData}
+          patientInfo={patientInfo}
+          user={user}
+          transcriptionId={transcriptionId || ''}
+          isEditMode={isEditMode}
+          onToggleEditMode={onToggleEditMode}
+          onSaveEdit={onSaveEdit}
+          onNoteSaved={onNoteSaved}
+          onEndConsult={onEndConsult}
+          noteSaved={noteSaved}
+        />
+      )}
     </div>
   );
 };

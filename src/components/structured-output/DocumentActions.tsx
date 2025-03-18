@@ -22,6 +22,10 @@ interface DocumentActionsProps {
   onNoteSaved?: () => void;
   onEndConsult?: () => void;
   noteSaved?: boolean;
+  selectedFormats?: Array<{
+    formatType: string;
+    structuredData: MedicalSections;
+  }>;
 }
 
 const DocumentActions = ({
@@ -34,7 +38,8 @@ const DocumentActions = ({
   onToggleEditMode,
   onNoteSaved,
   onEndConsult,
-  noteSaved = false
+  noteSaved = false,
+  selectedFormats = []
 }: DocumentActionsProps) => {
   const handleEndConsult = () => {
     console.log('End consultation triggered from DocumentActions');
@@ -54,6 +59,7 @@ const DocumentActions = ({
             patientId={patientInfo.id}
             transcriptionId={transcriptionId || ''}
             onNoteSaved={onNoteSaved}
+            selectedFormats={selectedFormats}
           />
           <CopyButton sections={structuredData} />
           <ExportButton sections={structuredData} />
