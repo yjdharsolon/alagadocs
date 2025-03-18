@@ -97,7 +97,7 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
       variant={variant} 
       size={size} 
       onClick={handleSave}
-      disabled={isSaving}
+      disabled={isSaving || (selectedFormats && selectedFormats.length === 0)}
       className="flex items-center gap-2"
     >
       {isSaving ? (

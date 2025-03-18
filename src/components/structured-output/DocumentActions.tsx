@@ -48,6 +48,9 @@ const DocumentActions = ({
     }
   };
 
+  // Determine if save button should be disabled (when in Selection tab with no formats selected)
+  const hasSelectedFormats = selectedFormats && selectedFormats.length > 0;
+
   return (
     <div className="flex flex-wrap gap-2">
       {!isEditMode ? (
