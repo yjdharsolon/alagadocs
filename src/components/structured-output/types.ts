@@ -1,13 +1,39 @@
 
 export interface MedicalSections {
-  chiefComplaint: string;
-  historyOfPresentIllness: string;
-  pastMedicalHistory: string;
-  medications: string;
-  allergies: string;
-  physicalExamination: string;
-  assessment: string;
-  plan: string;
+  // Standard history & physical format fields
+  chiefComplaint?: string;
+  historyOfPresentIllness?: string;
+  pastMedicalHistory?: string;
+  medications?: string;
+  allergies?: string;
+  physicalExamination?: string;
+  assessment?: string;
+  plan?: string;
+  
+  // SOAP format fields
+  subjective?: string;
+  objective?: string;
+  
+  // Consultation format fields
+  reasonForConsultation?: string;
+  history?: string;
+  findings?: string;
+  impression?: string;
+  recommendations?: string;
+  
+  // Prescription format fields
+  patientInformation?: {
+    name: string;
+    sex: string;
+    age: string;
+    date: string;
+  };
+  medications?: any[];
+  prescriberInformation?: {
+    name: string;
+    licenseNumber: string;
+    signature: string;
+  };
 }
 
 export interface MedicalSection {

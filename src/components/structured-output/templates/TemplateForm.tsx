@@ -6,6 +6,7 @@ import TemplateHeader from './form/TemplateHeader';
 import TemplateSections from './form/TemplateSections';
 import TemplateFormActions from './form/TemplateFormActions';
 import { useTemplateForm } from '@/hooks/useTemplateForm';
+import { Button } from '@/components/ui/button';
 
 interface TemplateFormProps {
   initialValues?: Partial<TemplateFormValues>;
@@ -19,7 +20,8 @@ const TemplateForm = ({ initialValues, onSubmit, onCancel }: TemplateFormProps) 
     sections, 
     addSection, 
     removeSection, 
-    moveSection 
+    moveSection,
+    useSoapTemplate
   } = useTemplateForm(initialValues);
 
   const { handleSubmit, formState: { errors } } = form;
@@ -28,6 +30,18 @@ const TemplateForm = ({ initialValues, onSubmit, onCancel }: TemplateFormProps) 
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <TemplateHeader form={form} />
+        
+        <div className="flex justify-end space-x-2 mb-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={useSoapTemplate}
+            className="text-xs"
+            size="sm"
+          >
+            Use SOAP Template
+          </Button>
+        </div>
         
         <TemplateSections 
           form={form}

@@ -78,7 +78,8 @@ export const useFormatGeneration = ({
       const formatTypes = [
         { id: 'history', name: 'History & Physical' },
         { id: 'consultation', name: 'Consultation' },
-        { id: 'prescription', name: 'Prescription' }
+        { id: 'prescription', name: 'Prescription' },
+        { id: 'soap', name: 'SOAP Note' }
       ];
       
       const formattedResults = [];

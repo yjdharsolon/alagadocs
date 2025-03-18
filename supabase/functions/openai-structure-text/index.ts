@@ -103,6 +103,59 @@ serve(async (req) => {
 });
 
 function getSystemPrompt(role: string, template?: { sections: string[] }): string {
+  // SOAP format prompt
+  if (template?.sections && 
+      template.sections.includes('Subjective') && 
+      template.sections.includes('Objective') && 
+      template.sections.includes('Assessment') && 
+      template.sections.includes('Plan')) {
+    return `You are a medical assistant helping to format transcribed medical conversations into a structured SOAP note.
+Format the provided transcription into a SOAP note with these exact sections:
+
+1. Subjective:
+   - Patient's symptoms
+   - Patient's complaints
+   - Patient's history related to current problem
+   - Patient's own words and descriptions
+
+2. Objective:
+   - Physical examination findings
+   - Vital signs
+   - Laboratory and diagnostic results
+   - Measurable, observable data
+
+3. Assessment:
+   - Diagnosis or clinical impression
+   - Differential diagnoses if applicable
+   - Analysis of the findings
+
+4. Plan:
+   - Treatment plan
+   - Medications prescribed
+   - Further testing needed
+   - Follow-up instructions
+   - Patient education
+
+Return the structured information in this exact JSON format:
+{
+  "subjective": "",
+  "objective": "",
+  "assessment": "",
+  "plan": ""
+}
+
+Extract all relevant information from the transcription. If any information is not present for a section, include that section with an empty string or "Not documented" as the value. Be accurate, concise and maintain medical terminology.`;
+  }
+  
+  // Prescription format prompt
+  if (template?.sections && template.sections.includes('Prescription')) {
+    return `You are a medical assistant helping to format prescription information from transcribed medical conversations.
+Format the provided transcription into a structured prescription note.
+
+Return the structured information in JSON format with prescription-related information.
+If certain details are not present in the transcription, include the key with "Not specified" as the value.`;
+  }
+
   const standardSections = [
     "Subjective",
     "Objective",

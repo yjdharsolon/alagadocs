@@ -8,8 +8,17 @@ interface DocumentViewProps {
 }
 
 const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
-  // Map the sections to their display titles
-  const sections = [
+  // Check if this is a SOAP format note
+  const isSoapFormat = 'subjective' in structuredData && 'objective' in structuredData &&
+                     !('chiefComplaint' in structuredData) && !('historyOfPresentIllness' in structuredData);
+  
+  // Define sections based on format
+  const sections = isSoapFormat ? [
+    { key: 'subjective', title: 'SUBJECTIVE' },
+    { key: 'objective', title: 'OBJECTIVE' },
+    { key: 'assessment', title: 'ASSESSMENT' },
+    { key: 'plan', title: 'PLAN' }
+  ] : [
     { key: 'chiefComplaint', title: 'CHIEF COMPLAINT' },
     { key: 'historyOfPresentIllness', title: 'HISTORY OF PRESENT ILLNESS' },
     { key: 'pastMedicalHistory', title: 'PAST MEDICAL HISTORY' },
@@ -23,11 +32,13 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
   return (
     <div className="document-view space-y-4 py-2">
       {sections.map(section => (
-        <SectionView
-          key={section.key}
-          title={section.title}
-          content={structuredData[section.key as keyof MedicalSections] || ''}
-        />
+        structuredData[section.key as keyof MedicalSections] !== undefined && (
+          <SectionView
+            key={section.key}
+            title={section.title}
+            content={structuredData[section.key as keyof MedicalSections] || ''}
+          />
+        )
       ))}
     </div>
   );

@@ -23,6 +23,7 @@ const FormatSelectionTab: React.FC<FormatSelectionTabProps> = ({
       case 'history': return 'History & Physical';
       case 'consultation': return 'Consultation';
       case 'prescription': return 'Prescription';
+      case 'soap': return 'SOAP Note';
       default: return formatType.charAt(0).toUpperCase() + formatType.slice(1);
     }
   };

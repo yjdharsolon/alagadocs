@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -14,7 +15,8 @@ export const useTextFormatting = ({ transcriptionText }: UseTextFormattingProps)
   const formatTypes = [
     { id: 'history', name: 'History & Physical' },
     { id: 'consultation', name: 'Consultation' },
-    { id: 'prescription', name: 'Prescription' }
+    { id: 'prescription', name: 'Prescription' },
+    { id: 'soap', name: 'SOAP Note' }
   ];
   
   const getTemplateSections = (type: string): string[] => {
@@ -25,6 +27,8 @@ export const useTextFormatting = ({ transcriptionText }: UseTextFormattingProps)
         return ['Chief Complaint', 'History of Present Illness', 'Past Medical History', 'Physical Examination', 'Assessment', 'Plan'];
       case 'consultation':
         return ['Reason for Consultation', 'History', 'Findings', 'Impression', 'Recommendations'];
+      case 'soap':
+        return ['Subjective', 'Objective', 'Assessment', 'Plan'];
       default:
         return ['Chief Complaint', 'History', 'Assessment', 'Plan'];
     }

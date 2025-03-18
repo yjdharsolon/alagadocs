@@ -34,6 +34,13 @@ export function useTemplateForm(initialValues?: Partial<TemplateFormValues>) {
     { id: crypto.randomUUID(), name: 'Plan', required: true },
   ];
 
+  const soapSections: TemplateSection[] = [
+    { id: crypto.randomUUID(), name: 'Subjective', required: true },
+    { id: crypto.randomUUID(), name: 'Objective', required: true },
+    { id: crypto.randomUUID(), name: 'Assessment', required: true },
+    { id: crypto.randomUUID(), name: 'Plan', required: true },
+  ];
+
   const form = useForm<TemplateFormValues>({
     resolver: zodResolver(templateFormSchema),
     defaultValues: {
@@ -74,11 +81,16 @@ export function useTemplateForm(initialValues?: Partial<TemplateFormValues>) {
     setValue('sections', newSections);
   };
 
+  const useSoapTemplate = () => {
+    setValue('sections', soapSections);
+  };
+
   return {
     form,
     sections,
     addSection,
     removeSection,
     moveSection,
+    useSoapTemplate
   };
 }

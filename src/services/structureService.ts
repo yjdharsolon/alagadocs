@@ -21,6 +21,24 @@ export const structureText = async (
       throw new Error('Invalid or empty text provided');
     }
     
+    // Set template sections based on the role if not provided
+    if (!template) {
+      switch (role) {
+        case 'soap':
+          template = { sections: ['Subjective', 'Objective', 'Assessment', 'Plan'] };
+          break;
+        case 'history':
+          template = { sections: ['Chief Complaint', 'History of Present Illness', 'Past Medical History', 'Physical Examination', 'Assessment', 'Plan'] };
+          break;
+        case 'consultation':
+          template = { sections: ['Reason for Consultation', 'History', 'Findings', 'Impression', 'Recommendations'] };
+          break;
+        case 'prescription':
+          template = { sections: ['Patient Information', 'Medications', 'Prescriber Information'] };
+          break;
+      }
+    }
+    
     // Call the edge function to structure the medical text
     const { data, error } = await supabase.functions.invoke('structure-medical-text', {
       body: { 
@@ -42,7 +60,7 @@ export const structureText = async (
     console.log('Raw response from structure-medical-text:', data);
     
     // If the response is already a MedicalSections object
-    if (data && typeof data === 'object' && data.chiefComplaint !== undefined) {
+    if (data && typeof data === 'object' && (data.chiefComplaint !== undefined || data.subjective !== undefined)) {
       return data as MedicalSections;
     }
     
