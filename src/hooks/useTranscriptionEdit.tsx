@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -85,29 +84,22 @@ export const useTranscriptionEdit = (locationState: any) => {
   }, [transcriptionData, transcriptionText]);
   
   const handleContinueToStructured = (formatType?: string, formattedText?: string) => {
-    // Add the new formatted version if provided
-    if (formatType && formattedText) {
-      const newVersion = { formatType, formattedText };
-      setFormattedVersions(prev => [...prev, newVersion]);
-    }
+    const textToStructure = formattedText || transcriptionText;
     
     // Setup data for next page
-    const updatedTranscriptionData = transcriptionData ? {
+    const updatedTranscriptionData = {
       ...transcriptionData,
-      text: transcriptionText
-    } : null;
+      text: textToStructure
+    };
     
-    // Navigate with all necessary data
+    // Navigate with the text that should be structured
     navigate('/structured-output', {
       state: {
         transcriptionData: updatedTranscriptionData,
         audioUrl,
         transcriptionId,
         patientId,
-        patientName,
-        formattedVersions: formattedVersions.length > 0 
-          ? [...formattedVersions, ...(formatType && formattedText ? [{ formatType, formattedText }] : [])]
-          : (formatType && formattedText ? [{ formatType, formattedText }] : undefined)
+        patientName
       }
     });
   };
@@ -119,10 +111,8 @@ export const useTranscriptionEdit = (locationState: any) => {
     isSaving,
     error,
     saveSuccess,
-    formattedVersions,
     setTranscriptionText,
     handleSave,
-    handleContinueToStructured,
-    setFormattedVersions
+    handleContinueToStructured
   };
 };
