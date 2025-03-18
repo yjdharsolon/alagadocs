@@ -29,17 +29,39 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
     { key: 'plan', title: 'PLAN' }
   ];
 
+  // Helper function to convert complex objects to strings for display
+  const formatSectionContent = (content: any): string => {
+    if (content === undefined || content === null) {
+      return '';
+    }
+    
+    if (typeof content === 'string') {
+      return content;
+    }
+    
+    // Handle arrays
+    if (Array.isArray(content)) {
+      return content.map(item => 
+        typeof item === 'string' ? item : JSON.stringify(item, null, 2)
+      ).join('\n');
+    }
+    
+    // Handle objects
+    return JSON.stringify(content, null, 2);
+  };
+
   return (
     <div className="document-view space-y-4 py-2">
-      {sections.map(section => (
-        structuredData[section.key as keyof MedicalSections] !== undefined && (
+      {sections.map(section => {
+        const content = structuredData[section.key as keyof MedicalSections];
+        return content !== undefined && (
           <SectionView
             key={section.key}
             title={section.title}
-            content={structuredData[section.key as keyof MedicalSections] || ''}
+            content={formatSectionContent(content)}
           />
-        )
-      ))}
+        );
+      })}
     </div>
   );
 };

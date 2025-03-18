@@ -4,7 +4,7 @@ export interface MedicalSections {
   chiefComplaint?: string;
   historyOfPresentIllness?: string;
   pastMedicalHistory?: string;
-  medications?: string;
+  medications?: string | any[]; // Updated to support both string and array types
   allergies?: string;
   physicalExamination?: string;
   assessment?: string;
@@ -28,7 +28,6 @@ export interface MedicalSections {
     age: string;
     date: string;
   };
-  medications?: any[];
   prescriberInformation?: {
     name: string;
     licenseNumber: string;
