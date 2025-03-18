@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { TextTemplate, TemplateFormValues } from '@/components/structured-output/types';
@@ -11,17 +10,17 @@ import {
   deleteTemplate,
   setDefaultTemplate 
 } from '@/services/templateService';
-import TemplateForm from '@/components/structured-output/templates/TemplateForm';
-import TemplateList from '@/components/structured-output/templates/TemplateList';
-import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
 import { toast } from 'react-hot-toast';
+import { TabsContent } from '@/components/ui/tabs';
+
+// Import the newly created components
+import TemplateActions from '@/components/structured-output/templates/TemplateActions';
+import TemplateTabs from '@/components/structured-output/templates/TemplateTabs';
+import TemplateListView from '@/components/structured-output/templates/views/TemplateListView';
+import CreateEditTemplateView from '@/components/structured-output/templates/views/CreateEditTemplateView';
 
 export default function Templates() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [templates, setTemplates] = useState<TextTemplate[]>([]);
   const [activeTab, setActiveTab] = useState<string>('view');
   const [selectedTemplate, setSelectedTemplate] = useState<TextTemplate | null>(null);
@@ -105,6 +104,14 @@ export default function Templates() {
     }
   };
 
+  const handleSubmit = async (formValues: TemplateFormValues) => {
+    if (selectedTemplate) {
+      await handleUpdateTemplate(formValues);
+    } else {
+      await handleCreateTemplate(formValues);
+    }
+  };
+
   const handleEditTemplate = (template: TextTemplate) => {
     setSelectedTemplate(template);
     setActiveTab('edit');
@@ -142,86 +149,39 @@ export default function Templates() {
     setActiveTab('view');
   };
 
+  const handleCreateNew = () => {
+    setActiveTab('create');
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-6 px-4">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate(-1)}
-              className="mr-2"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-2xl font-bold">Templates</h1>
-          </div>
-          
-          <div>
-            {activeTab === 'view' && (
-              <Button 
-                onClick={() => setActiveTab('create')}
-                className="flex items-center gap-1"
-              >
-                <Plus className="h-4 w-4" />
-                Create Template
-              </Button>
-            )}
-          </div>
-        </div>
+        <TemplateActions 
+          activeTab={activeTab}
+          onCreateNew={handleCreateNew}
+        />
         
-        <Separator className="mb-6" />
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6 grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="view">View Templates</TabsTrigger>
-            <TabsTrigger value={selectedTemplate ? 'edit' : 'create'}>
-              {selectedTemplate ? 'Edit Template' : 'Create Template'}
-            </TabsTrigger>
-          </TabsList>
-          
+        <TemplateTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          selectedTemplate={selectedTemplate}
+        >
           <TabsContent value="view">
-            {loading ? (
-              <div className="flex justify-center items-center min-h-[200px]">
-                <p className="text-muted-foreground">Loading templates...</p>
-              </div>
-            ) : (
-              <TemplateList
-                templates={templates}
-                onEdit={handleEditTemplate}
-                onDelete={handleDeleteTemplate}
-                onSetDefault={handleSetDefault}
-              />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="create">
-            <TemplateForm
-              onSubmit={handleCreateTemplate}
-              onCancel={handleCancel}
+            <TemplateListView
+              loading={loading}
+              templates={templates}
+              onEdit={handleEditTemplate}
+              onDelete={handleDeleteTemplate}
+              onSetDefault={handleSetDefault}
             />
           </TabsContent>
           
-          <TabsContent value="edit">
-            {selectedTemplate && (
-              <TemplateForm
-                initialValues={{
-                  title: selectedTemplate.title,
-                  description: selectedTemplate.description || '',
-                  isDefault: selectedTemplate.isDefault,
-                  sections: selectedTemplate.sections.map(name => ({
-                    id: crypto.randomUUID(),
-                    name,
-                    required: true
-                  }))
-                }}
-                onSubmit={handleUpdateTemplate}
-                onCancel={handleCancel}
-              />
-            )}
-          </TabsContent>
-        </Tabs>
+          <CreateEditTemplateView
+            selectedTemplate={selectedTemplate}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+          />
+        </TemplateTabs>
       </div>
     </Layout>
   );
