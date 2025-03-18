@@ -50,10 +50,10 @@ const EditStep: React.FC<EditStepProps> = ({
           <div className="bg-muted p-4 rounded-lg">
             <h3 className="text-sm font-medium mb-2">Tips:</h3>
             <ul className="text-xs text-muted-foreground space-y-1">
-              <li>• Use the Edit tab to correct transcription errors</li>
-              <li>• Switch to the Format tab to structure your text as a clinical note</li>
-              <li>• Choose from different note types like SOAP, Consultation, etc.</li>
-              <li>• You can edit the formatted text before saving</li>
+              <li>• Edit the transcription to correct any errors</li>
+              <li>• When ready, click "Continue to Structuring"</li>
+              <li>• The AI will structure your text as a clinical note</li>
+              <li>• You can edit the structured text in the next step</li>
             </ul>
           </div>
         </div>

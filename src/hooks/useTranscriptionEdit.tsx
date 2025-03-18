@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -12,10 +13,6 @@ export const useTranscriptionEdit = (locationState: any) => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [formattedVersions, setFormattedVersions] = useState<Array<{
-    formatType: string;
-    formattedText: string;
-  }>>([]);
 
   const navigate = useNavigate();
 
@@ -83,13 +80,11 @@ export const useTranscriptionEdit = (locationState: any) => {
     }
   }, [transcriptionData, transcriptionText]);
   
-  const handleContinueToStructured = (formatType?: string, formattedText?: string) => {
-    const textToStructure = formattedText || transcriptionText;
-    
+  const handleContinueToStructured = () => {
     // Setup data for next page
     const updatedTranscriptionData = {
       ...transcriptionData,
-      text: textToStructure
+      text: transcriptionText
     };
     
     // Navigate with the text that should be structured

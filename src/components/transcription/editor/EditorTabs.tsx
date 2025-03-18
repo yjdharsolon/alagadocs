@@ -1,9 +1,8 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit, FileText } from 'lucide-react';
+import { Edit } from 'lucide-react';
 import EditorTextArea from './EditorTextArea';
-import MedicalTranscriptionFormatter from '../MedicalTranscriptionFormatter';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle, AlertTriangle } from 'lucide-react';
 
@@ -12,7 +11,6 @@ interface EditorTabsProps {
   setActiveTab: (tab: string) => void;
   transcriptionText: string;
   onTranscriptionChange: (text: string) => void;
-  onSaveFormatted: (text: string, formatType: string) => void;
   isSaving: boolean;
   onSave: () => void;
   onContinueToStructured: () => void;
@@ -25,7 +23,6 @@ const EditorTabs = ({
   setActiveTab,
   transcriptionText,
   onTranscriptionChange,
-  onSaveFormatted,
   isSaving,
   onSave,
   onContinueToStructured,
@@ -34,20 +31,13 @@ const EditorTabs = ({
 }: EditorTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4">
-      <TabsList className="w-full grid grid-cols-2 border border-[#E0E0E0] p-1 rounded-md">
+      <TabsList className="w-full grid grid-cols-1 border border-[#E0E0E0] p-1 rounded-md">
         <TabsTrigger 
           value="edit" 
           className="flex items-center gap-2 data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white"
         >
           <Edit className="h-4 w-4" />
           <span>Edit Text</span>
-        </TabsTrigger>
-        <TabsTrigger 
-          value="format" 
-          className="flex items-center gap-2 data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white"
-        >
-          <FileText className="h-4 w-4" />
-          <span>Format</span>
         </TabsTrigger>
       </TabsList>
       
@@ -73,13 +63,6 @@ const EditorTabs = ({
         <EditorTextArea 
           transcriptionText={transcriptionText}
           onTranscriptionChange={onTranscriptionChange}
-        />
-      </TabsContent>
-      
-      <TabsContent value="format">
-        <MedicalTranscriptionFormatter 
-          transcriptionText={transcriptionText}
-          onSaveFormatted={onSaveFormatted}
         />
       </TabsContent>
     </Tabs>
