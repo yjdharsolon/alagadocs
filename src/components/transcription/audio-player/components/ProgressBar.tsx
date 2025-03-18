@@ -30,9 +30,9 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ currentTime, audioDuration, i
   
   return (
     <div className="space-y-1">
-      <div className="relative h-1.5 bg-gray-200 rounded-full overflow-hidden">
+      <div className="relative h-1.5 bg-gray-200 rounded-full overflow-hidden border border-[#E0E0E0]">
         <div 
-          className="absolute h-full bg-primary rounded-full"
+          className="absolute h-full bg-[#33C3F0] rounded-full"
           style={{ 
             width: `${progressPercentage}%`, 
             transition: 'width 0.1s linear, transform 0.1s ease-out',

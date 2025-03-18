@@ -54,18 +54,18 @@ const ExportButton: React.FC<ExportButtonProps> = ({
           variant={variant} 
           size={size} 
           disabled={isExporting}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 border-[#33C3F0] text-[#33C3F0] hover:bg-[#33C3F0]/10 transition-colors duration-200"
         >
           <FileDown className="h-4 w-4" />
           Export
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => handleExport('pdf')}>
+      <DropdownMenuContent align="end" className="border border-[#E0E0E0] shadow-md z-50 bg-white">
+        <DropdownMenuItem onClick={() => handleExport('pdf')} className="cursor-pointer hover:bg-[#33C3F0]/10 hover:text-[#33C3F0] transition-colors duration-200">
           <FileType className="h-4 w-4 mr-2" />
           Export as PDF
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleExport('text')}>
+        <DropdownMenuItem onClick={() => handleExport('text')} className="cursor-pointer hover:bg-[#33C3F0]/10 hover:text-[#33C3F0] transition-colors duration-200">
           <FileText className="h-4 w-4 mr-2" />
           Export as Text
         </DropdownMenuItem>

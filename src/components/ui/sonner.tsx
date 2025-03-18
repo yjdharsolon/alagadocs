@@ -17,15 +17,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group toast group-[.toaster]:bg-white group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
           description: "group-[.toast]:text-muted-foreground",
           actionButton:
-            "group-[.toast]:bg-[#33C3F0] group-[.toast]:text-white group-[.toast]:hover:bg-[#1EAEDB]",
+            "group-[.toast]:bg-[#33C3F0] group-[.toast]:text-white group-[.toast]:hover:bg-[#1EAEDB] group-[.toast]:transition-colors group-[.toast]:duration-200",
           cancelButton:
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
           success: 
-            "group-[.toaster]:bg-green-50 group-[.toaster]:text-green-900 group-[.toaster]:border-green-200",
+            "group-[.toaster]:bg-green-50 group-[.toaster]:text-green-900 group-[.toaster]:border-green-200 group-[.toaster]:border",
           error: 
-            "group-[.toaster]:bg-red-50 group-[.toaster]:text-red-900 group-[.toaster]:border-red-200",
+            "group-[.toaster]:bg-red-50 group-[.toaster]:text-red-900 group-[.toaster]:border-red-200 group-[.toaster]:border",
           info: 
-            "group-[.toaster]:bg-[#E6F7FC] group-[.toaster]:text-[#0C7A9E] group-[.toaster]:border-[#33C3F0]/30",
+            "group-[.toaster]:bg-[#E6F7FC] group-[.toaster]:text-[#0C7A9E] group-[.toaster]:border-[#33C3F0]/30 group-[.toaster]:border",
         },
       }}
       {...props}

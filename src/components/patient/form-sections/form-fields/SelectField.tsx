@@ -30,15 +30,18 @@ export const SelectField: React.FC<SelectFieldProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className="text-sm font-medium">{label}</Label>
       <Select
         value={value}
         onValueChange={(selectedValue) => onChange(selectedValue)}
       >
-        <SelectTrigger>
+        <SelectTrigger 
+          className="border-[#E0E0E0] focus:ring-[#33C3F0]/20 focus:border-[#33C3F0] transition-colors duration-200" 
+          id={id}
+        >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="border-[#E0E0E0] shadow-md z-50 bg-white">
           {includeNone && <SelectItem value="_none">None</SelectItem>}
           {options.map(option => (
             <SelectItem key={option} value={option}>{option}</SelectItem>

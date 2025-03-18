@@ -29,7 +29,7 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
           variant="outline" 
           onClick={onSave}
           disabled={isSaving || !transcriptionText.trim()}
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto border-[#33C3F0] text-[#33C3F0] hover:bg-[#33C3F0]/10 transition-colors duration-200"
         >
           <Save className="h-4 w-4 mr-2" />
           {isSaving ? 'Saving...' : 'Save Changes'}
@@ -37,7 +37,7 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
         <Button
           onClick={() => setActiveTab('format')}
           disabled={!transcriptionText.trim()}
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto bg-[#33C3F0] hover:bg-[#1EAEDB] text-white transition-colors duration-200"
         >
           <FileText className="h-4 w-4 mr-2" />
           Format Note
@@ -50,7 +50,7 @@ const EditorFooter: React.FC<EditorFooterProps> = ({
     <Button 
       onClick={onContinueToStructured}
       disabled={!formattedText.trim() && !transcriptionText.trim()}
-      className="ml-auto"
+      className="ml-auto bg-[#33C3F0] hover:bg-[#1EAEDB] text-white transition-colors duration-200"
     >
       <FileText className="h-4 w-4 mr-2" />
       Continue to Structuring

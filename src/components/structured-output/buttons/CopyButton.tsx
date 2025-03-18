@@ -32,7 +32,7 @@ const CopyButton: React.FC<CopyButtonProps> = ({
       variant={variant} 
       size={size} 
       onClick={handleCopy}
-      className="flex items-center gap-2"
+      className="flex items-center gap-2 border-[#33C3F0] text-[#33C3F0] hover:bg-[#33C3F0]/10 transition-colors duration-200"
     >
       <Copy className="h-4 w-4" />
       Copy

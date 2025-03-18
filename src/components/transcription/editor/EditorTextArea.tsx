@@ -28,7 +28,7 @@ const EditorTextArea: React.FC<EditorTextAreaProps> = ({
   const renderOptimizedTextarea = () => {
     return (
       <div className="space-y-2">
-        <div className="border rounded-md">
+        <div className="border border-[#E0E0E0] rounded-md">
           <List
             height={300}
             itemCount={lines.length}
@@ -44,7 +44,7 @@ const EditorTextArea: React.FC<EditorTextAreaProps> = ({
           </List>
         </div>
         <Textarea 
-          className="min-h-[100px] font-mono text-sm"
+          className="min-h-[100px] font-mono text-sm border-[#E0E0E0] focus:border-[#33C3F0] focus:ring-[#33C3F0]/20"
           value={transcriptionText}
           onChange={handleTextChange}
           placeholder="Your transcription text will appear here for editing..."
@@ -57,7 +57,7 @@ const EditorTextArea: React.FC<EditorTextAreaProps> = ({
   // Standard rendering for smaller content
   const renderStandardTextarea = () => (
     <Textarea 
-      className="min-h-[300px] sm:min-h-[400px] font-mono text-sm resize-none"
+      className="min-h-[300px] sm:min-h-[400px] font-mono text-sm resize-none border-[#E0E0E0] focus:border-[#33C3F0] focus:ring-[#33C3F0]/20 transition-colors duration-200"
       value={transcriptionText}
       onChange={handleTextChange}
       placeholder="Your transcription text will appear here for editing..."

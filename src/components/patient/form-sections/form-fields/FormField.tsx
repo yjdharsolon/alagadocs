@@ -30,7 +30,7 @@ export const FormField: React.FC<FormFieldProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>{label}{required && '*'}</Label>
+      <Label htmlFor={id} className="text-sm font-medium">{label}{required && <span className="text-red-500">*</span>}</Label>
       <Input 
         id={id} 
         name={id} 
@@ -40,7 +40,7 @@ export const FormField: React.FC<FormFieldProps> = ({
         type={type}
         required={required}
         readOnly={readOnly}
-        className={`${readOnly ? 'bg-gray-100' : ''} ${className}`}
+        className={`${readOnly ? 'bg-gray-100' : ''} border-[#E0E0E0] focus:border-[#33C3F0] focus:ring-[#33C3F0]/20 transition-colors duration-200 ${className}`}
         autoComplete={autoComplete}
       />
     </div>

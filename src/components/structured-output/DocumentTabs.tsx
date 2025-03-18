@@ -12,13 +12,43 @@ interface DocumentTabsProps {
 const DocumentTabs = ({ structuredData }: DocumentTabsProps) => {
   return (
     <Tabs defaultValue="document" className="w-full">
-      <TabsList className="grid w-full grid-cols-6 mb-6">
-        <TabsTrigger value="document">Document</TabsTrigger>
-        <TabsTrigger value="all">All Sections</TabsTrigger>
-        <TabsTrigger value="cc-hpi">CC & HPI</TabsTrigger>
-        <TabsTrigger value="medical-info">Medical Info</TabsTrigger>
-        <TabsTrigger value="assessment">Assessment</TabsTrigger>
-        <TabsTrigger value="plan">Plan</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-6 mb-6 border border-[#E0E0E0] p-1 rounded-md">
+        <TabsTrigger 
+          value="document" 
+          className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white transition-colors duration-200"
+        >
+          Document
+        </TabsTrigger>
+        <TabsTrigger 
+          value="all" 
+          className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white transition-colors duration-200"
+        >
+          All Sections
+        </TabsTrigger>
+        <TabsTrigger 
+          value="cc-hpi" 
+          className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white transition-colors duration-200"
+        >
+          CC & HPI
+        </TabsTrigger>
+        <TabsTrigger 
+          value="medical-info" 
+          className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white transition-colors duration-200"
+        >
+          Medical Info
+        </TabsTrigger>
+        <TabsTrigger 
+          value="assessment" 
+          className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white transition-colors duration-200"
+        >
+          Assessment
+        </TabsTrigger>
+        <TabsTrigger 
+          value="plan" 
+          className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white transition-colors duration-200"
+        >
+          Plan
+        </TabsTrigger>
       </TabsList>
       
       <TabsContent value="document" className="space-y-6">

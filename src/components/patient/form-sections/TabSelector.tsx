@@ -15,10 +15,25 @@ export const TabSelector: React.FC<TabSelectorProps> = ({ activeTab, onTabChange
         onValueChange={onTabChange}
         className="w-full"
       >
-        <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="personal">Personal Information</TabsTrigger>
-          <TabsTrigger value="emergency">Emergency Contact</TabsTrigger>
-          <TabsTrigger value="medical">Medical Information</TabsTrigger>
+        <TabsList className="grid grid-cols-3 w-full border border-[#E0E0E0] rounded-md p-1">
+          <TabsTrigger 
+            value="personal" 
+            className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white transition-colors duration-200"
+          >
+            Personal Information
+          </TabsTrigger>
+          <TabsTrigger 
+            value="emergency" 
+            className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white transition-colors duration-200"
+          >
+            Emergency Contact
+          </TabsTrigger>
+          <TabsTrigger 
+            value="medical" 
+            className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white transition-colors duration-200"
+          >
+            Medical Information
+          </TabsTrigger>
         </TabsList>
       </Tabs>
     </div>

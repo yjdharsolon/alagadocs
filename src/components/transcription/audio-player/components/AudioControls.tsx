@@ -33,12 +33,13 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         title="Skip backward 10s (Left arrow)" 
         disabled={disabled}
         aria-label="Skip backward 10 seconds"
+        className="border-[#E0E0E0] hover:bg-[#33C3F0]/10 hover:border-[#33C3F0] transition-colors duration-200"
       >
         <SkipBack className="h-4 w-4" aria-hidden="true" />
       </Button>
       <Button 
         size="icon" 
-        className="h-10 w-10 rounded-full" 
+        className="h-10 w-10 rounded-full bg-[#33C3F0] hover:bg-[#1EAEDB] text-white transition-colors duration-200" 
         onClick={togglePlayPause} 
         title="Play/Pause (Space)"
         disabled={disabled || hasError}
@@ -53,6 +54,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         title="Skip forward 10s (Right arrow)" 
         disabled={disabled}
         aria-label="Skip forward 10 seconds"
+        className="border-[#E0E0E0] hover:bg-[#33C3F0]/10 hover:border-[#33C3F0] transition-colors duration-200"
       >
         <SkipForward className="h-4 w-4" aria-hidden="true" />
       </Button>
@@ -63,6 +65,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         title="Download audio" 
         disabled={disabled || is403Error}
         aria-label="Download audio file"
+        className="border-[#E0E0E0] hover:bg-[#33C3F0]/10 hover:border-[#33C3F0] transition-colors duration-200"
       >
         <Download className="h-4 w-4" aria-hidden="true" />
       </Button>

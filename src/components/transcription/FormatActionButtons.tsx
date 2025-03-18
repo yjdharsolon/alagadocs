@@ -26,7 +26,7 @@ const FormatActionButtons: React.FC<FormatActionButtonsProps> = memo(({
         onClick={onSave}
         disabled={isProcessing || !formattedText.trim()}
         aria-label="Save formatted text"
-        className="border-[#33C3F0] text-[#33C3F0] hover:bg-[#33C3F0]/10"
+        className="border-[#33C3F0] text-[#33C3F0] hover:bg-[#33C3F0]/10 transition-colors duration-200"
       >
         <Save className="mr-2 h-4 w-4" aria-hidden="true" />
         <span>Save Formatted Text</span>
@@ -36,7 +36,7 @@ const FormatActionButtons: React.FC<FormatActionButtonsProps> = memo(({
         disabled={isProcessing || !transcriptionText.trim()}
         aria-label={isProcessing ? "Processing text with AI" : "Format text with AI"}
         aria-busy={isProcessing}
-        className="bg-[#33C3F0] hover:bg-[#1EAEDB] text-white"
+        className="bg-[#33C3F0] hover:bg-[#1EAEDB] text-white transition-colors duration-200"
       >
         {isProcessing ? (
           <>
