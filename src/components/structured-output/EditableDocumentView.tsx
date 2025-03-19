@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { MedicalSections } from './types';
 import { toast } from 'react-hot-toast';
 import { getDocumentFormat } from './tabs/TabUtils';
-import PrescriptionEditor from './PrescriptionEditor';
+import { PrescriptionEditor } from './prescription';
 import SectionEditor from './sections/SectionEditor';
 import DocumentEditorToolbar from './toolbar/DocumentEditorToolbar';
 import { formatContent } from './utils/contentFormatter';
