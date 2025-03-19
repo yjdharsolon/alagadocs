@@ -2,7 +2,7 @@
 import React from 'react';
 import { MedicalSections } from './types';
 import SectionView from './sections/SectionView';
-import { getDocumentFormat, getDocumentSections } from './tabs/TabUtils';
+import { getDocumentFormat, getDocumentSections, filterStructuredDataByFormat } from './tabs/TabUtils';
 
 interface DocumentViewProps {
   structuredData: MedicalSections;
@@ -11,6 +11,9 @@ interface DocumentViewProps {
 const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
   // Use the centralized format detection logic
   const documentFormat = getDocumentFormat(structuredData);
+  
+  // Filter the data to only include format-specific fields
+  const filteredData = filterStructuredDataByFormat(structuredData, documentFormat);
   
   // Get sections based on format
   const sections = getDocumentSections(documentFormat);
@@ -118,7 +121,7 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
   return (
     <div className="document-view space-y-4 py-2">
       {sections.map(section => {
-        const content = structuredData[section.key as keyof MedicalSections];
+        const content = filteredData[section.key as keyof MedicalSections];
         return content !== undefined && (
           <SectionView
             key={section.key}

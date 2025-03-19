@@ -91,3 +91,24 @@ export const getDocumentSections = (format: 'standard' | 'soap' | 'consultation'
       ];
   }
 };
+
+/**
+ * Filters structured data to only include fields relevant to the selected format
+ */
+export const filterStructuredDataByFormat = (data: MedicalSections, format: 'standard' | 'soap' | 'consultation' | 'prescription'): MedicalSections => {
+  const sections = getDocumentSections(format);
+  const allowedKeys = sections.map(section => section.key);
+  
+  // Create a new object with only the allowed keys
+  const filteredData: Partial<MedicalSections> = {};
+  
+  // Only include keys that are valid for this format
+  allowedKeys.forEach(key => {
+    const typedKey = key as keyof MedicalSections;
+    if (data[typedKey] !== undefined) {
+      filteredData[typedKey] = data[typedKey];
+    }
+  });
+  
+  return filteredData as MedicalSections;
+};

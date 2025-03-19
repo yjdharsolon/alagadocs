@@ -6,6 +6,7 @@ import EditableDocumentView from './EditableDocumentView';
 import PatientInfoHeader from './PatientInfoHeader';
 import DocumentActions from './DocumentActions';
 import { MedicalSections } from './types';
+import { getDocumentFormat, filterStructuredDataByFormat } from './tabs/TabUtils';
 
 interface DocumentContainerProps {
   structuredData: MedicalSections;
@@ -43,8 +44,14 @@ const DocumentContainer = ({
   noteSaved = false,
   selectedFormats = []
 }: DocumentContainerProps) => {
+  // Detect document format
+  const documentFormat = getDocumentFormat(structuredData);
+  
+  // Filter data by format
+  const filteredData = filterStructuredDataByFormat(structuredData, documentFormat);
+  
   const getStructuredText = () => {
-    return Object.entries(structuredData)
+    return Object.entries(filteredData)
       .map(([key, value]) => {
         const title = key
           .replace(/([A-Z])/g, ' $1')
@@ -71,7 +78,7 @@ const DocumentContainer = ({
         
         <DocumentActions 
           user={user}
-          structuredData={structuredData}
+          structuredData={filteredData}
           structuredText={structuredText}
           transcriptionId={transcriptionId}
           patientInfo={patientInfo}

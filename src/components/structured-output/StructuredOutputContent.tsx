@@ -5,6 +5,7 @@ import DocumentContainer from './DocumentContainer';
 import NoDataView from './NoDataView';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import FormatSelectionTab from './FormatSelectionTab';
+import { filterStructuredDataByFormat } from './tabs/TabUtils';
 
 interface StructuredOutputContentProps {
   loading: boolean;
@@ -73,12 +74,15 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
     }
   };
 
-  // Get selected formats for saving
+  // Get selected formats for saving, and filter each one by format
   const selectedFormats = formattedVersions
     .filter(format => format.selected)
     .map(format => ({
       formatType: format.formatType,
-      structuredData: format.structuredData
+      structuredData: filterStructuredDataByFormat(
+        format.structuredData, 
+        format.formatType as 'standard' | 'soap' | 'consultation' | 'prescription'
+      )
     }));
 
   return (
@@ -94,23 +98,31 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
             <TabsTrigger value="selection">Selection</TabsTrigger>
           </TabsList>
           
-          {formattedVersions.map(format => (
-            <TabsContent key={format.formatType} value={format.formatType} className="mt-4">
-              <DocumentContainer 
-                structuredData={format.structuredData}
-                patientInfo={patientInfo}
-                user={user}
-                transcriptionId={transcriptionId || ''}
-                isEditMode={isEditMode}
-                onToggleEditMode={onToggleEditMode}
-                onSaveEdit={onSaveEdit}
-                onNoteSaved={onNoteSaved}
-                onEndConsult={onEndConsult}
-                noteSaved={noteSaved}
-                selectedFormats={selectedFormats}
-              />
-            </TabsContent>
-          ))}
+          {formattedVersions.map(format => {
+            // Filter data to only include fields relevant to this format
+            const filteredData = filterStructuredDataByFormat(
+              format.structuredData,
+              format.formatType as 'standard' | 'soap' | 'consultation' | 'prescription'
+            );
+            
+            return (
+              <TabsContent key={format.formatType} value={format.formatType} className="mt-4">
+                <DocumentContainer 
+                  structuredData={filteredData}
+                  patientInfo={patientInfo}
+                  user={user}
+                  transcriptionId={transcriptionId || ''}
+                  isEditMode={isEditMode}
+                  onToggleEditMode={onToggleEditMode}
+                  onSaveEdit={onSaveEdit}
+                  onNoteSaved={onNoteSaved}
+                  onEndConsult={onEndConsult}
+                  noteSaved={noteSaved}
+                  selectedFormats={selectedFormats}
+                />
+              </TabsContent>
+            );
+          })}
           
           <TabsContent value="selection" className="mt-4">
             {onToggleFormatSelection && (
