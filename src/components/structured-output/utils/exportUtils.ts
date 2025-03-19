@@ -3,7 +3,7 @@
 // This helps maintain backward compatibility while organizing code better
 
 export { exportAsPDF, exportPrescriptionAsPDF } from './pdf';
-export { exportAsText, formatClipboardText } from './textExport';
+export { exportAsText, formatClipboardText } from './text';
 
 // Prescription-specific export utilities
 export const formatPrescriptionForExport = (sections: any) => {

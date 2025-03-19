@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   DropdownMenu, 
@@ -9,8 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { FileDown, FileText, FileType } from 'lucide-react';
 import { MedicalSections } from '../types';
-import { exportAsPDF, exportPrescriptionAsPDF } from '../utils/exportUtils';
-import { exportAsText } from '../utils/textExport';
+import { exportAsPDF, exportPrescriptionAsPDF, exportAsText } from '../utils/exportUtils';
 import { toast } from 'sonner';
 
 interface ExportButtonProps {
@@ -38,11 +36,9 @@ const ExportButton: React.FC<ExportButtonProps> = ({
       
       if (format === 'pdf') {
         if (isPrescription) {
-          // Use the specialized prescription PDF exporter
           exportPrescriptionAsPDF(sections, patientName, profileData);
           toast.success('Exported prescription as PDF');
         } else {
-          // Use the standard PDF exporter
           exportAsPDF(sections, patientName);
           toast.success('Exported as PDF');
         }
