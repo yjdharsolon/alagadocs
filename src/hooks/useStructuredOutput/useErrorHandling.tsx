@@ -3,23 +3,24 @@ import { useCallback } from 'react';
 import { toast } from 'sonner';
 
 interface UseErrorHandlingParams {
-  error: string | null;
-  handleRetry: () => boolean;
+  handleRetry: () => void;
 }
 
 export const useErrorHandling = ({ 
-  error, 
   handleRetry 
 }: UseErrorHandlingParams) => {
   
+  const handleError = useCallback((error: string) => {
+    console.error('Error encountered:', error);
+    toast.error(error || 'An unexpected error occurred');
+  }, []);
+
   const retryProcessing = useCallback(() => {
-    if (!handleRetry()) {
-      toast.error('No transcription data available');
-    }
+    handleRetry();
   }, [handleRetry]);
 
   return {
-    error,
+    handleError,
     retryProcessing
   };
 };

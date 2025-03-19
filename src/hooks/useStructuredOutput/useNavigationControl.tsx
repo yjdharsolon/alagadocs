@@ -3,11 +3,15 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface UseNavigationControlParams {
-  transcriptionData: any;
+  isEditMode: boolean;
+  onCancelEdit: () => void;
+  transcriptionData?: any;
   audioUrl?: string;
 }
 
 export const useNavigationControl = ({
+  isEditMode,
+  onCancelEdit,
   transcriptionData,
   audioUrl
 }: UseNavigationControlParams) => {
@@ -15,6 +19,12 @@ export const useNavigationControl = ({
   const [noteSaved, setNoteSaved] = useState(false);
 
   const handleBackClick = useCallback(() => {
+    // If in edit mode, cancel edit first
+    if (isEditMode) {
+      onCancelEdit();
+      return;
+    }
+
     if (transcriptionData) {
       navigate('/edit-transcript', { 
         state: { 
@@ -25,7 +35,7 @@ export const useNavigationControl = ({
     } else {
       navigate('/select-patient');
     }
-  }, [navigate, transcriptionData, audioUrl]);
+  }, [navigate, transcriptionData, audioUrl, isEditMode, onCancelEdit]);
 
   const handleRetry = useCallback(() => {
     if (!transcriptionData || !transcriptionData.text) {

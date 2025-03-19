@@ -48,15 +48,6 @@ export const useStructuredOutputPage = ({
     patientId: patientInfo?.id
   });
   
-  // Use the error handling hook to handle errors
-  const { handleError } = useErrorHandling();
-  
-  // Use the navigation control hook to handle navigation
-  const { handleBackClick } = useNavigationControl({ 
-    isEditMode, 
-    onCancelEdit: handleToggleEditMode 
-  });
-
   // Initialize the note processing hook for handling retries
   const {
     processTranscriptionText,
@@ -83,6 +74,19 @@ export const useStructuredOutputPage = ({
       null
     );
   }, [transcriptionData, transcriptionId, processTranscriptionText]);
+  
+  // Use the error handling hook to handle errors
+  const { handleError, retryProcessing } = useErrorHandling({ 
+    handleRetry 
+  });
+  
+  // Use the navigation control hook to handle navigation
+  const { handleBackClick } = useNavigationControl({ 
+    isEditMode, 
+    onCancelEdit: handleToggleEditMode,
+    transcriptionData,
+    audioUrl
+  });
   
   // Handle note saved
   const handleNoteSaved = useCallback(() => {
