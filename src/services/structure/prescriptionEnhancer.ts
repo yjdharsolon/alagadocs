@@ -55,13 +55,12 @@ export async function enhancePrescriptionData(structuredData: any, patientId?: s
     }
   }
   
-  // Get current user data for prescriber information with proper formatting
+  // Get current user data for prescriber information - title field removed
   let prescriberInfo = {
     name: "Attending Physician",
     licenseNumber: "License number not specified",
     s2Number: "",
-    ptrNumber: "",
-    title: ""
+    ptrNumber: ""
   };
   
   try {
@@ -78,7 +77,6 @@ export async function enhancePrescriptionData(structuredData: any, patientId?: s
         prescriberInfo = {
           name: `${firstName} ${middleName}${lastName}${nameExtension}`.trim() || "Attending Physician",
           licenseNumber: userData.prc_license || "License number not specified",
-          title: userData.medical_title || "",
           s2Number: userData.s2_number || "",
           ptrNumber: userData.ptr_number || ""
         };

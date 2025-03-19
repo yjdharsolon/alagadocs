@@ -10,7 +10,6 @@ interface PrescriberInfo {
   licenseNumber: string;
   s2Number?: string;
   ptrNumber?: string;
-  title?: string;
 }
 
 interface PrescriberInfoCardProps {
@@ -39,17 +38,6 @@ const PrescriberInfoCard: React.FC<PrescriberInfoCardProps> = ({
             value={prescriberInfo.name || ''} 
             onChange={onChange} 
             className="mt-1"
-          />
-        </div>
-        <div>
-          <Label htmlFor="prescriberTitle">Medical Title</Label>
-          <Input 
-            id="prescriberTitle" 
-            name="title" 
-            value={prescriberInfo.title || ''} 
-            onChange={onChange} 
-            className="mt-1"
-            placeholder="e.g., MD, Cardiologist"
           />
         </div>
         <div>

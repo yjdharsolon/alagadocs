@@ -2,7 +2,7 @@
 import { jsPDF } from 'jspdf';
 
 /**
- * Adds prescriber information section to a prescription PDF
+ * Adds prescriber information section to a prescription PDF - title field removed
  */
 export const addPrescriberSection = (
   doc: jsPDF,
@@ -15,7 +15,7 @@ export const addPrescriberSection = (
   const footerY = pageHeight - margin - 30; // Position footer 30 points from bottom
   const pageWidth = doc.internal.pageSize.getWidth();
   
-  // Get prescriber name with proper formatting
+  // Get prescriber name with proper formatting - title removed
   let prescriberName = '';
   
   if (profileData) {
@@ -24,14 +24,11 @@ export const addPrescriberSection = (
     const middleName = profileData.middle_name ? profileData.middle_name.charAt(0) + '. ' : '';
     const lastName = profileData.last_name || '';
     const nameExtension = profileData.name_extension ? `, ${profileData.name_extension}` : '';
-    const title = profileData.medical_title ? `, ${profileData.medical_title}` : '';
     
-    prescriberName = `${firstName} ${middleName}${lastName}${nameExtension}${title}`.trim();
+    prescriberName = `${firstName} ${middleName}${lastName}${nameExtension}`.trim();
   } else if (typeof prescriberInfo === 'object') {
     // Use prescriber info from the prescription
-    const name = prescriberInfo.name || '';
-    const title = prescriberInfo.title ? `, ${prescriberInfo.title}` : '';
-    prescriberName = `${name}${title}`.trim();
+    prescriberName = prescriberInfo.name || '';
   }
   
   // Get license information from profile data if available, otherwise fall back to prescriber info
@@ -43,7 +40,7 @@ export const addPrescriberSection = (
   const footerX = pageWidth - margin - (contentWidth * 0.3);
   let currentY = footerY;
   
-  // Add doctor's name with title on same line
+  // Add doctor's name
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.text(prescriberName, footerX, currentY);

@@ -61,19 +61,18 @@ export const usePrescriptionEditor = ({
       : []
   );
   
-  // Initialize prescriberInfo with correct structure - signature field is now removed
+  // Initialize prescriberInfo with correct structure - title field is now removed
   const [prescriberInfo, setPrescriberInfo] = useState({
     name: '',
     licenseNumber: '',
     s2Number: '',
-    ptrNumber: '',
-    title: ''
+    ptrNumber: ''
   });
 
-  // Update prescriberInfo when profileData changes - improved formatting
+  // Update prescriberInfo when profileData changes - title field removed
   useEffect(() => {
     if (profileData) {
-      // Format name with proper spacing and include title if available
+      // Format name with proper spacing without title
       const firstName = profileData.first_name || '';
       const middleName = profileData.middle_name ? `${profileData.middle_name.charAt(0)}. ` : '';
       const lastName = profileData.last_name || '';
@@ -86,8 +85,7 @@ export const usePrescriptionEditor = ({
         name: fullName || prev.name || '',
         licenseNumber: profileData.prc_license || prev.licenseNumber || '',
         s2Number: profileData.s2_number || prev.s2Number || '',
-        ptrNumber: profileData.ptr_number || prev.ptrNumber || '',
-        title: profileData.medical_title || prev.title || ''
+        ptrNumber: profileData.ptr_number || prev.ptrNumber || ''
       }));
     }
   }, [profileData]);

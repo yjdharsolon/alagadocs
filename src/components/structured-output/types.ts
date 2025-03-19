@@ -1,4 +1,3 @@
-
 export interface MedicalSections {
   // Standard history & physical format fields
   chiefComplaint?: string;
@@ -34,7 +33,7 @@ export interface MedicalSections {
     // signature field completely removed
     s2Number?: string;  // S2 number
     ptrNumber?: string; // PTR number
-    title?: string;     // Title
+    // title field removed
   };
 }
 
