@@ -8,17 +8,23 @@ export const formatMedications = (medications: any[]) => {
   if (!medications || !Array.isArray(medications)) return "No medications specified";
   
   return medications.map((med, index) => {
-    const medNumber = med.id || (index + 1);
-    // Format medication with generic and brand name (if available)
-    const genericName = med.genericName || med.name || 'Not specified'; // For backward compatibility
-    const brandName = med.brandName ? ` (${med.brandName})` : '';
-    
-    return `${medNumber}. ${genericName}${brandName} ${med.strength || ''} (${med.dosageForm || 'Not specified'})
+    try {
+      const medNumber = med.id || (index + 1);
+      
+      // Format medication with generic and brand name (if available)
+      const genericName = med.genericName || med.name || 'Not specified'; // For backward compatibility
+      const brandName = med.brandName ? ` (${med.brandName})` : '';
+      
+      return `${medNumber}. ${genericName}${brandName} ${med.strength || ''} (${med.dosageForm || 'Not specified'})
     Sig: ${med.sigInstructions || 'Not specified'}
     Quantity: ${med.quantity || 'Not specified'}
     Refills: ${med.refills || 'Not specified'}
     ${med.specialInstructions ? `Special Instructions: ${med.specialInstructions}` : ''}
     `;
+    } catch (error) {
+      console.error('Error formatting medication:', error, med);
+      return `${index + 1}. Error formatting medication`;
+    }
   }).join("\n\n");
 };
 

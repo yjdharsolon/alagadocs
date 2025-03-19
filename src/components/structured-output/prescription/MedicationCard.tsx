@@ -35,7 +35,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
   return (
     <div className="p-4 border rounded-lg space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="font-medium">Medication #{medication.id}</h3>
+        <h3 className="font-medium">Medication #{medication.id || index + 1}</h3>
         <Button 
           variant="ghost" 
           size="sm" 
@@ -61,7 +61,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Label htmlFor={`med-brand-${index}`}>Brand Name (Optional)</Label>
           <Input 
             id={`med-brand-${index}`}
-            value={medication.brandName} 
+            value={medication.brandName || ''} 
             onChange={(e) => onFieldChange(index, 'brandName', e.target.value)} 
             className="mt-1"
           />
@@ -70,7 +70,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Label htmlFor={`med-strength-${index}`}>Strength</Label>
           <Input 
             id={`med-strength-${index}`}
-            value={medication.strength} 
+            value={medication.strength || ''} 
             onChange={(e) => onFieldChange(index, 'strength', e.target.value)} 
             className="mt-1"
           />
@@ -79,7 +79,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Label htmlFor={`med-dosage-${index}`}>Dosage Form</Label>
           <Input 
             id={`med-dosage-${index}`}
-            value={medication.dosageForm} 
+            value={medication.dosageForm || ''} 
             onChange={(e) => onFieldChange(index, 'dosageForm', e.target.value)} 
             className="mt-1"
           />
@@ -88,7 +88,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Label htmlFor={`med-quantity-${index}`}>Quantity</Label>
           <Input 
             id={`med-quantity-${index}`}
-            value={medication.quantity} 
+            value={medication.quantity || ''} 
             onChange={(e) => onFieldChange(index, 'quantity', e.target.value)} 
             className="mt-1"
           />
@@ -97,7 +97,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Label htmlFor={`med-refills-${index}`}>Refills</Label>
           <Input 
             id={`med-refills-${index}`}
-            value={medication.refills} 
+            value={medication.refills || ''} 
             onChange={(e) => onFieldChange(index, 'refills', e.target.value)} 
             className="mt-1"
           />
@@ -106,7 +106,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Label htmlFor={`med-sig-${index}`}>Sig Instructions</Label>
           <Textarea 
             id={`med-sig-${index}`}
-            value={medication.sigInstructions} 
+            value={medication.sigInstructions || ''} 
             onChange={(e) => onFieldChange(index, 'sigInstructions', e.target.value)} 
             className="mt-1"
             rows={2}
@@ -116,7 +116,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Label htmlFor={`med-special-${index}`}>Special Instructions</Label>
           <Textarea 
             id={`med-special-${index}`}
-            value={medication.specialInstructions} 
+            value={medication.specialInstructions || ''} 
             onChange={(e) => onFieldChange(index, 'specialInstructions', e.target.value)} 
             className="mt-1"
             rows={2}
