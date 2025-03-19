@@ -2,7 +2,7 @@
 import { Medication } from '../types/prescriptionTypes';
 import { toast } from 'sonner';
 
-// Handle medication changes with improved error handling
+// Handle medication changes with improved error handling and debugging
 export const handleMedicationChange = (
   medications: Medication[],
   index: number, 
@@ -28,8 +28,8 @@ export const handleMedicationChange = (
       ...medications.slice(index + 1)
     ];
     
-    console.log(`Updated medication at index ${index}, field ${field}:`, updatedMedication);
-    console.log('Updated medications array:', updatedMedications);
+    console.log(`Updated medication at index ${index}, field ${field}:`, JSON.stringify(updatedMedication, null, 2));
+    console.log('Updated medications array:', JSON.stringify(updatedMedications, null, 2));
     
     return updatedMedications;
   } catch (error) {
@@ -57,8 +57,8 @@ export const addMedication = (medications: Medication[]): Medication[] => {
     
     // Add new medication at the beginning of the array
     const updatedMedications = [newMedication, ...medications];
-    console.log('Added new medication:', newMedication);
-    console.log('Updated medications array after add:', updatedMedications);
+    console.log('Added new medication:', JSON.stringify(newMedication, null, 2));
+    console.log('Updated medications array after add:', JSON.stringify(updatedMedications, null, 2));
     
     return updatedMedications;
   } catch (error) {
@@ -86,7 +86,7 @@ export const removeMedication = (medications: Medication[], index: number): Medi
     }));
     
     console.log(`Removed medication at index ${index}`);
-    console.log('Updated medications array after removal:', updatedMedications);
+    console.log('Updated medications array after removal:', JSON.stringify(updatedMedications, null, 2));
     
     return updatedMedications;
   } catch (error) {
@@ -104,7 +104,7 @@ export const initializeMedications = (medications: any): Medication[] => {
     }
     
     if (Array.isArray(medications)) {
-      console.log('Initializing medications from array:', medications);
+      console.log('Initializing medications from array:', JSON.stringify(medications, null, 2));
       return medications.map((med, index) => {
         // Properly handle the legacy 'name' field by mapping to genericName
         const genericName = med.genericName || med.name || '';

@@ -29,17 +29,19 @@ export interface PrescriberInfo {
 
 export interface UsePrescriptionEditorProps {
   structuredData: MedicalSections;
-  onSave: (updatedData: MedicalSections) => void;
+  onSave: (updatedData: MedicalSections, stayInEditMode?: boolean) => void;
 }
 
 export interface PrescriptionEditorState {
   patientInfo: PatientInfo;
   medications: Medication[];
   prescriberInfo: PrescriberInfo;
+  stayInEditMode: boolean;
   handlePatientInfoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleMedicationChange: (index: number, field: keyof Medication, value: string) => void;
   handleAddMedication: () => void;
   handleRemoveMedication: (index: number) => void;
   handlePrescriberInfoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  toggleStayInEditMode: () => void;
   handleSave: () => void;
 }

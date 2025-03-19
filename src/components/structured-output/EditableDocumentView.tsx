@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { MedicalSections } from './types';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { getDocumentFormat } from './tabs/TabUtils';
 import { PrescriptionEditor } from './prescription';
 import SectionEditor from './sections/SectionEditor';
@@ -29,10 +29,15 @@ const EditableDocumentView = ({
     return (
       <PrescriptionEditor 
         structuredData={structuredData}
-        onSave={(updatedData) => {
+        onSave={(updatedData, stayInEditMode = false) => {
           if (onSave) {
             onSave(updatedData);
             toast.success('Prescription saved successfully');
+            // Only exit edit mode if stayInEditMode is false
+            if (!stayInEditMode) {
+              // Since onSave typically comes from a parent that handles edit mode,
+              // we just call it with the updated data and don't handle exit logic here
+            }
           }
         }}
       />

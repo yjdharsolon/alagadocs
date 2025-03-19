@@ -17,6 +17,7 @@ import {
   initializeMedications
 } from '../utils/medicationUtils';
 import { validateAndSavePrescription } from '../utils/saveUtils';
+import { toast } from 'sonner';
 
 export const usePrescriptionEditor = ({
   structuredData,
@@ -24,6 +25,7 @@ export const usePrescriptionEditor = ({
 }: UsePrescriptionEditorProps): PrescriptionEditorState => {
   const { user } = useAuth();
   const { profileData } = useProfileFields();
+  const [stayInEditMode, setStayInEditMode] = useState(true);
 
   // Extract only prescription-relevant data
   const [patientInfo, setPatientInfo] = useState<PatientInfo>(structuredData.patientInformation || {
@@ -36,7 +38,7 @@ export const usePrescriptionEditor = ({
   // Initialize medications with improved error handling
   const [medications, setMedications] = useState<Medication[]>(() => {
     const initialMedications = initializeMedications(structuredData.medications);
-    console.log('Initial medications state:', initialMedications);
+    console.log('Initial medications state:', JSON.stringify(initialMedications, null, 2));
     return initialMedications;
   });
   
@@ -90,10 +92,10 @@ export const usePrescriptionEditor = ({
   // Hook up medication utility functions to state with improved logging
   const handleMedicationChangeState = (index: number, field: keyof Medication, value: string) => {
     console.log(`Medication change requested - Index: ${index}, Field: ${field}, Value: ${value}`);
-    console.log('Current medications before change:', medications);
+    console.log('Current medications before change:', JSON.stringify(medications, null, 2));
     
     const updatedMedications = handleMedicationChange(medications, index, field, value);
-    console.log('Setting medications state with:', updatedMedications);
+    console.log('Setting medications state with:', JSON.stringify(updatedMedications, null, 2));
     
     setMedications(updatedMedications);
   };
@@ -101,14 +103,14 @@ export const usePrescriptionEditor = ({
   const handleAddMedication = () => {
     console.log('Adding new medication');
     const updatedMedications = addMedication(medications);
-    console.log('Setting medications state after add:', updatedMedications);
+    console.log('Setting medications state after add:', JSON.stringify(updatedMedications, null, 2));
     setMedications(updatedMedications);
   };
   
   const handleRemoveMedication = (index: number) => {
     console.log(`Removing medication at index ${index}`);
     const updatedMedications = removeMedication(medications, index);
-    console.log('Setting medications state after remove:', updatedMedications);
+    console.log('Setting medications state after remove:', JSON.stringify(updatedMedications, null, 2));
     setMedications(updatedMedications);
   };
   
@@ -120,15 +122,22 @@ export const usePrescriptionEditor = ({
     });
   };
   
+  // Toggle whether to stay in edit mode after saving
+  const toggleStayInEditMode = () => {
+    setStayInEditMode(prev => !prev);
+    toast.info(stayInEditMode ? "Will exit editor after saving" : "Will stay in editor after saving");
+  };
+  
   // Handle form submission with validation using our utility
   const handleSave = () => {
-    console.log('Saving prescription with medications:', medications);
+    console.log('Saving prescription with medications:', JSON.stringify(medications, null, 2));
     validateAndSavePrescription(
       structuredData,
       patientInfo,
       medications,
       prescriberInfo,
-      onSave
+      onSave,
+      stayInEditMode
     );
   };
 
@@ -136,11 +145,13 @@ export const usePrescriptionEditor = ({
     patientInfo,
     medications,
     prescriberInfo,
+    stayInEditMode,
     handlePatientInfoChange,
     handleMedicationChange: handleMedicationChangeState,
     handleAddMedication,
     handleRemoveMedication,
     handlePrescriberInfoChange,
+    toggleStayInEditMode,
     handleSave
   };
 };

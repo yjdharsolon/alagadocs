@@ -8,7 +8,8 @@ export const validateAndSavePrescription = (
   patientInfo: PatientInfo,
   medications: Medication[],
   prescriberInfo: PrescriberInfo,
-  onSave: (updatedData: MedicalSections) => void
+  onSave: (updatedData: MedicalSections) => void,
+  stayInEditMode: boolean = false
 ): void => {
   try {
     // Validate required fields
@@ -17,22 +18,27 @@ export const validateAndSavePrescription = (
       toast.warning("Some medications are missing required generic name");
     }
     
-    console.log('Saving medications:', medications);
+    console.log('Saving medications:', JSON.stringify(medications, null, 2));
     
-    // Prepare updated data with properly structured medications
+    // Prepare updated data with properly structured medications - preserve ALL fields
     const updatedData: MedicalSections = {
       ...structuredData,
       patientInformation: patientInfo,
-      medications: medications.map(med => ({
-        ...med,
-        // Ensure both name and genericName are set for backward compatibility
-        name: med.genericName, // Set name field to match genericName for legacy system compatibility
-      })),
+      medications: medications.map(med => {
+        // Return the complete medication object with all fields preserved
+        return {
+          ...med,
+          // Only add name for backward compatibility without overriding existing data
+          name: med.genericName
+        };
+      }),
       prescriberInformation: prescriberInfo
     };
     
-    console.log("Saving prescription with medications:", updatedData.medications);
-    onSave(updatedData);
+    console.log("Saving prescription with medications:", JSON.stringify(updatedData.medications, null, 2));
+    
+    // Pass the stayInEditMode flag to the callback so the parent can decide to stay in edit mode
+    onSave(updatedData, stayInEditMode);
     toast.success("Prescription saved successfully");
   } catch (error) {
     console.error('Error saving prescription:', error);
