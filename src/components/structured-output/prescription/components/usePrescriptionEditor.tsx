@@ -129,12 +129,13 @@ export const usePrescriptionEditor = ({
   };
   
   // Handle form submission with validation using our utility
-  // Added forceStayInEditMode parameter to override the stayInEditMode state
   const handleSave = (forceStayInEditMode?: boolean) => {
-    console.log('Saving prescription with medications:', JSON.stringify(medications, null, 2));
+    console.log('handleSave called with forceStayInEditMode:', forceStayInEditMode);
+    console.log('Current medications being saved:', JSON.stringify(medications, null, 2));
     
     // Use forceStayInEditMode if provided, otherwise use the stayInEditMode state
     const shouldStayInEditMode = forceStayInEditMode !== undefined ? forceStayInEditMode : stayInEditMode;
+    console.log('shouldStayInEditMode calculated as:', shouldStayInEditMode);
     
     validateAndSavePrescription(
       structuredData,

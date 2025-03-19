@@ -65,6 +65,12 @@ const DocumentContainer = ({
 
   const structuredText = getStructuredText();
 
+  const handleSaveEdit = (updatedData: MedicalSections, stayInEditMode?: boolean) => {
+    console.log('[DocumentContainer] Received save with updatedData and stayInEditMode:', stayInEditMode);
+    // Pass the stayInEditMode parameter to the parent's onSaveEdit
+    onSaveEdit(updatedData, stayInEditMode);
+  };
+
   return (
     <>
       <div className="flex justify-between items-center mb-4">
@@ -96,7 +102,7 @@ const DocumentContainer = ({
       {isEditMode ? (
         <EditableDocumentView 
           structuredData={structuredData} 
-          onSave={(updatedData, stayInEditMode) => onSaveEdit(updatedData, stayInEditMode)}
+          onSave={handleSaveEdit}
         />
       ) : (
         <DocumentView structuredData={structuredData} />

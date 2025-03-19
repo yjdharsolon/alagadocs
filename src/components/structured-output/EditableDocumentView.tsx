@@ -30,7 +30,9 @@ const EditableDocumentView = ({
       <PrescriptionEditor 
         structuredData={structuredData}
         onSave={(updatedData, stayInEditMode = false) => {
+          console.log('[EditableDocumentView] Received save with updatedData and stayInEditMode:', stayInEditMode);
           if (onSave) {
+            console.log('[EditableDocumentView] Calling parent onSave with stayInEditMode:', stayInEditMode);
             // Pass both the updatedData and stayInEditMode flag to the parent onSave
             onSave(updatedData, stayInEditMode);
           }

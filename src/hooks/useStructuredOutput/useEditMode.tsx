@@ -15,14 +15,24 @@ export const useEditMode = ({ setStructuredData }: UseEditModeParams) => {
   }, [isEditMode]);
 
   const handleSaveEdit = useCallback((updatedData: MedicalSections, stayInEditMode = false) => {
-    // First update the data
+    console.log('[useEditMode] handleSaveEdit called with:', { 
+      dataSize: Object.keys(updatedData).length,
+      hasMedications: !!updatedData.medications,
+      medicationsCount: updatedData.medications ? 
+        (Array.isArray(updatedData.medications) ? updatedData.medications.length : 'not array') : 
+        'none',
+      stayInEditMode 
+    });
+    
+    // First update the data - this will trigger re-renders with the new data
     setStructuredData(updatedData);
     
     // Only exit edit mode if stayInEditMode is false
     if (!stayInEditMode) {
+      console.log('[useEditMode] Exiting edit mode as requested');
       setIsEditMode(false);
     } else {
-      console.log('Staying in edit mode after save as requested');
+      console.log('[useEditMode] Staying in edit mode after save as requested');
     }
     
     toast.success('Document changes saved successfully');

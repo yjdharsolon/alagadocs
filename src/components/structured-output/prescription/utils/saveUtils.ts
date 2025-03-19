@@ -18,7 +18,8 @@ export const validateAndSavePrescription = (
       toast.warning("Some medications are missing required generic name");
     }
     
-    console.log('Saving medications:', JSON.stringify(medications, null, 2));
+    console.log('[validateAndSavePrescription] Input medications:', JSON.stringify(medications, null, 2));
+    console.log('[validateAndSavePrescription] stayInEditMode:', stayInEditMode);
     
     // Prepare updated data with properly structured medications - preserve ALL fields
     const updatedData: MedicalSections = {
@@ -35,9 +36,10 @@ export const validateAndSavePrescription = (
       prescriberInformation: prescriberInfo
     };
     
-    console.log("Saving prescription with medications:", JSON.stringify(updatedData.medications, null, 2));
+    console.log("[validateAndSavePrescription] Final updatedData.medications:", JSON.stringify(updatedData.medications, null, 2));
     
     // Pass the stayInEditMode flag to the callback so the parent can decide to stay in edit mode
+    console.log("[validateAndSavePrescription] Calling onSave with stayInEditMode:", stayInEditMode);
     onSave(updatedData, stayInEditMode);
     
     const message = stayInEditMode ? "Prescription saved" : "Prescription submitted successfully";
