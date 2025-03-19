@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,24 +20,9 @@ const roles = [
     icon: '👩‍⚕️'
   },
   {
-    title: 'Therapist',
-    description: 'Physical therapists, occupational therapists, and speech therapists',
-    icon: '🧑‍⚕️'
-  },
-  {
     title: 'Medical Assistant',
     description: 'Clinical and administrative medical assistants',
     icon: '💉'
-  },
-  {
-    title: 'Transcriptionist',
-    description: 'Medical transcription specialists',
-    icon: '🎙️'
-  },
-  {
-    title: 'Other',
-    description: 'Other healthcare professionals',
-    icon: '🏥'
   }
 ];
 
@@ -49,7 +33,6 @@ export default function RoleSelection() {
   const [initialLoading, setInitialLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Check if user already has a role
   useEffect(() => {
     const checkUserRole = async () => {
       if (user) {
@@ -78,7 +61,6 @@ export default function RoleSelection() {
     setSelectedRole(role);
 
     try {
-      // Check if user already has a role
       const { data: existingRole } = await supabase
         .from('user_roles')
         .select('*')
@@ -88,7 +70,6 @@ export default function RoleSelection() {
       let error;
 
       if (existingRole) {
-        // Update existing role
         const { error: updateError } = await supabase
           .from('user_roles')
           .update({ role, updated_at: new Date().toISOString() })
@@ -96,7 +77,6 @@ export default function RoleSelection() {
         
         error = updateError;
       } else {
-        // Insert new role
         const { error: insertError } = await supabase
           .from('user_roles')
           .insert({ user_id: user.id, role });
@@ -110,7 +90,6 @@ export default function RoleSelection() {
 
       toast.success(`Role set to ${role}`);
       
-      // Navigate to the select-patient page instead of upload
       setTimeout(() => {
         navigate('/select-patient');
       }, 1000);

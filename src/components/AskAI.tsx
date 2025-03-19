@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
@@ -76,7 +75,6 @@ const AskAI = () => {
     
     try {
       setIsSaving(true);
-      // Using a temporary ID for now - in a real app, you would use the actual transcription ID
       const tempTranscriptionId = 'temp-' + Date.now().toString();
       const { id } = await saveStructuredNote(structuredOutput, tempTranscriptionId);
       toast.success('Note saved successfully!');
@@ -124,7 +122,7 @@ const AskAI = () => {
                 <SelectContent>
                   <SelectItem value="Doctor">Doctor</SelectItem>
                   <SelectItem value="Nurse">Nurse</SelectItem>
-                  <SelectItem value="Therapist">Therapist</SelectItem>
+                  <SelectItem value="Medical Assistant">Medical Assistant</SelectItem>
                   <SelectItem value="Pharmacist">Pharmacist</SelectItem>
                   <SelectItem value="Medical Student">Medical Student</SelectItem>
                 </SelectContent>
