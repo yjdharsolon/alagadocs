@@ -1,373 +1,221 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
-import { getUserProfile, updateUserProfile } from '@/services/userService';
-import toast from 'react-hot-toast';
-import { Link } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserRound, Stethoscope, Building2 } from 'lucide-react';
+import { useProfileFields, ProfileData } from '@/hooks/useProfileFields';
 
-export default function Profile() {
+export default function ProfilePage() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  
-  // Personal Information
-  const [firstName, setFirstName] = useState('');
-  const [middleName, setMiddleName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [nameExtension, setNameExtension] = useState('');
-  const [medicalTitle, setMedicalTitle] = useState('');
-  const [profession, setProfession] = useState('');
-  
-  // Professional Credentials
-  const [prcLicense, setPrcLicense] = useState('');
-  const [ptrNumber, setPtrNumber] = useState('');
-  const [s2Number, setS2Number] = useState('');
-  
-  // Clinic Information
-  const [clinicName, setClinicName] = useState('');
-  const [clinicAddress, setClinicAddress] = useState('');
-  const [clinicSchedule, setClinicSchedule] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
+  const { profileData, loading, updateProfile } = useProfileFields();
+  const [formData, setFormData] = useState<ProfileData>({});
+  const [activeTab, setActiveTab] = useState('personal');
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user) return;
-
-      try {
-        setLoading(true);
-        
-        // Fetch user role
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (roleError && roleError.code !== 'PGRST116') {
-          console.error('Error fetching user role:', roleError);
-        }
-
-        if (roleData) {
-          setUserRole(roleData.role);
-        }
-
-        // Fetch user profile
-        const profileData = await getUserProfile(user.id);
-        
-        if (profileData) {
-          setFirstName(profileData.first_name || '');
-          setMiddleName(profileData.middle_name || '');
-          setLastName(profileData.last_name || '');
-          setNameExtension(profileData.name_extension || '');
-          setMedicalTitle(profileData.medical_title || '');
-          setProfession(profileData.profession || '');
-          setPrcLicense(profileData.prc_license || '');
-          setPtrNumber(profileData.ptr_number || '');
-          setS2Number(profileData.s2_number || '');
-          setClinicName(profileData.clinic_name || '');
-          setClinicAddress(profileData.clinic_address || '');
-          setClinicSchedule(profileData.clinic_schedule || '');
-          setContactNumber(profileData.contact_number || '');
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [user]);
-
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      
-      await updateUserProfile(user.id, {
-        first_name: firstName,
-        middle_name: middleName,
-        last_name: lastName,
-        name_extension: nameExtension,
-        medical_title: medicalTitle,
-        profession,
-        prc_license: prcLicense,
-        ptr_number: ptrNumber,
-        s2_number: s2Number,
-        clinic_name: clinicName,
-        clinic_address: clinicAddress,
-        clinic_schedule: clinicSchedule,
-        contact_number: contactNumber,
-        updated_at: new Date().toISOString(),
-      });
-
-      toast.success('Profile updated successfully');
-    } catch (error: any) {
-      toast.error(error.message || 'Error updating profile');
-      console.error('Error updating profile:', error);
-    } finally {
-      setLoading(false);
+  // Initialize form data when profile data is loaded
+  React.useEffect(() => {
+    if (profileData) {
+      setFormData(profileData);
     }
+  }, [profileData]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateProfile(formData);
   };
 
   return (
     <Layout>
-      <div className="container max-w-7xl mx-auto py-10 px-4">
-        <h1 className="text-3xl font-bold mb-6">Your Profile</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="md:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Info</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-medium">{user?.email}</p>
+      <div className="container mx-auto py-6 px-4">
+        <h1 className="text-2xl font-bold mb-6">My Profile</h1>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="personal">Personal Info</TabsTrigger>
+            <TabsTrigger value="professional">Professional</TabsTrigger>
+            <TabsTrigger value="clinic">Clinic Info</TabsTrigger>
+          </TabsList>
+
+          <Card>
+            <form onSubmit={handleSubmit}>
+              <TabsContent value="personal" className="space-y-4">
+                <CardHeader>
+                  <CardTitle>Personal Information</CardTitle>
+                  <CardDescription>
+                    Update your personal information
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="first_name">First Name</Label>
+                      <Input 
+                        id="first_name" 
+                        name="first_name"
+                        value={formData.first_name || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="middle_name">Middle Name</Label>
+                      <Input 
+                        id="middle_name" 
+                        name="middle_name"
+                        value={formData.middle_name || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Role</p>
-                    <p className="font-medium">
-                      {userRole || (
-                        <Link to="/role-selection" className="text-primary hover:underline">
-                          Select a role
-                        </Link>
-                      )}
-                    </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="last_name">Last Name</Label>
+                      <Input 
+                        id="last_name" 
+                        name="last_name"
+                        value={formData.last_name || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="name_extension">Name Extension</Label>
+                      <Input 
+                        id="name_extension" 
+                        name="name_extension"
+                        placeholder="Jr., Sr., III, etc."
+                        value={formData.name_extension || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
                   </div>
-                </div>
-              </CardContent>
+                  <div className="space-y-2">
+                    <Label htmlFor="medical_title">Medical Title</Label>
+                    <Input 
+                      id="medical_title" 
+                      name="medical_title"
+                      placeholder="MD, DMD, FPCP, etc."
+                      value={formData.medical_title || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profession">Profession</Label>
+                    <Input 
+                      id="profession" 
+                      name="profession"
+                      placeholder="Cardiologist, General Practitioner, etc."
+                      value={formData.profession || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </CardContent>
+              </TabsContent>
+
+              <TabsContent value="professional" className="space-y-4">
+                <CardHeader>
+                  <CardTitle>Professional Credentials</CardTitle>
+                  <CardDescription>
+                    Update your professional license information
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="prc_license">PRC License Number</Label>
+                    <Input 
+                      id="prc_license" 
+                      name="prc_license"
+                      value={formData.prc_license || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ptr_number">PTR Number</Label>
+                    <Input 
+                      id="ptr_number" 
+                      name="ptr_number"
+                      value={formData.ptr_number || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="s2_number">S2 Number</Label>
+                    <Input 
+                      id="s2_number" 
+                      name="s2_number"
+                      value={formData.s2_number || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </CardContent>
+              </TabsContent>
+
+              <TabsContent value="clinic" className="space-y-4">
+                <CardHeader>
+                  <CardTitle>Clinic Information</CardTitle>
+                  <CardDescription>
+                    Update your clinic details
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="clinic_name">Clinic Name</Label>
+                    <Input 
+                      id="clinic_name" 
+                      name="clinic_name"
+                      value={formData.clinic_name || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="clinic_address">Clinic Address</Label>
+                    <Input 
+                      id="clinic_address" 
+                      name="clinic_address"
+                      value={formData.clinic_address || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="clinic_schedule">Clinic Schedule/Hours</Label>
+                    <Input 
+                      id="clinic_schedule" 
+                      name="clinic_schedule"
+                      placeholder="Mon-Fri: 9AM-5PM, etc."
+                      value={formData.clinic_schedule || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_number">Contact Number</Label>
+                    <Input 
+                      id="contact_number" 
+                      name="contact_number"
+                      value={formData.contact_number || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </CardContent>
+              </TabsContent>
+
               <CardFooter>
-                <Link to="/role-selection">
-                  <Button variant="outline" className="w-full">Change Role</Button>
-                </Link>
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full"
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </Button>
               </CardFooter>
-            </Card>
-          </div>
-          
-          <div className="md:col-span-3">
-            <Tabs defaultValue="personal" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="personal">
-                  <UserRound className="h-4 w-4 mr-2" />
-                  Personal Info
-                </TabsTrigger>
-                <TabsTrigger value="professional">
-                  <Stethoscope className="h-4 w-4 mr-2" />
-                  Professional Info
-                </TabsTrigger>
-                <TabsTrigger value="clinic">
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Clinic Details
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="personal">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Personal Information</CardTitle>
-                    <CardDescription>
-                      Update your personal details here
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="firstName">First Name</Label>
-                          <Input
-                            id="firstName"
-                            value={firstName}
-                            onChange={(e) => setFirstName(e.target.value)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="middleName">Middle Name</Label>
-                          <Input
-                            id="middleName"
-                            value={middleName}
-                            onChange={(e) => setMiddleName(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="lastName">Last Name</Label>
-                          <Input
-                            id="lastName"
-                            value={lastName}
-                            onChange={(e) => setLastName(e.target.value)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="nameExtension">Name Extension</Label>
-                          <Input
-                            id="nameExtension"
-                            value={nameExtension}
-                            onChange={(e) => setNameExtension(e.target.value)}
-                            placeholder="Jr., Sr., etc."
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="medicalTitle">Medical Title</Label>
-                          <Input
-                            id="medicalTitle"
-                            value={medicalTitle}
-                            onChange={(e) => setMedicalTitle(e.target.value)}
-                            placeholder="MD, DMD, FPCP, etc."
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="profession">Profession/Specialty</Label>
-                          <Input
-                            id="profession"
-                            value={profession}
-                            onChange={(e) => setProfession(e.target.value)}
-                            placeholder="e.g. Cardiologist, Pediatric Nurse, etc."
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      onClick={handleUpdateProfile}
-                      disabled={loading}
-                      className="w-full"
-                    >
-                      {loading ? 'Saving...' : 'Save Personal Info'}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="professional">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Professional Credentials</CardTitle>
-                    <CardDescription>
-                      Update your professional licensure information
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="prcLicense">PRC License Number</Label>
-                        <Input
-                          id="prcLicense"
-                          value={prcLicense}
-                          onChange={(e) => setPrcLicense(e.target.value)}
-                        />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="ptrNumber">PTR Number (if applicable)</Label>
-                          <Input
-                            id="ptrNumber"
-                            value={ptrNumber}
-                            onChange={(e) => setPtrNumber(e.target.value)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="s2Number">S2 Number (if applicable)</Label>
-                          <Input
-                            id="s2Number"
-                            value={s2Number}
-                            onChange={(e) => setS2Number(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      onClick={handleUpdateProfile}
-                      disabled={loading}
-                      className="w-full"
-                    >
-                      {loading ? 'Saving...' : 'Save Professional Info'}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="clinic">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Clinic Information</CardTitle>
-                    <CardDescription>
-                      Update details about your practice location
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="clinicName">Name of the Clinic</Label>
-                        <Input
-                          id="clinicName"
-                          value={clinicName}
-                          onChange={(e) => setClinicName(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="clinicAddress">Address of the Clinic</Label>
-                        <Textarea
-                          id="clinicAddress"
-                          value={clinicAddress}
-                          onChange={(e) => setClinicAddress(e.target.value)}
-                          rows={3}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="clinicSchedule">Operating Hours/Schedule</Label>
-                        <Textarea
-                          id="clinicSchedule"
-                          value={clinicSchedule}
-                          onChange={(e) => setClinicSchedule(e.target.value)}
-                          placeholder="e.g. Monday-Friday: 9AM-5PM, Saturday: 9AM-12PM"
-                          rows={2}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="contactNumber">Contact Number</Label>
-                        <Input
-                          id="contactNumber"
-                          value={contactNumber}
-                          onChange={(e) => setContactNumber(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      onClick={handleUpdateProfile}
-                      disabled={loading}
-                      className="w-full"
-                    >
-                      {loading ? 'Saving...' : 'Save Clinic Info'}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
+            </form>
+          </Card>
+        </Tabs>
       </div>
     </Layout>
   );

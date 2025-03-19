@@ -49,7 +49,7 @@ const PrescriptionTabs: React.FC<PrescriptionTabsProps> = ({ structuredData }) =
 
   // Format prescriber information with professional details
   const formatPrescriberInfo = () => {
-    if (!prescriberInfo) return structuredData.prescriberInformation || "No prescriber information";
+    if (!prescriberInfo) return String(structuredData.prescriberInformation || "No prescriber information");
 
     let formattedInfo = '';
     const name = `${prescriberInfo.first_name || ''} ${prescriberInfo.middle_name ? prescriberInfo.middle_name.charAt(0) + '. ' : ''}${prescriberInfo.last_name || ''}${prescriberInfo.name_extension ? ', ' + prescriberInfo.name_extension : ''}`;
@@ -85,7 +85,7 @@ const PrescriptionTabs: React.FC<PrescriptionTabsProps> = ({ structuredData }) =
       formattedInfo += `Contact: ${prescriberInfo.contact_number}\n`;
     }
     
-    return formattedInfo || structuredData.prescriberInformation || "No prescriber information";
+    return formattedInfo || String(structuredData.prescriberInformation || "No prescriber information");
   };
 
   return (

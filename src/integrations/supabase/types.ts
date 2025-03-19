@@ -110,27 +110,57 @@ export type Database = {
       }
       profiles: {
         Row: {
+          clinic_address: string | null
+          clinic_name: string | null
+          clinic_schedule: string | null
+          contact_number: string | null
           created_at: string
           first_name: string | null
           id: string
           last_name: string | null
+          medical_title: string | null
+          middle_name: string | null
+          name_extension: string | null
+          prc_license: string | null
           profession: string | null
+          ptr_number: string | null
+          s2_number: string | null
           updated_at: string
         }
         Insert: {
+          clinic_address?: string | null
+          clinic_name?: string | null
+          clinic_schedule?: string | null
+          contact_number?: string | null
           created_at?: string
           first_name?: string | null
           id: string
           last_name?: string | null
+          medical_title?: string | null
+          middle_name?: string | null
+          name_extension?: string | null
+          prc_license?: string | null
           profession?: string | null
+          ptr_number?: string | null
+          s2_number?: string | null
           updated_at?: string
         }
         Update: {
+          clinic_address?: string | null
+          clinic_name?: string | null
+          clinic_schedule?: string | null
+          contact_number?: string | null
           created_at?: string
           first_name?: string | null
           id?: string
           last_name?: string | null
+          medical_title?: string | null
+          middle_name?: string | null
+          name_extension?: string | null
+          prc_license?: string | null
           profession?: string | null
+          ptr_number?: string | null
+          s2_number?: string | null
           updated_at?: string
         }
         Relationships: []
