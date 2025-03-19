@@ -45,4 +45,3 @@ export interface PrescriptionEditorState {
   toggleStayInEditMode: () => void;
   handleSave: (forceStayInEditMode?: boolean) => void;
 }
-
