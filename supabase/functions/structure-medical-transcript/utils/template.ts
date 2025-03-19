@@ -41,33 +41,33 @@ Format the provided transcription into a structured prescription with these exac
    - License/Registration Number
    - Signature (indicate [SIGNATURE])
 
-Return the structured information in this exact JSON format:
+IMPORTANT: You MUST return the structured information in this exact JSON format with all values as strings:
 {
   "patientInformation": {
-    "name": "",
-    "sex": "",
-    "age": "",
-    "date": ""
+    "name": "string",
+    "sex": "string",
+    "age": "string",
+    "date": "string"
   },
   "medications": [
     {
-      "name": "",
-      "strength": "",
-      "dosageForm": "",
-      "sigInstructions": "",
-      "quantity": "",
-      "refills": "",
-      "specialInstructions": ""
+      "name": "string",
+      "strength": "string",
+      "dosageForm": "string",
+      "sigInstructions": "string",
+      "quantity": "string",
+      "refills": "string",
+      "specialInstructions": "string"
     }
   ],
   "prescriberInformation": {
-    "name": "",
-    "licenseNumber": "",
+    "name": "string",
+    "licenseNumber": "string",
     "signature": "[SIGNATURE]"
   }
 }
 
-Extract all relevant information from the transcription. If any information is not present, use "Not specified" as the value. Be accurate and maintain medical terminology.`;
+Extract all relevant information from the transcription. If any information is not present, use "Not specified" as the value. Be accurate and maintain medical terminology. Do not add any fields that are not in the template above.`;
   }
 
   // SOAP format prompt
@@ -102,12 +102,12 @@ Format the provided transcription into a SOAP note with these exact sections:
    - Follow-up instructions
    - Patient education
 
-Return the structured information in this exact JSON format:
+IMPORTANT: You MUST return the structured information in this exact JSON format with all values as strings:
 {
-  "subjective": "",
-  "objective": "",
-  "assessment": "",
-  "plan": ""
+  "subjective": "string",
+  "objective": "string",
+  "assessment": "string",
+  "plan": "string"
 }
 
 Extract all relevant information from the transcription. If any information is not present for a section, include that section with an empty string or "Not documented" as the value. Be accurate, concise and maintain medical terminology.`;
@@ -141,13 +141,13 @@ Format the provided transcription into a consultation note with these exact sect
    - Referrals if needed
    - Medication recommendations
 
-Return the structured information in this exact JSON format:
+IMPORTANT: You MUST return the structured information in this exact JSON format with all values as strings:
 {
-  "reasonForConsultation": "",
-  "history": "",
-  "findings": "",
-  "impression": "",
-  "recommendations": ""
+  "reasonForConsultation": "string",
+  "history": "string",
+  "findings": "string",
+  "impression": "string",
+  "recommendations": "string"
 }
 
 Extract all relevant information from the transcription. If any information is not present for a section, include that section with an empty string or "Not documented" as the value. Be accurate, concise and maintain medical terminology.`;
@@ -173,13 +173,13 @@ You are an expert medical assistant helping to structure transcriptions of medic
 Take the provided transcription text and organize it into a structured medical note with the following sections:
 ${sectionsList}
 
-Return the structured information in JSON format with these sections as keys with camelCase format. 
+IMPORTANT: You MUST return the structured information in JSON format with these sections as keys with camelCase format. ALL VALUES MUST BE STRINGS, not objects or arrays.
 If certain sections are not present in the transcription, include the key with an empty string or "Not mentioned" as the value.
 Be accurate, concise and professional in your structuring. Do not invent information not present in the transcription.
 
 Example response format (using camelCase for keys):
 {
-  ${sections.map(section => `"${toCamelCase(section)}": "..."`).join(',\n  ')}
+  ${sections.map(section => `"${toCamelCase(section)}": "string"`).join(',\n  ')}
 }
 `;
 

@@ -71,7 +71,11 @@ serve(async (req) => {
     try {
       // Parse the response as JSON if possible
       const structuredContent = JSON.parse(data.choices[0].message.content);
-      return new Response(JSON.stringify(structuredContent), {
+      
+      // Normalize the response to ensure consistent formats
+      const normalizedContent = normalizeResponse(structuredContent, template);
+      
+      return new Response(JSON.stringify(normalizedContent), {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
@@ -79,6 +83,7 @@ serve(async (req) => {
         },
       });
     } catch (e) {
+      console.log("Could not parse as JSON, returning raw content");
       // If not valid JSON, return the raw text
       return new Response(JSON.stringify({
         content: data.choices[0].message.content 
@@ -101,6 +106,123 @@ serve(async (req) => {
     });
   }
 });
+
+/**
+ * Normalizes the OpenAI response to ensure consistent formats
+ */
+function normalizeResponse(data: any, template?: { sections: string[] }): any {
+  // Determine the format type based on the template or data fields
+  let formatType = 'standard';
+  
+  if (template?.sections) {
+    if (template.sections.includes('Subjective')) formatType = 'soap';
+    else if (template.sections.includes('Reason for Consultation')) formatType = 'consultation';
+    else if (template.sections.includes('Prescription')) formatType = 'prescription';
+  } else if (data.subjective && data.objective) {
+    formatType = 'soap';
+  } else if (data.reasonForConsultation) {
+    formatType = 'consultation';
+  } else if (data.patientInformation || data.medications) {
+    formatType = 'prescription';
+  }
+  
+  // Normalize based on format type
+  switch (formatType) {
+    case 'soap':
+      return {
+        subjective: ensureString(data.subjective),
+        objective: ensureString(data.objective),
+        assessment: ensureString(data.assessment),
+        plan: ensureString(data.plan)
+      };
+    case 'consultation':
+      return {
+        reasonForConsultation: ensureString(data.reasonForConsultation),
+        history: ensureString(data.history),
+        findings: ensureString(data.findings),
+        impression: ensureString(data.impression),
+        recommendations: ensureString(data.recommendations)
+      };
+    case 'prescription':
+      // Ensure patientInformation is an object with string values
+      const patientInfo = typeof data.patientInformation === 'object' ? 
+        {
+          name: ensureString(data.patientInformation.name),
+          sex: ensureString(data.patientInformation.sex),
+          age: ensureString(data.patientInformation.age),
+          date: ensureString(data.patientInformation.date)
+        } : 
+        { name: '', sex: '', age: '', date: '' };
+      
+      // Ensure medications is an array of objects
+      let medications;
+      if (Array.isArray(data.medications)) {
+        medications = data.medications.map((med: any) => {
+          return {
+            name: ensureString(med.name),
+            strength: ensureString(med.strength),
+            dosageForm: ensureString(med.dosageForm),
+            sigInstructions: ensureString(med.sigInstructions),
+            quantity: ensureString(med.quantity),
+            refills: ensureString(med.refills),
+            specialInstructions: ensureString(med.specialInstructions)
+          };
+        });
+      } else if (typeof data.medications === 'object') {
+        // Handle case where medications is an object, not an array
+        medications = [
+          {
+            name: ensureString(data.medications.name || ''),
+            strength: ensureString(data.medications.strength || ''),
+            dosageForm: ensureString(data.medications.dosageForm || ''),
+            sigInstructions: ensureString(data.medications.sigInstructions || ''),
+            quantity: ensureString(data.medications.quantity || ''),
+            refills: ensureString(data.medications.refills || ''),
+            specialInstructions: ensureString(data.medications.specialInstructions || '')
+          }
+        ];
+      } else {
+        medications = [];
+      }
+      
+      // Ensure prescriberInformation is an object with string values
+      const prescriberInfo = typeof data.prescriberInformation === 'object' ?
+        {
+          name: ensureString(data.prescriberInformation.name),
+          licenseNumber: ensureString(data.prescriberInformation.licenseNumber),
+          signature: ensureString(data.prescriberInformation.signature || '[SIGNATURE]')
+        } :
+        { name: '', licenseNumber: '', signature: '[SIGNATURE]' };
+      
+      return {
+        patientInformation: patientInfo,
+        medications: medications,
+        prescriberInformation: prescriberInfo
+      };
+    default:
+      // Standard history & physical format
+      return {
+        chiefComplaint: ensureString(data.chiefComplaint),
+        historyOfPresentIllness: ensureString(data.historyOfPresentIllness),
+        pastMedicalHistory: ensureString(data.pastMedicalHistory),
+        medications: ensureString(data.medications),
+        allergies: ensureString(data.allergies),
+        physicalExamination: ensureString(data.physicalExamination),
+        assessment: ensureString(data.assessment),
+        plan: ensureString(data.plan)
+      };
+  }
+}
+
+/**
+ * Ensures a value is a string
+ */
+function ensureString(value: any): string {
+  if (value === undefined || value === null) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
 
 function getSystemPrompt(role: string, template?: { sections: string[] }): string {
   // SOAP format prompt
@@ -136,12 +258,12 @@ Format the provided transcription into a SOAP note with these exact sections:
    - Follow-up instructions
    - Patient education
 
-Return the structured information in this exact JSON format:
+IMPORTANT: You MUST return the structured information in this exact JSON format with all values as strings:
 {
-  "subjective": "",
-  "objective": "",
-  "assessment": "",
-  "plan": ""
+  "subjective": "string",
+  "objective": "string",
+  "assessment": "string",
+  "plan": "string"
 }
 
 Extract all relevant information from the transcription. If any information is not present for a section, include that section with an empty string or "Not documented" as the value. Be accurate, concise and maintain medical terminology.`;
@@ -150,15 +272,103 @@ Extract all relevant information from the transcription. If any information is n
   // Prescription format prompt
   if (template?.sections && template.sections.includes('Prescription')) {
     return `You are a medical assistant helping to format prescription information from transcribed medical conversations.
-Format the provided transcription into a structured prescription note.
+Format the provided transcription into a structured prescription with these exact sections:
 
-Return the structured information in JSON format with prescription-related information.
-If certain details are not present in the transcription, include the key with "Not specified" as the value.`;
+1. Patient Information:
+   - Patient Name
+   - Sex/Gender
+   - Age
+   - Date
+
+2. Medication Details (for each medication):
+   - Medication Name and Strength
+   - Dosage Form (tablets, capsules, etc.)
+   - Sig (Instructions)
+   - Quantity
+   - Refills
+   - Special Instructions
+
+3. Prescriber Information:
+   - Name
+   - License/Registration Number
+   - Signature (indicate [SIGNATURE])
+
+IMPORTANT: You MUST return the structured information in this exact JSON format with all values as strings:
+{
+  "patientInformation": {
+    "name": "string",
+    "sex": "string",
+    "age": "string",
+    "date": "string"
+  },
+  "medications": [
+    {
+      "name": "string",
+      "strength": "string",
+      "dosageForm": "string",
+      "sigInstructions": "string",
+      "quantity": "string",
+      "refills": "string",
+      "specialInstructions": "string"
+    }
+  ],
+  "prescriberInformation": {
+    "name": "string",
+    "licenseNumber": "string",
+    "signature": "[SIGNATURE]"
+  }
+}
+
+Extract all relevant information from the transcription. If any information is not present, use "Not specified" as the value. Be accurate and maintain medical terminology.`;
+  }
+  
+  // Consultation format prompt
+  if (template?.sections && template.sections.includes('Reason for Consultation')) {
+    return `You are a medical assistant helping to format transcribed medical conversations into a structured consultation note.
+Format the provided transcription into a consultation note with these exact sections:
+
+1. Reason for Consultation:
+   - Why the patient was referred
+   - Main clinical question
+
+2. History:
+   - Relevant patient history
+   - Current symptoms
+
+3. Findings:
+   - Examination findings
+   - Test results
+   - Observations
+
+4. Impression:
+   - Diagnosis or clinical impression
+   - Analysis of the case
+
+5. Recommendations:
+   - Treatment plan
+   - Follow-up suggestions
+   - Referrals if needed
+   - Medication recommendations
+
+IMPORTANT: You MUST return the structured information in this exact JSON format with all values as strings:
+{
+  "reasonForConsultation": "string",
+  "history": "string",
+  "findings": "string",
+  "impression": "string",
+  "recommendations": "string"
+}
+
+Extract all relevant information from the transcription. If any information is not present for a section, include that section with an empty string or "Not documented" as the value. Be accurate, concise and maintain medical terminology.`;
   }
 
   const standardSections = [
-    "Subjective",
-    "Objective",
+    "Chief Complaint",
+    "History of Present Illness",
+    "Past Medical History",
+    "Medications",
+    "Allergies",
+    "Physical Examination",
     "Assessment",
     "Plan"
   ];
@@ -173,13 +383,13 @@ You are an expert medical assistant helping to structure transcriptions of medic
 Take the provided transcription text and organize it into a structured medical note with the following sections:
 ${sectionsList}
 
-Return the structured information in JSON format with these sections as keys with camelCase format. 
+IMPORTANT: You MUST return the structured information in JSON format with these sections as keys with camelCase format. ALL VALUES MUST BE STRINGS, not objects or arrays.
 If certain sections are not present in the transcription, include the key with an empty string or "Not mentioned" as the value.
 Be accurate, concise and professional in your structuring. Do not invent information not present in the transcription.
 
 Example response format (using camelCase for keys):
 {
-  ${sections.map(section => `"${toCamelCase(section)}": "..."`).join(',\n  ')}
+  ${sections.map(section => `"${toCamelCase(section)}": "string"`).join(',\n  ')}
 }
 `;
 

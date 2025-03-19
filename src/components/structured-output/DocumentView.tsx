@@ -37,23 +37,25 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
         
         // Format medication objects
         if (item && typeof item === 'object') {
-          if ('name' in item && 'dosage' in item) {
-            return `${item.name}: ${item.dosage}${item.frequency ? ' - ' + item.frequency : ''}`;
-          }
-          
-          if ('name' in item && 'strength' in item) {
-            const parts = [];
-            parts.push(`${item.name} ${item.strength || ''}`);
-            if (item.dosageForm) parts.push(`Form: ${item.dosageForm}`);
-            if (item.sigInstructions) parts.push(`Instructions: ${item.sigInstructions}`);
-            if (item.quantity) parts.push(`Quantity: ${item.quantity}`);
-            if (item.refills) parts.push(`Refills: ${item.refills}`);
-            if (item.specialInstructions) parts.push(`Special Instructions: ${item.specialInstructions}`);
-            return parts.join('\n');
+          if ('name' in item && ('dosage' in item || 'strength' in item)) {
+            let medString = '';
+            
+            if (item.name) medString += `${item.name}`;
+            if (item.strength) medString += ` ${item.strength}`;
+            if (item.dosage) medString += `: ${item.dosage}`;
+            if (item.frequency) medString += ` - ${item.frequency}`;
+            if (item.dosageForm) medString += `\nForm: ${item.dosageForm}`;
+            if (item.sigInstructions) medString += `\nInstructions: ${item.sigInstructions}`;
+            if (item.quantity) medString += `\nQuantity: ${item.quantity}`;
+            if (item.refills) medString += `\nRefills: ${item.refills}`;
+            if (item.specialInstructions) medString += `\nSpecial Instructions: ${item.specialInstructions}`;
+            
+            return medString || JSON.stringify(item);
           }
           
           // Create a readable string representation of the object
           return Object.entries(item)
+            .filter(([_, value]) => value) // Only include properties with values
             .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`)
             .join('\n');
         }
@@ -62,10 +64,11 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
       }).join('\n\n');
     }
     
-    // Handle patient information object
+    // Handle patient information object for prescription format
     if (content && typeof content === 'object' && documentFormat === 'prescription') {
       if ('name' in content || 'sex' in content || 'age' in content) {
         return Object.entries(content)
+          .filter(([_, value]) => value) // Only include properties with values
           .map(([key, value]) => {
             const formattedKey = key
               .replace(/([A-Z])/g, ' $1')
@@ -73,6 +76,7 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
             
             if (value && typeof value === 'object' && !Array.isArray(value)) {
               return `${formattedKey}:\n${Object.entries(value)
+                .filter(([_, subValue]) => subValue) // Only include properties with values
                 .map(([subKey, subValue]) => `  ${subKey}: ${subValue}`)
                 .join('\n')}`;
             }
@@ -83,10 +87,11 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
       }
     }
     
-    // Handle prescriber information object
+    // Handle prescriber information object for prescription format
     if (content && typeof content === 'object' && documentFormat === 'prescription') {
       if ('name' in content || 'licenseNumber' in content) {
         return Object.entries(content)
+          .filter(([_, value]) => value) // Only include properties with values
           .map(([key, value]) => {
             const formattedKey = key
               .replace(/([A-Z])/g, ' $1')
@@ -100,6 +105,7 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
     // Default object handling for other sections
     if (content && typeof content === 'object') {
       return Object.entries(content)
+        .filter(([_, value]) => value) // Only include properties with values
         .map(([key, value]) => {
           const formattedKey = key
             .replace(/([A-Z])/g, ' $1') // Add space before capital letters
