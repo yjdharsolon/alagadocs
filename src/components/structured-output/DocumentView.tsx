@@ -75,14 +75,78 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
       return content;
     }
     
-    // Handle arrays
+    // Handle arrays of objects (like medications)
     if (Array.isArray(content)) {
-      return content.map(item => 
-        typeof item === 'string' ? item : JSON.stringify(item, null, 2)
-      ).join('\n');
+      return content.map(item => {
+        if (typeof item === 'string') {
+          return item;
+        }
+        
+        // Format medication objects
+        if (item && typeof item === 'object') {
+          if ('name' in item && 'dosage' in item) {
+            return `${item.name}: ${item.dosage}`;
+          }
+          
+          // Create a readable string representation of the object
+          return Object.entries(item)
+            .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`)
+            .join('\n');
+        }
+        
+        return String(item);
+      }).join('\n');
     }
     
-    // Handle objects
+    // Handle patient information object
+    if (content && typeof content === 'object' && 'patientInformation' === sections[0].key) {
+      return Object.entries(content)
+        .map(([key, value]) => {
+          const formattedKey = key
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, str => str.toUpperCase());
+          
+          if (value && typeof value === 'object' && !Array.isArray(value)) {
+            return `${formattedKey}:\n${Object.entries(value)
+              .map(([subKey, subValue]) => `  ${subKey}: ${subValue}`)
+              .join('\n')}`;
+          }
+          
+          return `${formattedKey}: ${value}`;
+        })
+        .join('\n');
+    }
+    
+    // Handle prescriber information object
+    if (content && typeof content === 'object' && 'prescriberInformation' === sections[2].key) {
+      return Object.entries(content)
+        .map(([key, value]) => {
+          const formattedKey = key
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, str => str.toUpperCase());
+          return `${formattedKey}: ${value}`;
+        })
+        .join('\n');
+    }
+    
+    // Default object handling for other sections
+    if (content && typeof content === 'object') {
+      return Object.entries(content)
+        .map(([key, value]) => {
+          const formattedKey = key
+            .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+            .replace(/^./, str => str.toUpperCase()); // Capitalize first letter
+          
+          if (typeof value === 'object' && value !== null) {
+            return `${formattedKey}: ${JSON.stringify(value, null, 2)}`;
+          }
+          
+          return `${formattedKey}: ${value}`;
+        })
+        .join('\n');
+    }
+    
+    // Fall back to JSON stringify for any other types
     return JSON.stringify(content, null, 2);
   };
 
