@@ -15,11 +15,22 @@ export const handleMedicationChange = (
       return medications;
     }
     
-    const updatedMedications = [...medications];
-    updatedMedications[index] = {
-      ...updatedMedications[index],
+    // Create a deep copy of the medication being updated
+    const updatedMedication = {
+      ...medications[index],
       [field]: value
     };
+    
+    // Create a new array with the updated medication
+    const updatedMedications = [
+      ...medications.slice(0, index),
+      updatedMedication,
+      ...medications.slice(index + 1)
+    ];
+    
+    console.log(`Updated medication at index ${index}, field ${field}:`, updatedMedication);
+    console.log('Updated medications array:', updatedMedications);
+    
     return updatedMedications;
   } catch (error) {
     console.error(`Error updating medication field '${field}':`, error);
@@ -45,7 +56,11 @@ export const addMedication = (medications: Medication[]): Medication[] => {
     };
     
     // Add new medication at the beginning of the array
-    return [newMedication, ...medications];
+    const updatedMedications = [newMedication, ...medications];
+    console.log('Added new medication:', newMedication);
+    console.log('Updated medications array after add:', updatedMedications);
+    
+    return updatedMedications;
   } catch (error) {
     console.error('Error adding new medication:', error);
     toast.error("Failed to add new medication");
@@ -61,14 +76,19 @@ export const removeMedication = (medications: Medication[], index: number): Medi
       return medications;
     }
     
-    const updatedMedications = [...medications];
-    updatedMedications.splice(index, 1);
-    
-    // Update IDs to maintain sequential numbering
-    return updatedMedications.map((med, idx) => ({
+    // Create a new array without the medication to remove
+    const updatedMedications = [
+      ...medications.slice(0, index),
+      ...medications.slice(index + 1)
+    ].map((med, idx) => ({
       ...med,
       id: idx + 1
     }));
+    
+    console.log(`Removed medication at index ${index}`);
+    console.log('Updated medications array after removal:', updatedMedications);
+    
+    return updatedMedications;
   } catch (error) {
     console.error('Error removing medication:', error);
     toast.error("Failed to remove medication");

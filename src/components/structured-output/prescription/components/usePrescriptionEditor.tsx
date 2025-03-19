@@ -34,9 +34,11 @@ export const usePrescriptionEditor = ({
   });
   
   // Initialize medications with improved error handling
-  const [medications, setMedications] = useState<Medication[]>(() => 
-    initializeMedications(structuredData.medications)
-  );
+  const [medications, setMedications] = useState<Medication[]>(() => {
+    const initialMedications = initializeMedications(structuredData.medications);
+    console.log('Initial medications state:', initialMedications);
+    return initialMedications;
+  });
   
   // Initialize prescriberInfo with correct structure
   const [prescriberInfo, setPrescriberInfo] = useState<PrescriberInfo>({
@@ -85,19 +87,28 @@ export const usePrescriptionEditor = ({
     });
   };
   
-  // Hook up medication utility functions to state
+  // Hook up medication utility functions to state with improved logging
   const handleMedicationChangeState = (index: number, field: keyof Medication, value: string) => {
+    console.log(`Medication change requested - Index: ${index}, Field: ${field}, Value: ${value}`);
+    console.log('Current medications before change:', medications);
+    
     const updatedMedications = handleMedicationChange(medications, index, field, value);
+    console.log('Setting medications state with:', updatedMedications);
+    
     setMedications(updatedMedications);
   };
   
   const handleAddMedication = () => {
+    console.log('Adding new medication');
     const updatedMedications = addMedication(medications);
+    console.log('Setting medications state after add:', updatedMedications);
     setMedications(updatedMedications);
   };
   
   const handleRemoveMedication = (index: number) => {
+    console.log(`Removing medication at index ${index}`);
     const updatedMedications = removeMedication(medications, index);
+    console.log('Setting medications state after remove:', updatedMedications);
     setMedications(updatedMedications);
   };
   
@@ -111,6 +122,7 @@ export const usePrescriptionEditor = ({
   
   // Handle form submission with validation using our utility
   const handleSave = () => {
+    console.log('Saving prescription with medications:', medications);
     validateAndSavePrescription(
       structuredData,
       patientInfo,

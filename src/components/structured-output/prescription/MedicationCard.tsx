@@ -21,6 +21,17 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
   onFieldChange,
   onRemove
 }) => {
+  // Helper function to handle input changes with logging
+  const handleInputChange = (field: keyof Medication, value: string) => {
+    console.log(`MedicationCard input change - Index: ${index}, Field: ${field}, Value: ${value}`);
+    onFieldChange(index, field, value);
+  };
+
+  // For debugging - log when component renders with its data
+  React.useEffect(() => {
+    console.log(`MedicationCard ${index} rendered with data:`, medication);
+  }, [medication, index]);
+
   return (
     <div className="p-4 border rounded-lg space-y-4">
       <div className="flex justify-between items-center">
@@ -41,7 +52,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Input 
             id={`med-generic-${index}`}
             value={medication.genericName} 
-            onChange={(e) => onFieldChange(index, 'genericName', e.target.value)} 
+            onChange={(e) => handleInputChange('genericName', e.target.value)} 
             className="mt-1"
             required
           />
@@ -51,7 +62,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Input 
             id={`med-brand-${index}`}
             value={medication.brandName || ''} 
-            onChange={(e) => onFieldChange(index, 'brandName', e.target.value)} 
+            onChange={(e) => handleInputChange('brandName', e.target.value)} 
             className="mt-1"
           />
         </div>
@@ -60,7 +71,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Input 
             id={`med-strength-${index}`}
             value={medication.strength || ''} 
-            onChange={(e) => onFieldChange(index, 'strength', e.target.value)} 
+            onChange={(e) => handleInputChange('strength', e.target.value)} 
             className="mt-1"
           />
         </div>
@@ -69,7 +80,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Input 
             id={`med-dosage-${index}`}
             value={medication.dosageForm || ''} 
-            onChange={(e) => onFieldChange(index, 'dosageForm', e.target.value)} 
+            onChange={(e) => handleInputChange('dosageForm', e.target.value)} 
             className="mt-1"
           />
         </div>
@@ -78,7 +89,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Input 
             id={`med-quantity-${index}`}
             value={medication.quantity || ''} 
-            onChange={(e) => onFieldChange(index, 'quantity', e.target.value)} 
+            onChange={(e) => handleInputChange('quantity', e.target.value)} 
             className="mt-1"
           />
         </div>
@@ -87,7 +98,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Input 
             id={`med-refills-${index}`}
             value={medication.refills || ''} 
-            onChange={(e) => onFieldChange(index, 'refills', e.target.value)} 
+            onChange={(e) => handleInputChange('refills', e.target.value)} 
             className="mt-1"
           />
         </div>
@@ -96,7 +107,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Textarea 
             id={`med-sig-${index}`}
             value={medication.sigInstructions || ''} 
-            onChange={(e) => onFieldChange(index, 'sigInstructions', e.target.value)} 
+            onChange={(e) => handleInputChange('sigInstructions', e.target.value)} 
             className="mt-1"
             rows={2}
           />
@@ -106,7 +117,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
           <Textarea 
             id={`med-special-${index}`}
             value={medication.specialInstructions || ''} 
-            onChange={(e) => onFieldChange(index, 'specialInstructions', e.target.value)} 
+            onChange={(e) => handleInputChange('specialInstructions', e.target.value)} 
             className="mt-1"
             rows={2}
           />

@@ -33,6 +33,7 @@ export const validateAndSavePrescription = (
     
     console.log("Saving prescription with medications:", updatedData.medications);
     onSave(updatedData);
+    toast.success("Prescription saved successfully");
   } catch (error) {
     console.error('Error saving prescription:', error);
     toast.error("Failed to save prescription");
