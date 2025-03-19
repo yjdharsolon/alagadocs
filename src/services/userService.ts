@@ -134,14 +134,28 @@ export const updateUserRole = async (userId: string, role: string) => {
 };
 
 /**
- * Gets the user's profile settings 
- * (future enhancement - no preferences column exists yet)
+ * Gets the user's profile settings including medical professional details
  */
 export const getUserSettings = async (userId: string) => {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, profession')
+      .select(`
+        id, 
+        first_name, 
+        middle_name,
+        last_name, 
+        name_extension,
+        medical_title,
+        profession,
+        prc_license,
+        ptr_number,
+        s2_number,
+        clinic_name,
+        clinic_address,
+        clinic_schedule,
+        contact_number
+      `)
       .eq('id', userId)
       .maybeSingle();
     

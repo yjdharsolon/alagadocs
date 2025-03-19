@@ -70,7 +70,8 @@ export const signUpNewUser = async (
             first_name: userData.first_name,
             middle_name: userData.middle_name,
             last_name: userData.last_name,
-            name_extension: userData.name_extension
+            name_extension: userData.name_extension,
+            medical_title: userData.medical_title
           })
           .eq('id', data.user.id);
           

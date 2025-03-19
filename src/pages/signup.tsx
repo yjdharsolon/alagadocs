@@ -16,13 +16,16 @@ export default function Signup() {
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [nameExtension, setNameExtension] = useState('');
+  const [medicalTitle, setMedicalTitle] = useState('');
   const [showExtensionSuggestions, setShowExtensionSuggestions] = useState(false);
+  const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const { signUp, loading, user } = useAuth();
 
   const nameExtensionSuggestions = ['Jr.', 'Sr.', 'I', 'II', 'III', 'IV', 'V'];
+  const medicalTitleSuggestions = ['MD', 'DMD', 'RN', 'PT', 'OT', 'FPCP', 'DPCP', 'FPPS', 'DPPS', 'FAAP', 'FAAOS'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +49,8 @@ export default function Signup() {
         first_name: firstName,
         middle_name: middleName,
         last_name: lastName,
-        name_extension: nameExtension
+        name_extension: nameExtension,
+        medical_title: medicalTitle
       });
       toast.success('Account created successfully!');
       navigate('/role-selection');
@@ -73,9 +77,9 @@ export default function Signup() {
           <form onSubmit={handleSubmit}>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
                     <Input 
                       id="firstName" 
                       value={firstName}
@@ -91,8 +95,11 @@ export default function Signup() {
                       onChange={(e) => setMiddleName(e.target.value)}
                     />
                   </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName">Last Name <span className="text-red-500">*</span></Label>
                     <Input 
                       id="lastName" 
                       value={lastName}
@@ -101,7 +108,7 @@ export default function Signup() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="nameExtension">Extension</Label>
+                    <Label htmlFor="nameExtension">Name Extension</Label>
                     <div className="relative">
                       <Input 
                         id="nameExtension" 
@@ -132,7 +139,37 @@ export default function Signup() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="medicalTitle">Medical Title</Label>
+                  <div className="relative">
+                    <Input 
+                      id="medicalTitle" 
+                      value={medicalTitle}
+                      onChange={(e) => setMedicalTitle(e.target.value)}
+                      onFocus={() => setShowTitleSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowTitleSuggestions(false), 200)}
+                      placeholder="MD, DMD, FPCP, etc."
+                    />
+                    {showTitleSuggestions && (
+                      <div className="absolute z-10 w-full mt-1 bg-background border border-input rounded-md shadow-lg max-h-48 overflow-y-auto">
+                        {medicalTitleSuggestions.map((title) => (
+                          <div 
+                            key={title} 
+                            className="px-4 py-2 hover:bg-accent cursor-pointer"
+                            onClick={() => {
+                              setMedicalTitle(title);
+                              setShowTitleSuggestions(false);
+                            }}
+                          >
+                            {title}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
                   <Input 
                     id="email" 
                     type="email" 
@@ -144,7 +181,7 @@ export default function Signup() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
                   <Input 
                     id="password" 
                     type="password"
@@ -155,7 +192,7 @@ export default function Signup() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">Confirm Password <span className="text-red-500">*</span></Label>
                   <Input 
                     id="confirmPassword" 
                     type="password"
