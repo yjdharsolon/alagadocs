@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation } from '@tanstack/react-query';
-import { saveStructuredNote } from '@/services/structuredOutput/noteService';
+import { saveStructuredNote } from '@/services/structuredNote/saveNote';
 import { MedicalSections } from '../types';
 
 interface SaveNoteButtonProps {
@@ -33,7 +33,12 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const mutation = useMutation({
-    mutationFn: () => saveStructuredNote(user.id, sections, structuredText, patientId, transcriptionId, selectedFormats),
+    mutationFn: () => saveStructuredNote(
+      user.id,
+      transcriptionId,
+      sections,
+      patientId
+    ),
     onSuccess: () => {
       setIsSaving(false);
       toast({
