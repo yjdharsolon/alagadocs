@@ -15,11 +15,14 @@ export const useEditMode = ({ setStructuredData }: UseEditModeParams) => {
   }, [isEditMode]);
 
   const handleSaveEdit = useCallback((updatedData: MedicalSections, stayInEditMode = false) => {
+    // First update the data
     setStructuredData(updatedData);
     
     // Only exit edit mode if stayInEditMode is false
     if (!stayInEditMode) {
       setIsEditMode(false);
+    } else {
+      console.log('Staying in edit mode after save as requested');
     }
     
     toast.success('Document changes saved successfully');

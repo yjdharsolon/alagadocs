@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MedicalSections } from '@/components/structured-output/types';
@@ -42,9 +43,14 @@ export const useStructuredOutputPage = ({
     setIsEditMode(!isEditMode);
   }, [isEditMode]);
 
-  const handleSaveEdit = useCallback((updatedData: MedicalSections) => {
+  const handleSaveEdit = useCallback((updatedData: MedicalSections, stayInEditMode = false) => {
     setStructuredData(updatedData);
-    setIsEditMode(false);
+    
+    // Only exit edit mode if stayInEditMode is false
+    if (!stayInEditMode) {
+      setIsEditMode(false);
+    }
+    
     toast.success('Document changes saved successfully');
   }, [setStructuredData]);
 

@@ -10,7 +10,7 @@ import { formatContent } from './utils/contentFormatter';
 
 interface EditableDocumentViewProps {
   structuredData: MedicalSections;
-  onSave?: (updatedData: MedicalSections) => void;
+  onSave?: (updatedData: MedicalSections, stayInEditMode?: boolean) => void;
 }
 
 const EditableDocumentView = ({ 
@@ -31,13 +31,8 @@ const EditableDocumentView = ({
         structuredData={structuredData}
         onSave={(updatedData, stayInEditMode = false) => {
           if (onSave) {
-            onSave(updatedData);
-            toast.success('Prescription saved successfully');
-            // Only exit edit mode if stayInEditMode is false
-            if (!stayInEditMode) {
-              // Since onSave typically comes from a parent that handles edit mode,
-              // we just call it with the updated data and don't handle exit logic here
-            }
+            // Pass both the updatedData and stayInEditMode flag to the parent onSave
+            onSave(updatedData, stayInEditMode);
           }
         }}
       />
@@ -83,8 +78,8 @@ const EditableDocumentView = ({
 
   const handleSave = () => {
     if (onSave) {
-      onSave(editableData);
-      toast.success('Document changes saved successfully');
+      // For standard formats, we don't stay in edit mode after saving
+      onSave(editableData, false);
     }
   };
 

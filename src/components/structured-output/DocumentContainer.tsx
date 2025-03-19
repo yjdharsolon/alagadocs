@@ -21,7 +21,7 @@ interface DocumentContainerProps {
   transcriptionId: string;
   isEditMode: boolean;
   onToggleEditMode: () => void;
-  onSaveEdit: (updatedData: MedicalSections) => void;
+  onSaveEdit: (updatedData: MedicalSections, stayInEditMode?: boolean) => void;
   onNoteSaved?: () => void;
   onEndConsult?: () => void;
   noteSaved?: boolean;
@@ -96,13 +96,13 @@ const DocumentContainer = ({
       {isEditMode ? (
         <EditableDocumentView 
           structuredData={structuredData} 
-          onSave={onSaveEdit}
+          onSave={(updatedData, stayInEditMode) => onSaveEdit(updatedData, stayInEditMode)}
         />
       ) : (
         <DocumentView structuredData={structuredData} />
       )}
     </>
   );
-};
+}
 
 export default DocumentContainer;
