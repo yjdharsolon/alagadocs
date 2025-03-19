@@ -79,7 +79,6 @@ export const usePrescriptionEditor = ({
       const middleName = profileData.middle_name ? `${profileData.middle_name.charAt(0)}. ` : '';
       const lastName = profileData.last_name || '';
       const nameExtension = profileData.name_extension ? `, ${profileData.name_extension}` : '';
-      const title = profileData.medical_title ? `, ${profileData.medical_title}` : '';
       
       const fullName = `${firstName} ${middleName}${lastName}${nameExtension}`.trim();
       

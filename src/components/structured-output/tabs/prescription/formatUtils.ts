@@ -26,7 +26,7 @@ export const formatPrescriberInfo = (prescriberInfo: any, structuredPrescriberIn
 
   let formattedInfo = '';
   
-  // Create properly formatted name with all components and title on the same line
+  // Create properly formatted name with title on the same line
   if (prescriberInfo.first_name || prescriberInfo.last_name) {
     const firstName = prescriberInfo.first_name || '';
     const middleName = prescriberInfo.middle_name ? prescriberInfo.middle_name.charAt(0) + '. ' : '';
