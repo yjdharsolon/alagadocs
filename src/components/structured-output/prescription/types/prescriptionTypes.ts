@@ -43,5 +43,6 @@ export interface PrescriptionEditorState {
   handleRemoveMedication: (index: number) => void;
   handlePrescriberInfoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   toggleStayInEditMode: () => void;
-  handleSave: () => void;
+  handleSave: (forceStayInEditMode?: boolean) => void;
 }
+
