@@ -85,7 +85,18 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
         // Format medication objects
         if (item && typeof item === 'object') {
           if ('name' in item && 'dosage' in item) {
-            return `${item.name}: ${item.dosage}`;
+            return `${item.name}: ${item.dosage}${item.frequency ? ' - ' + item.frequency : ''}`;
+          }
+          
+          if ('name' in item && 'strength' in item) {
+            const parts = [];
+            parts.push(`${item.name} ${item.strength || ''}`);
+            if (item.dosageForm) parts.push(`Form: ${item.dosageForm}`);
+            if (item.sigInstructions) parts.push(`Instructions: ${item.sigInstructions}`);
+            if (item.quantity) parts.push(`Quantity: ${item.quantity}`);
+            if (item.refills) parts.push(`Refills: ${item.refills}`);
+            if (item.specialInstructions) parts.push(`Special Instructions: ${item.specialInstructions}`);
+            return parts.join('\n');
           }
           
           // Create a readable string representation of the object
@@ -95,38 +106,42 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
         }
         
         return String(item);
-      }).join('\n');
+      }).join('\n\n');
     }
     
     // Handle patient information object
-    if (content && typeof content === 'object' && 'patientInformation' === sections[0].key) {
-      return Object.entries(content)
-        .map(([key, value]) => {
-          const formattedKey = key
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^./, str => str.toUpperCase());
-          
-          if (value && typeof value === 'object' && !Array.isArray(value)) {
-            return `${formattedKey}:\n${Object.entries(value)
-              .map(([subKey, subValue]) => `  ${subKey}: ${subValue}`)
-              .join('\n')}`;
-          }
-          
-          return `${formattedKey}: ${value}`;
-        })
-        .join('\n');
+    if (content && typeof content === 'object' && documentFormat === 'prescription') {
+      if (sections[0].key === 'patientInformation') {
+        return Object.entries(content)
+          .map(([key, value]) => {
+            const formattedKey = key
+              .replace(/([A-Z])/g, ' $1')
+              .replace(/^./, str => str.toUpperCase());
+            
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+              return `${formattedKey}:\n${Object.entries(value)
+                .map(([subKey, subValue]) => `  ${subKey}: ${subValue}`)
+                .join('\n')}`;
+            }
+            
+            return `${formattedKey}: ${value}`;
+          })
+          .join('\n');
+      }
     }
     
     // Handle prescriber information object
-    if (content && typeof content === 'object' && 'prescriberInformation' === sections[2].key) {
-      return Object.entries(content)
-        .map(([key, value]) => {
-          const formattedKey = key
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^./, str => str.toUpperCase());
-          return `${formattedKey}: ${value}`;
-        })
-        .join('\n');
+    if (content && typeof content === 'object' && documentFormat === 'prescription') {
+      if (sections[2].key === 'prescriberInformation') {
+        return Object.entries(content)
+          .map(([key, value]) => {
+            const formattedKey = key
+              .replace(/([A-Z])/g, ' $1')
+              .replace(/^./, str => str.toUpperCase());
+            return `${formattedKey}: ${value}`;
+          })
+          .join('\n');
+      }
     }
     
     // Default object handling for other sections

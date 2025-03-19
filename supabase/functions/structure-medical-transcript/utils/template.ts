@@ -113,6 +113,46 @@ Return the structured information in this exact JSON format:
 Extract all relevant information from the transcription. If any information is not present for a section, include that section with an empty string or "Not documented" as the value. Be accurate, concise and maintain medical terminology.`;
   }
 
+  // Consultation note format
+  if (template?.sections && template.sections.includes('Reason for Consultation')) {
+    return `You are a medical assistant helping to format transcribed medical conversations into a structured consultation note.
+Format the provided transcription into a consultation note with these exact sections:
+
+1. Reason for Consultation:
+   - Why the patient was referred
+   - Main clinical question
+
+2. History:
+   - Relevant patient history
+   - Current symptoms
+
+3. Findings:
+   - Examination findings
+   - Test results
+   - Observations
+
+4. Impression:
+   - Diagnosis or clinical impression
+   - Analysis of the case
+
+5. Recommendations:
+   - Treatment plan
+   - Follow-up suggestions
+   - Referrals if needed
+   - Medication recommendations
+
+Return the structured information in this exact JSON format:
+{
+  "reasonForConsultation": "",
+  "history": "",
+  "findings": "",
+  "impression": "",
+  "recommendations": ""
+}
+
+Extract all relevant information from the transcription. If any information is not present for a section, include that section with an empty string or "Not documented" as the value. Be accurate, concise and maintain medical terminology.`;
+  }
+
   const standardSections = [
     "Chief Complaint",
     "History of Present Illness",
