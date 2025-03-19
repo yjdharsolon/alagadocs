@@ -7,6 +7,8 @@ import { MedicalSections } from '../../types';
 export const formatMedications = (medications: any[]) => {
   if (!medications || !Array.isArray(medications)) return "No medications specified";
   
+  console.log('Formatting medications:', JSON.stringify(medications, null, 2));
+  
   return medications.map((med, index) => {
     try {
       const medNumber = med.id || (index + 1);
@@ -14,6 +16,8 @@ export const formatMedications = (medications: any[]) => {
       // Format medication with generic and brand name (if available)
       const genericName = med.genericName || med.name || 'Not specified'; // For backward compatibility
       const brandName = med.brandName ? ` (${med.brandName})` : '';
+      
+      console.log(`Medication ${medNumber} - Generic Name: "${genericName}", Brand Name: "${med.brandName || 'none'}", Formatted Brand: "${brandName}"`);
       
       return `${medNumber}. ${genericName}${brandName} ${med.strength || ''} (${med.dosageForm || 'Not specified'})
     Sig: ${med.sigInstructions || 'Not specified'}

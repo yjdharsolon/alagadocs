@@ -28,8 +28,10 @@ export const handleMedicationChange = (
       ...medications.slice(index + 1)
     ];
     
-    console.log(`Updated medication at index ${index}, field ${field}:`, JSON.stringify(updatedMedication, null, 2));
-    console.log('Updated medications array:', JSON.stringify(updatedMedications, null, 2));
+    // Debug logging for brand name changes
+    if (field === 'brandName') {
+      console.log(`Updated medication brand name at index ${index}: "${value}"`);
+    }
     
     return updatedMedications;
   } catch (error) {
@@ -112,10 +114,15 @@ export const initializeMedications = (medications: any): Medication[] => {
         // Initialize brandName separately (it might not exist in legacy data)
         const brandName = med.brandName || '';
         
-        // Log the mapping for debugging
-        if (med.name && !med.genericName) {
-          console.log(`Converting legacy name '${med.name}' to genericName`);
-        }
+        // Log brand name for debugging
+        console.log(`Initializing medication ${index + 1}:`, {
+          genericName,
+          brandName,
+          originalBrandName: med.brandName, 
+          hasNameProperty: 'name' in med,
+          hasGenericNameProperty: 'genericName' in med,
+          hasBrandNameProperty: 'brandName' in med
+        });
         
         // Ensure all fields have at least empty string values to prevent null/undefined errors
         return {

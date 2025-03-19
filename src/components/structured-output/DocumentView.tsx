@@ -14,7 +14,16 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
     console.log('DocumentView received structuredData:', structuredData);
     const format = getDocumentFormat(structuredData);
     console.log('Detected document format:', format);
-    console.log('Filtered data:', filterStructuredDataByFormat(structuredData, format));
+    
+    // Debug medications specifically to check brand names
+    if (structuredData.medications && Array.isArray(structuredData.medications)) {
+      console.log('DocumentView medication data:', JSON.stringify(structuredData.medications, null, 2));
+      
+      structuredData.medications.forEach((med, index) => {
+        console.log(`Med ${index + 1} - Brand name property exists:`, 'brandName' in med);
+        console.log(`Med ${index + 1} - Brand name value:`, med.brandName);
+      });
+    }
   }, [structuredData]);
   
   // Use the centralized format detection logic
