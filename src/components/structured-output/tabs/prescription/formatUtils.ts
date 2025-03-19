@@ -1,4 +1,3 @@
-
 import { MedicalSections } from '../../types';
 
 /**
@@ -26,35 +25,28 @@ export const formatPrescriberInfo = (prescriberInfo: any, structuredPrescriberIn
 
   let formattedInfo = '';
   
-  // Create name
+  // Create name with title on the same line
   const name = `${prescriberInfo.first_name || ''} ${prescriberInfo.middle_name ? prescriberInfo.middle_name.charAt(0) + '. ' : ''}${prescriberInfo.last_name || ''}${prescriberInfo.name_extension ? ', ' + prescriberInfo.name_extension : ''}`;
-  
-  // Get medical title - from either source
   const title = prescriberInfo.medical_title || (structuredPrescriberInfo && structuredPrescriberInfo.title ? structuredPrescriberInfo.title : '');
   
-  // Add doctor's name
-  formattedInfo += `${name}\n`;
-  
-  // Add title on separate line if available
-  if (title) {
-    formattedInfo += `${title}\n`;
-  }
+  // Add doctor's name with title on the same line
+  formattedInfo += `${name}${title ? ', ' + title : ''}\n`;
   
   if (prescriberInfo.profession) {
     formattedInfo += `${prescriberInfo.profession}\n`;
   }
   
-  // Add professional license information
+  // Add professional license information in specific order: PRC, S2, PTR
   if (prescriberInfo.prc_license || (structuredPrescriberInfo && structuredPrescriberInfo.licenseNumber)) {
     formattedInfo += `PRC License No: ${prescriberInfo.prc_license || (structuredPrescriberInfo ? structuredPrescriberInfo.licenseNumber : '')}\n`;
   }
   
-  if (prescriberInfo.ptr_number || (structuredPrescriberInfo && structuredPrescriberInfo.ptrNumber)) {
-    formattedInfo += `PTR No: ${prescriberInfo.ptr_number || (structuredPrescriberInfo ? structuredPrescriberInfo.ptrNumber : '')}\n`;
-  }
-  
   if (prescriberInfo.s2_number || (structuredPrescriberInfo && structuredPrescriberInfo.s2Number)) {
     formattedInfo += `S2 No: ${prescriberInfo.s2_number || (structuredPrescriberInfo ? structuredPrescriberInfo.s2Number : '')}\n`;
+  }
+  
+  if (prescriberInfo.ptr_number || (structuredPrescriberInfo && structuredPrescriberInfo.ptrNumber)) {
+    formattedInfo += `PTR No: ${prescriberInfo.ptr_number || (structuredPrescriberInfo ? structuredPrescriberInfo.ptrNumber : '')}\n`;
   }
   
   // Add clinic information

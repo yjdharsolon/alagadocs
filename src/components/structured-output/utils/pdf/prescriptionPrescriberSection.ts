@@ -17,17 +17,17 @@ export const addPrescriberSection = (
   
   // Get prescriber name with proper formatting
   let prescriberName = '';
-  let title = '';
   
   if (profileData) {
     // Use profile data if available
     const name = `${profileData.first_name || ''} ${profileData.last_name || ''}`;
-    title = profileData.medical_title || '';
-    prescriberName = name;
+    const title = profileData.medical_title || '';
+    prescriberName = title ? `${name}, ${title}` : name;
   } else if (typeof prescriberInfo === 'object') {
     // Use prescriber info from the prescription
-    prescriberName = prescriberInfo.name || '';
-    title = prescriberInfo.title || '';
+    const name = prescriberInfo.name || '';
+    const title = prescriberInfo.title || '';
+    prescriberName = title ? `${name}, ${title}` : name;
   }
   
   // Get license information from profile data if available, otherwise fall back to prescriber info
@@ -39,22 +39,15 @@ export const addPrescriberSection = (
   const footerX = pageWidth - margin - (contentWidth * 0.3);
   let currentY = footerY;
   
-  // Add doctor's name
+  // Add doctor's name with title on same line
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.text(prescriberName, footerX, currentY);
   
-  // Add title on the next line if available
-  if (title) {
-    currentY += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.text(title, footerX, currentY);
-  }
-  
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
   
-  // Add license information
+  // Add license information in specific order: PRC, S2, PTR
   currentY += 5;
   if (prcLicense) doc.text(`PRC No.: ${prcLicense}`, footerX, currentY);
   
