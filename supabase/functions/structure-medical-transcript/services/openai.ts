@@ -68,7 +68,7 @@ function normalizeResponse(data: any, template?: { sections: string[] }): any {
     formatType = 'soap';
   } else if (data.reasonForConsultation) {
     formatType = 'consultation';
-  } else if (data.patientInformation || data.medications) {
+  } else if (data.medications) {
     formatType = 'prescription';
   }
   
@@ -90,21 +90,15 @@ function normalizeResponse(data: any, template?: { sections: string[] }): any {
         recommendations: ensureString(data.recommendations)
       };
     case 'prescription':
-      // Ensure patientInformation is an object with string values
-      const patientInfo = typeof data.patientInformation === 'object' ? 
-        {
-          name: ensureString(data.patientInformation.name),
-          sex: ensureString(data.patientInformation.sex),
-          age: ensureString(data.patientInformation.age),
-          date: ensureString(data.patientInformation.date)
-        } : 
-        { name: '', sex: '', age: '', date: '' };
+      // For prescription, we're now only handling medications from the AI
+      // The patient and prescriber info will be added by the frontend
       
       // Ensure medications is an array of objects
-      let medications;
+      let medications = [];
       if (Array.isArray(data.medications)) {
-        medications = data.medications.map((med: any) => {
+        medications = data.medications.map((med: any, index: number) => {
           return {
+            id: index + 1, // Add numbering to medications
             name: ensureString(med.name),
             strength: ensureString(med.strength),
             dosageForm: ensureString(med.dosageForm),
@@ -118,6 +112,7 @@ function normalizeResponse(data: any, template?: { sections: string[] }): any {
         // Handle case where medications is an object, not an array
         medications = [
           {
+            id: 1, // Add numbering (single medication)
             name: ensureString(data.medications.name || ''),
             strength: ensureString(data.medications.strength || ''),
             dosageForm: ensureString(data.medications.dosageForm || ''),
@@ -131,19 +126,13 @@ function normalizeResponse(data: any, template?: { sections: string[] }): any {
         medications = [];
       }
       
-      // Ensure prescriberInformation is an object with string values
-      const prescriberInfo = typeof data.prescriberInformation === 'object' ?
-        {
-          name: ensureString(data.prescriberInformation.name),
-          licenseNumber: ensureString(data.prescriberInformation.licenseNumber),
-          signature: ensureString(data.prescriberInformation.signature || '[SIGNATURE]')
-        } :
-        { name: '', licenseNumber: '', signature: '[SIGNATURE]' };
-      
+      // Return just the medications array - patient and prescriber info
+      // will be added by the frontend
       return {
-        patientInformation: patientInfo,
         medications: medications,
-        prescriberInformation: prescriberInfo
+        // These empty objects will be filled by the frontend
+        patientInformation: {}, 
+        prescriberInformation: {}
       };
     default:
       // Standard history & physical format

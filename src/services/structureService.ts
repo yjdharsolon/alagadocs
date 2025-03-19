@@ -1,17 +1,20 @@
 import { supabase } from '@/integrations/supabase/client';
 import { MedicalSections } from '@/components/structured-output/types';
+import { getUserProfile } from './userService';
 
 /**
  * Structures transcribed text into medical note sections
  * @param text The transcribed text to structure
  * @param role The medical professional role (e.g., Doctor, Nurse)
  * @param template Optional custom template with sections
+ * @param patientId Optional patient ID to include patient information
  * @returns The structured medical note sections
  */
 export const structureText = async (
   text: string, 
   role: string = 'Doctor',
-  template?: { sections: string[] }
+  template?: { sections: string[] },
+  patientId?: string
 ): Promise<MedicalSections> => {
   try {
     console.log('Structuring text with role:', role);
@@ -36,13 +39,13 @@ export const structureText = async (
     } else if (role === 'consultation') {
       formattedTemplate = { sections: ['Reason for Consultation', 'History', 'Findings', 'Impression', 'Recommendations'] };
     } else if (role === 'prescription') {
-      formattedTemplate = { sections: ['Patient Information', 'Medications', 'Prescriber Information'] };
+      formattedTemplate = { sections: ['Prescription'] };
     }
     
     console.log('Using formatted template:', formattedTemplate);
     
     // Call the edge function to structure the medical text
-    const { data, error } = await supabase.functions.invoke('structure-medical-text', {
+    const { data, error } = await supabase.functions.invoke('structure-medical-transcript', {
       body: { 
         text,
         role: formattedRole,
@@ -59,44 +62,118 @@ export const structureText = async (
       throw new Error('No data returned from structuring service');
     }
     
-    console.log('Raw response from structure-medical-text:', data);
+    console.log('Raw response from structure-medical-transcript:', data);
     
-    // If the response is already a MedicalSections object
-    if (data && typeof data === 'object') {
-      const normalizedData = normalizeStructuredData(data, role);
-      console.log('Normalized data:', normalizedData);
-      return normalizedData;
-    }
-    
-    // If the response is in the content field
-    if (data && data.content) {
+    // Parse the response
+    let structuredData;
+    if (typeof data === 'string') {
       try {
-        // Try to parse the content as JSON if it's a string
-        if (typeof data.content === 'string') {
-          const parsedContent = JSON.parse(data.content);
-          const normalizedData = normalizeStructuredData(parsedContent, role);
-          console.log('Normalized data from content string:', normalizedData);
-          return normalizedData;
-        } else {
-          // If it's already an object, normalize it
-          const normalizedData = normalizeStructuredData(data.content, role);
-          console.log('Normalized data from content object:', normalizedData);
-          return normalizedData;
-        }
+        structuredData = JSON.parse(data);
       } catch (e) {
-        console.error('Error parsing structured content:', e);
-        // Fallback structure if it's not parseable JSON
-        return createFallbackStructure(typeof data.content === 'string' ? data.content : 'Error parsing content');
+        structuredData = data;
       }
+    } else {
+      structuredData = data;
     }
     
-    console.error('Unexpected response format:', data);
-    return createFallbackStructure('Structured data not available');
+    // For prescriptions, enhance with patient and user data
+    if (formattedTemplate?.sections?.includes('Prescription')) {
+      structuredData = await enhancePrescriptionData(structuredData, patientId);
+    }
+    
+    // Normalize and return the structured data
+    const normalizedData = normalizeStructuredData(structuredData, role);
+    console.log('Normalized data:', normalizedData);
+    return normalizedData;
   } catch (error) {
     console.error('Error in structureText:', error);
     throw error;
   }
 };
+
+/**
+ * Enhances prescription data with patient and user information
+ */
+async function enhancePrescriptionData(structuredData: any, patientId?: string): Promise<any> {
+  // Get current date
+  const currentDate = new Date().toISOString().split('T')[0];
+  
+  // Default patient info if we can't find actual patient data
+  let patientInfo = {
+    name: "Not specified",
+    sex: "Not specified",
+    age: "Not specified",
+    date: currentDate
+  };
+  
+  // Try to get patient data if ID is provided
+  if (patientId) {
+    try {
+      const { data: patient } = await supabase
+        .from('patients')
+        .select('first_name, last_name, gender, age, date_of_birth')
+        .eq('id', patientId)
+        .maybeSingle();
+        
+      if (patient) {
+        patientInfo = {
+          name: `${patient.first_name} ${patient.last_name}`,
+          sex: patient.gender || "Not specified",
+          age: patient.age ? patient.age.toString() : "Not specified",
+          date: currentDate
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching patient data:', error);
+    }
+  } else {
+    // Try to get patient from session storage as fallback
+    try {
+      const storedPatient = sessionStorage.getItem('selectedPatient');
+      if (storedPatient) {
+        const patient = JSON.parse(storedPatient);
+        patientInfo = {
+          name: `${patient.first_name} ${patient.last_name}`,
+          sex: patient.gender || "Not specified",
+          age: patient.age ? patient.age.toString() : "Not specified",
+          date: currentDate
+        };
+      }
+    } catch (error) {
+      console.error('Error getting patient from session storage:', error);
+    }
+  }
+  
+  // Get current user data for prescriber information
+  let prescriberInfo = {
+    name: "Attending Physician",
+    licenseNumber: "License number not specified",
+    signature: "[SIGNATURE]"
+  };
+  
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const userData = await getUserProfile(session.user.id);
+      if (userData) {
+        prescriberInfo = {
+          name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || "Attending Physician",
+          licenseNumber: userData.profession || "License number not specified",
+          signature: "[SIGNATURE]"
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Error getting user data:', error);
+  }
+  
+  // Merge the data
+  return {
+    ...structuredData,
+    patientInformation: patientInfo,
+    prescriberInformation: prescriberInfo
+  };
+}
 
 /**
  * Normalize structured data to ensure consistent formats across all note types

@@ -12,6 +12,21 @@ interface PrescriptionTabsProps {
 }
 
 const PrescriptionTabs: React.FC<PrescriptionTabsProps> = ({ structuredData }) => {
+  // Format medications to show numbering
+  const formatMedications = (medications: any[]) => {
+    if (!medications || !Array.isArray(medications)) return "No medications specified";
+    
+    return medications.map((med, index) => {
+      const medNumber = med.id || (index + 1);
+      return `${medNumber}. ${med.name} ${med.strength} (${med.dosageForm})
+      Sig: ${med.sigInstructions}
+      Quantity: ${med.quantity}
+      Refills: ${med.refills}
+      ${med.specialInstructions ? `Special Instructions: ${med.specialInstructions}` : ''}
+      `;
+    }).join("\n\n");
+  };
+
   return (
     <Tabs defaultValue="document" className="w-full">
       <TabsList className="grid w-full grid-cols-4 mb-6 border border-[#E0E0E0] p-1 rounded-md">
@@ -56,7 +71,11 @@ const PrescriptionTabs: React.FC<PrescriptionTabsProps> = ({ structuredData }) =
         />
         <SectionContent 
           title="MEDICATIONS" 
-          content={formatContent(structuredData.medications)} 
+          content={
+            Array.isArray(structuredData.medications)
+              ? formatMedications(structuredData.medications)
+              : formatContent(structuredData.medications)
+          } 
         />
         <SectionContent 
           title="PRESCRIBER INFORMATION" 
@@ -74,7 +93,11 @@ const PrescriptionTabs: React.FC<PrescriptionTabsProps> = ({ structuredData }) =
       <TabsContent value="medications">
         <SectionContent 
           title="MEDICATIONS" 
-          content={formatContent(structuredData.medications)} 
+          content={
+            Array.isArray(structuredData.medications)
+              ? formatMedications(structuredData.medications)
+              : formatContent(structuredData.medications)
+          } 
         />
       </TabsContent>
     </Tabs>
