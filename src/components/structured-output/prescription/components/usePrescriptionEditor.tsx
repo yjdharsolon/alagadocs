@@ -208,7 +208,7 @@ export const usePrescriptionEditor = ({
     });
   };
   
-  // Handle form submission with validation
+  // Handle form submission with validation - FIXED: Changed property name from prescriberInfo to prescriberInformation
   const handleSave = () => {
     try {
       // Validate required fields
@@ -226,7 +226,7 @@ export const usePrescriptionEditor = ({
           // Ensure both name and genericName are set for backward compatibility
           name: med.genericName, // Set name field to match genericName for backward compatibility
         })),
-        prescriberInfo: prescriberInfo
+        prescriberInformation: prescriberInfo // Changed from prescriberInfo to prescriberInformation
       };
       
       console.log("Saving prescription with medications:", updatedData.medications);
