@@ -45,10 +45,14 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
         
         // Format medication objects
         if (item && typeof item === 'object') {
-          if ('name' in item && ('dosage' in item || 'strength' in item)) {
+          if (('genericName' in item || 'name' in item) && ('dosageForm' in item || 'strength' in item)) {
             let medString = '';
             
-            if (item.name) medString += `${item.name}`;
+            // Handle both new format (genericName + brandName) and old format (name)
+            const genericName = item.genericName || item.name || '';
+            const brandName = item.brandName ? ` (${item.brandName})` : '';
+            
+            medString += `${genericName}${brandName}`;
             if (item.strength) medString += ` ${item.strength}`;
             if (item.dosage) medString += `: ${item.dosage}`;
             if (item.frequency) medString += ` - ${item.frequency}`;

@@ -6,7 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface Medication {
   id?: number;
-  name: string;
+  genericName: string;
+  brandName: string; // Optional but included as a field
   strength: string;
   dosageForm: string;
   sigInstructions: string;
@@ -51,7 +52,8 @@ export const usePrescriptionEditor = ({
     Array.isArray(structuredData.medications) 
       ? structuredData.medications.map((med, index) => ({
           id: med.id || index + 1,
-          name: med.name || '',
+          genericName: med.genericName || med.name || '', // Support backward compatibility
+          brandName: med.brandName || '',
           strength: med.strength || '',
           dosageForm: med.dosageForm || '',
           sigInstructions: med.sigInstructions || '',
@@ -124,7 +126,8 @@ export const usePrescriptionEditor = ({
     // Create new medication with next ID
     const newMedication = {
       id: medications.length > 0 ? Math.max(...medications.map(med => med.id || 0)) + 1 : 1,
-      name: '',
+      genericName: '',
+      brandName: '',
       strength: '',
       dosageForm: '',
       sigInstructions: '',

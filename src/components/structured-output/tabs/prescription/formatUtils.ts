@@ -9,7 +9,11 @@ export const formatMedications = (medications: any[]) => {
   
   return medications.map((med, index) => {
     const medNumber = med.id || (index + 1);
-    return `${medNumber}. ${med.name} ${med.strength || ''} (${med.dosageForm || 'Not specified'})
+    // Format medication with generic and brand name (if available)
+    const genericName = med.genericName || med.name || 'Not specified'; // For backward compatibility
+    const brandName = med.brandName ? ` (${med.brandName})` : '';
+    
+    return `${medNumber}. ${genericName}${brandName} ${med.strength || ''} (${med.dosageForm || 'Not specified'})
     Sig: ${med.sigInstructions || 'Not specified'}
     Quantity: ${med.quantity || 'Not specified'}
     Refills: ${med.refills || 'Not specified'}

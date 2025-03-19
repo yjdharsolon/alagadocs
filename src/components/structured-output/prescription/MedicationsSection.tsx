@@ -7,7 +7,8 @@ import MedicationCard from './MedicationCard';
 
 interface Medication {
   id?: number;
-  name: string;
+  genericName: string;
+  brandName: string;
   strength: string;
   dosageForm: string;
   sigInstructions: string;

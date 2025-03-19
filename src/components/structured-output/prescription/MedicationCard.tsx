@@ -9,7 +9,8 @@ import { Trash2 } from 'lucide-react';
 
 interface Medication {
   id?: number;
-  name: string;
+  genericName: string;
+  brandName: string;
   strength: string;
   dosageForm: string;
   sigInstructions: string;
@@ -47,11 +48,21 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
       <Separator />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor={`med-name-${index}`}>Medication Name</Label>
+          <Label htmlFor={`med-generic-${index}`}>Generic Name *</Label>
           <Input 
-            id={`med-name-${index}`}
-            value={medication.name} 
-            onChange={(e) => onFieldChange(index, 'name', e.target.value)} 
+            id={`med-generic-${index}`}
+            value={medication.genericName} 
+            onChange={(e) => onFieldChange(index, 'genericName', e.target.value)} 
+            className="mt-1"
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor={`med-brand-${index}`}>Brand Name (Optional)</Label>
+          <Input 
+            id={`med-brand-${index}`}
+            value={medication.brandName} 
+            onChange={(e) => onFieldChange(index, 'brandName', e.target.value)} 
             className="mt-1"
           />
         </div>
@@ -82,6 +93,15 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
             className="mt-1"
           />
         </div>
+        <div>
+          <Label htmlFor={`med-refills-${index}`}>Refills</Label>
+          <Input 
+            id={`med-refills-${index}`}
+            value={medication.refills} 
+            onChange={(e) => onFieldChange(index, 'refills', e.target.value)} 
+            className="mt-1"
+          />
+        </div>
         <div className="sm:col-span-2">
           <Label htmlFor={`med-sig-${index}`}>Sig Instructions</Label>
           <Textarea 
@@ -90,15 +110,6 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
             onChange={(e) => onFieldChange(index, 'sigInstructions', e.target.value)} 
             className="mt-1"
             rows={2}
-          />
-        </div>
-        <div>
-          <Label htmlFor={`med-refills-${index}`}>Refills</Label>
-          <Input 
-            id={`med-refills-${index}`}
-            value={medication.refills} 
-            onChange={(e) => onFieldChange(index, 'refills', e.target.value)} 
-            className="mt-1"
           />
         </div>
         <div className="sm:col-span-2">

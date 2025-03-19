@@ -63,7 +63,9 @@ export const addMedicationsSection = (
       } else if (med && typeof med === 'object') {
         // If medication is an object with structured data
         try {
-          const medName = med.name || '';
+          // Handle both new format (genericName + brandName) and old format (name)
+          const genericName = med.genericName || med.name || '';
+          const brandName = med.brandName ? ` (${med.brandName})` : '';
           const medStrength = med.strength || '';
           const medDosageForm = med.dosageForm || '';
           const medQuantity = med.quantity || '';
@@ -71,7 +73,7 @@ export const addMedicationsSection = (
           const medSpecialInstructions = med.specialInstructions || '';
           
           // Medication name, strength, and form
-          const medText = `${index + 1}. ${medName} ${medStrength} ${medDosageForm}`;
+          const medText = `${index + 1}. ${genericName}${brandName} ${medStrength} ${medDosageForm}`;
           const qtyText = `Qty: ${medQuantity}`;
           
           doc.text(medText, margin, yPosition);
