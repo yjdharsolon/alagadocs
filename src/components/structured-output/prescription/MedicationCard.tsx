@@ -6,18 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Trash2 } from 'lucide-react';
-
-interface Medication {
-  id?: number;
-  genericName: string;
-  brandName: string;
-  strength: string;
-  dosageForm: string;
-  sigInstructions: string;
-  quantity: string;
-  refills: string;
-  specialInstructions: string;
-}
+import { Medication } from './types/prescriptionTypes';
 
 interface MedicationCardProps {
   medication: Medication;

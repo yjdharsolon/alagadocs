@@ -4,18 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Pill, Plus } from 'lucide-react';
 import MedicationCard from './MedicationCard';
-
-interface Medication {
-  id?: number;
-  genericName: string;
-  brandName: string;
-  strength: string;
-  dosageForm: string;
-  sigInstructions: string;
-  quantity: string;
-  refills: string;
-  specialInstructions: string;
-}
+import { Medication } from './types/prescriptionTypes';
 
 interface MedicationsSectionProps {
   medications: Medication[];
