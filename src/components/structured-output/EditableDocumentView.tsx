@@ -1,12 +1,12 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MedicalSections } from './types';
-import { Button } from '@/components/ui/button';
-import { Save, List, AlignLeft } from 'lucide-react';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { toast } from 'react-hot-toast';
 import { getDocumentFormat } from './tabs/TabUtils';
 import PrescriptionEditor from './PrescriptionEditor';
+import SectionEditor from './sections/SectionEditor';
+import DocumentEditorToolbar from './toolbar/DocumentEditorToolbar';
+import { formatContent } from './utils/contentFormatter';
 
 interface EditableDocumentViewProps {
   structuredData: MedicalSections;
@@ -51,27 +51,6 @@ const EditableDocumentView = ({
     { id: 'plan', title: 'PLAN', content: editableData.plan }
   ];
 
-  // Helper function to format content
-  const formatContent = (content: any): string => {
-    if (content === undefined || content === null) {
-      return '';
-    }
-    
-    if (typeof content === 'string') {
-      return content;
-    }
-    
-    // Handle arrays
-    if (Array.isArray(content)) {
-      return content.map(item => 
-        typeof item === 'string' ? item : JSON.stringify(item, null, 2)
-      ).join('\n');
-    }
-    
-    // Handle objects
-    return JSON.stringify(content, null, 2);
-  };
-
   const handleContentChange = (sectionId: keyof MedicalSections, content: string) => {
     setEditableData(prev => ({
       ...prev,
@@ -104,45 +83,18 @@ const EditableDocumentView = ({
     }
   };
 
-  // Function to convert paragraph to bullets and vice versa
+  // Function to toggle between paragraph and bullets view format
   const toggleFormat = (newFormat: 'paragraph' | 'bullets') => {
     setViewFormat(newFormat);
-    
-    // No content transformation needed for now as we're just changing how it's displayed,
-    // but we could add content transformation logic here if needed
   };
 
   return (
     <div className="editable-document-view">
-      <div className="flex justify-between mb-4 items-center">
-        <Button 
-          onClick={handleSave} 
-          className="flex items-center gap-2"
-          aria-label="Save document changes"
-        >
-          <Save className="h-4 w-4" aria-hidden="true" />
-          Save Changes
-        </Button>
-        
-        <div className="space-y-1">
-          <div className="text-sm font-medium" id="view-format-label">View Format</div>
-          <ToggleGroup 
-            type="single" 
-            value={viewFormat}
-            onValueChange={(value) => value && toggleFormat(value as 'paragraph' | 'bullets')}
-            aria-labelledby="view-format-label"
-          >
-            <ToggleGroupItem value="paragraph" aria-label="Paragraph view">
-              <AlignLeft className="h-4 w-4 mr-1" aria-hidden="true" />
-              <span className="hidden sm:inline">Paragraph</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="bullets" aria-label="Bullet points view">
-              <List className="h-4 w-4 mr-1" aria-hidden="true" />
-              <span className="hidden sm:inline">Bullets</span>
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-      </div>
+      <DocumentEditorToolbar 
+        onSave={handleSave}
+        viewFormat={viewFormat}
+        onFormatChange={toggleFormat}
+      />
       
       <div 
         className="document-content p-6 bg-white border rounded-md shadow-sm" 
@@ -155,41 +107,17 @@ const EditableDocumentView = ({
           const formattedContent = formatContent(section.content);
           
           return (
-            <div key={section.id} className="mb-6">
-              <h3 
-                className="text-lg font-bold mb-2" 
-                id={`${section.id}-heading`}
-              >
-                {section.title}:
-              </h3>
-              <div 
-                className={`p-2 border border-gray-200 rounded-md min-h-[100px] ${
-                  isEditing ? 'focus:border-primary focus:ring-1 focus:ring-primary' : ''
-                } ${viewFormat === 'bullets' ? 'list-content' : 'paragraph-content'}`}
-                contentEditable
-                suppressContentEditableWarning
-                onFocus={() => handleEditStart(section.id)}
-                onBlur={(e) => handleContentChange(sectionId, e.currentTarget.innerText)}
-                onKeyDown={(e) => handleKeyDown(e, sectionId)}
-                dangerouslySetInnerHTML={{ 
-                  __html: viewFormat === 'bullets' 
-                    ? formattedContent.split('\n')
-                        .filter(line => line.trim() !== '')
-                        .map(line => `<li>${line}</li>`)
-                        .join('') || ''
-                    : formattedContent.replace(/\n/g, '<br>') || ''
-                }}
-                aria-labelledby={`${section.id}-heading`}
-                role="textbox"
-                aria-multiline="true"
-                tabIndex={0}
-                aria-label={`Edit ${section.title}`}
-                data-testid={`${section.id}-editor`}
-              />
-              <div className="text-xs text-muted-foreground mt-1" aria-live="polite">
-                {isEditing ? 'Press Ctrl+Enter to save, Escape to cancel' : 'Click to edit'}
-              </div>
-            </div>
+            <SectionEditor
+              key={section.id}
+              id={section.id}
+              title={section.title}
+              content={formattedContent}
+              isEditing={isEditing}
+              viewFormat={viewFormat}
+              onEditStart={handleEditStart}
+              onContentChange={(id, content) => handleContentChange(id as keyof MedicalSections, content)}
+              onKeyDown={(e, id) => handleKeyDown(e, id as keyof MedicalSections)}
+            />
           );
         })}
       </div>
