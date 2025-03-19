@@ -18,10 +18,10 @@ const PrescriptionTabs: React.FC<PrescriptionTabsProps> = ({ structuredData }) =
     
     return medications.map((med, index) => {
       const medNumber = med.id || (index + 1);
-      return `${medNumber}. ${med.name} ${med.strength} (${med.dosageForm})
-      Sig: ${med.sigInstructions}
-      Quantity: ${med.quantity}
-      Refills: ${med.refills}
+      return `${medNumber}. ${med.name} ${med.strength || ''} (${med.dosageForm || 'Not specified'})
+      Sig: ${med.sigInstructions || 'Not specified'}
+      Quantity: ${med.quantity || 'Not specified'}
+      Refills: ${med.refills || 'Not specified'}
       ${med.specialInstructions ? `Special Instructions: ${med.specialInstructions}` : ''}
       `;
     }).join("\n\n");

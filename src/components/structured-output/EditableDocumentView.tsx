@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Save, List, AlignLeft } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { toast } from 'react-hot-toast';
+import { getDocumentFormat } from './tabs/TabUtils';
+import PrescriptionEditor from './PrescriptionEditor';
 
 interface EditableDocumentViewProps {
   structuredData: MedicalSections;
@@ -19,7 +21,25 @@ const EditableDocumentView = ({
   const [viewFormat, setViewFormat] = useState<'paragraph' | 'bullets'>('paragraph');
   const [currentlyEditingId, setCurrentlyEditingId] = useState<string | null>(null);
   
-  // Array of section configurations
+  // Detect document format
+  const documentFormat = getDocumentFormat(structuredData);
+  
+  // For prescription format, use the specialized editor
+  if (documentFormat === 'prescription') {
+    return (
+      <PrescriptionEditor 
+        structuredData={structuredData}
+        onSave={(updatedData) => {
+          if (onSave) {
+            onSave(updatedData);
+            toast.success('Prescription saved successfully');
+          }
+        }}
+      />
+    );
+  }
+  
+  // Array of section configurations for standard formats
   const sections = [
     { id: 'chiefComplaint', title: 'CHIEF COMPLAINT', content: editableData.chiefComplaint },
     { id: 'historyOfPresentIllness', title: 'HISTORY OF PRESENT ILLNESS', content: editableData.historyOfPresentIllness },
