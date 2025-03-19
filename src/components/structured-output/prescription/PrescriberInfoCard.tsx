@@ -10,8 +10,7 @@ interface PrescriberInfo {
   licenseNumber: string;
   s2Number?: string;
   ptrNumber?: string;
-  signature: string;
-  title?: string; // Added title field
+  title?: string;
 }
 
 interface PrescriberInfoCardProps {
@@ -79,16 +78,6 @@ const PrescriberInfoCard: React.FC<PrescriberInfoCardProps> = ({
             id="prescriberPTR" 
             name="ptrNumber" 
             value={prescriberInfo.ptrNumber || ''} 
-            onChange={onChange} 
-            className="mt-1"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <Label htmlFor="prescriberSignature">Signature</Label>
-          <Input 
-            id="prescriberSignature" 
-            name="signature" 
-            value={prescriberInfo.signature || ''} 
             onChange={onChange} 
             className="mt-1"
           />

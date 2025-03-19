@@ -20,20 +20,24 @@ export const addPrescriberSection = (
   
   if (profileData) {
     // Use profile data if available
-    const name = `${profileData.first_name || ''} ${profileData.last_name || ''}`;
-    const title = profileData.medical_title || '';
-    prescriberName = title ? `${name}, ${title}` : name;
+    const firstName = profileData.first_name || '';
+    const middleName = profileData.middle_name ? profileData.middle_name.charAt(0) + '. ' : '';
+    const lastName = profileData.last_name || '';
+    const nameExtension = profileData.name_extension ? `, ${profileData.name_extension}` : '';
+    const title = profileData.medical_title ? `, ${profileData.medical_title}` : '';
+    
+    prescriberName = `${firstName} ${middleName}${lastName}${nameExtension}${title}`.trim();
   } else if (typeof prescriberInfo === 'object') {
     // Use prescriber info from the prescription
     const name = prescriberInfo.name || '';
-    const title = prescriberInfo.title || '';
-    prescriberName = title ? `${name}, ${title}` : name;
+    const title = prescriberInfo.title ? `, ${prescriberInfo.title}` : '';
+    prescriberName = `${name}${title}`.trim();
   }
   
   // Get license information from profile data if available, otherwise fall back to prescriber info
   const prcLicense = profileData?.prc_license || (typeof prescriberInfo === 'object' ? prescriberInfo.licenseNumber || '' : '');
-  const ptrNumber = profileData?.ptr_number || (typeof prescriberInfo === 'object' ? prescriberInfo.ptrNumber || '' : '');
   const s2Number = profileData?.s2_number || (typeof prescriberInfo === 'object' ? prescriberInfo.s2Number || '' : '');
+  const ptrNumber = profileData?.ptr_number || (typeof prescriberInfo === 'object' ? prescriberInfo.ptrNumber || '' : '');
   
   // Position footer content
   const footerX = pageWidth - margin - (contentWidth * 0.3);

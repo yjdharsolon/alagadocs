@@ -1,3 +1,4 @@
+
 import { MedicalSections } from '../../types';
 
 /**
@@ -25,12 +26,21 @@ export const formatPrescriberInfo = (prescriberInfo: any, structuredPrescriberIn
 
   let formattedInfo = '';
   
-  // Create name with title on the same line
-  const name = `${prescriberInfo.first_name || ''} ${prescriberInfo.middle_name ? prescriberInfo.middle_name.charAt(0) + '. ' : ''}${prescriberInfo.last_name || ''}${prescriberInfo.name_extension ? ', ' + prescriberInfo.name_extension : ''}`;
-  const title = prescriberInfo.medical_title || (structuredPrescriberInfo && structuredPrescriberInfo.title ? structuredPrescriberInfo.title : '');
-  
-  // Add doctor's name with title on the same line
-  formattedInfo += `${name}${title ? ', ' + title : ''}\n`;
+  // Create properly formatted name with all components and title on the same line
+  if (prescriberInfo.first_name || prescriberInfo.last_name) {
+    const firstName = prescriberInfo.first_name || '';
+    const middleName = prescriberInfo.middle_name ? prescriberInfo.middle_name.charAt(0) + '. ' : '';
+    const lastName = prescriberInfo.last_name || '';
+    const nameExtension = prescriberInfo.name_extension ? `, ${prescriberInfo.name_extension}` : '';
+    const title = prescriberInfo.medical_title ? `, ${prescriberInfo.medical_title}` : '';
+    
+    formattedInfo += `${firstName} ${middleName}${lastName}${nameExtension}${title}\n`;
+  } else if (structuredPrescriberInfo && structuredPrescriberInfo.name) {
+    // Fall back to structured data if profile data not available
+    const name = structuredPrescriberInfo.name;
+    const title = structuredPrescriberInfo.title ? `, ${structuredPrescriberInfo.title}` : '';
+    formattedInfo += `${name}${title}\n`;
+  }
   
   if (prescriberInfo.profession) {
     formattedInfo += `${prescriberInfo.profession}\n`;
