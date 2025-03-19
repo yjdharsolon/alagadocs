@@ -62,16 +62,17 @@ export const usePrescriptionEditor = ({
       : []
   );
   
-  // Initialize prescriberInfo with data from profile if available
+  // Initialize prescriberInfo with correct structure
   const [prescriberInfo, setPrescriberInfo] = useState({
     name: '',
     licenseNumber: '',
     s2Number: '',
     ptrNumber: '',
-    signature: ''
+    signature: '',
+    title: '' // Added title field to store medical title separately
   });
 
-  // Update prescriberInfo when profileData changes
+  // Update prescriberInfo when profileData changes - fixed mapping
   useEffect(() => {
     if (profileData) {
       const fullName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
@@ -82,11 +83,12 @@ export const usePrescriptionEditor = ({
         licenseNumber: profileData.prc_license || prev.licenseNumber || '',
         s2Number: profileData.s2_number || prev.s2Number || '',
         ptrNumber: profileData.ptr_number || prev.ptrNumber || '',
+        title: profileData.medical_title || '' // Correctly map medical title to title field
       }));
     }
   }, [profileData]);
 
-  // Effect to initialize with structured data
+  // Effect to initialize with structured data if present
   useEffect(() => {
     if (structuredData.prescriberInformation) {
       setPrescriberInfo(prev => ({

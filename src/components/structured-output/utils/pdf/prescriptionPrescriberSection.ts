@@ -16,16 +16,24 @@ export const addPrescriberSection = (
   const pageWidth = doc.internal.pageSize.getWidth();
   
   // Get prescriber name with proper formatting
-  const prescriberName = profileData?.medical_title 
-    ? `Dr. ${profileData.first_name || ''} ${profileData.last_name || ''}, ${profileData.medical_title}` 
-    : (typeof prescriberInfo === 'object' ? prescriberInfo.name || '' : '');
+  let prescriberName = '';
   
-  const doctorName = `${profileData?.first_name || ''} ${profileData?.last_name || ''}`;
+  if (profileData) {
+    // Use profile data if available
+    const name = `${profileData.first_name || ''} ${profileData.last_name || ''}`;
+    const title = profileData.medical_title || '';
+    prescriberName = title ? `${name}, ${title}` : name;
+  } else if (typeof prescriberInfo === 'object') {
+    // Use prescriber info from the prescription
+    const name = prescriberInfo.name || '';
+    const title = prescriberInfo.title || '';
+    prescriberName = title ? `${name}, ${title}` : name;
+  }
   
   // Get license information from profile data if available, otherwise fall back to prescriber info
   const prcLicense = profileData?.prc_license || (typeof prescriberInfo === 'object' ? prescriberInfo.licenseNumber || '' : '');
-  const ptrNumber = profileData?.ptr_number || '';
-  const s2Number = profileData?.s2_number || '';
+  const ptrNumber = profileData?.ptr_number || (typeof prescriberInfo === 'object' ? prescriberInfo.ptrNumber || '' : '');
+  const s2Number = profileData?.s2_number || (typeof prescriberInfo === 'object' ? prescriberInfo.s2Number || '' : '');
   
   // Position footer content
   const footerX = pageWidth - margin - (contentWidth * 0.3);
@@ -34,7 +42,7 @@ export const addPrescriberSection = (
   // Add doctor name and title
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text(prescriberName || doctorName, footerX, currentY);
+  doc.text(prescriberName, footerX, currentY);
   
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);

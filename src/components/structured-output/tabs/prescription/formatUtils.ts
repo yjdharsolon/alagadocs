@@ -25,23 +25,26 @@ export const formatPrescriberInfo = (prescriberInfo: any, structuredPrescriberIn
   if (!prescriberInfo) return String(structuredPrescriberInfo || "No prescriber information");
 
   let formattedInfo = '';
+  
+  // Create name with title if available
   const name = `${prescriberInfo.first_name || ''} ${prescriberInfo.middle_name ? prescriberInfo.middle_name.charAt(0) + '. ' : ''}${prescriberInfo.last_name || ''}${prescriberInfo.name_extension ? ', ' + prescriberInfo.name_extension : ''}`;
+  const title = prescriberInfo.medical_title || (structuredPrescriberInfo && structuredPrescriberInfo.title ? structuredPrescriberInfo.title : '');
   
   // Add doctor's name and title
-  formattedInfo += `${name}${prescriberInfo.medical_title ? ', ' + prescriberInfo.medical_title : ''}\n`;
+  formattedInfo += `${name}${title ? ', ' + title : ''}\n`;
   formattedInfo += `${prescriberInfo.profession || ''}\n`;
   
   // Add professional license information
-  if (prescriberInfo.prc_license) {
-    formattedInfo += `PRC License No: ${prescriberInfo.prc_license}\n`;
+  if (prescriberInfo.prc_license || (structuredPrescriberInfo && structuredPrescriberInfo.licenseNumber)) {
+    formattedInfo += `PRC License No: ${prescriberInfo.prc_license || (structuredPrescriberInfo ? structuredPrescriberInfo.licenseNumber : '')}\n`;
   }
   
-  if (prescriberInfo.ptr_number) {
-    formattedInfo += `PTR No: ${prescriberInfo.ptr_number}\n`;
+  if (prescriberInfo.ptr_number || (structuredPrescriberInfo && structuredPrescriberInfo.ptrNumber)) {
+    formattedInfo += `PTR No: ${prescriberInfo.ptr_number || (structuredPrescriberInfo ? structuredPrescriberInfo.ptrNumber : '')}\n`;
   }
   
-  if (prescriberInfo.s2_number) {
-    formattedInfo += `S2 No: ${prescriberInfo.s2_number}\n`;
+  if (prescriberInfo.s2_number || (structuredPrescriberInfo && structuredPrescriberInfo.s2Number)) {
+    formattedInfo += `S2 No: ${prescriberInfo.s2_number || (structuredPrescriberInfo ? structuredPrescriberInfo.s2Number : '')}\n`;
   }
   
   // Add clinic information
