@@ -19,14 +19,11 @@ const PrescriptionDocument: React.FC<PrescriptionDocumentProps> = ({ structuredD
     ? structuredData.patientInformation?.name || null
     : null;
   
-  // Format data for export
-  const exportData = formatPrescriptionForExport(structuredData);
-
   return (
     <div>
       <div className="flex justify-end mb-4">
         <ExportButton 
-          sections={exportData} 
+          sections={structuredData} 
           patientName={patientName} 
           profileData={profileData}
           isPrescription={true}

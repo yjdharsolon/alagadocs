@@ -1,4 +1,3 @@
-
 import { MedicalSections } from '../types';
 import { jsPDF } from 'jspdf';
 import { useProfileFields } from '@/hooks/useProfileFields';
