@@ -39,7 +39,9 @@ export const validateAndSavePrescription = (
     
     // Pass the stayInEditMode flag to the callback so the parent can decide to stay in edit mode
     onSave(updatedData, stayInEditMode);
-    toast.success("Prescription saved successfully");
+    
+    const message = stayInEditMode ? "Prescription saved" : "Prescription submitted successfully";
+    toast.success(message);
   } catch (error) {
     console.error('Error saving prescription:', error);
     toast.error("Failed to save prescription");

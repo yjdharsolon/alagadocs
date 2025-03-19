@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { Pill, Plus } from 'lucide-react';
+import { Pill, Plus, Save } from 'lucide-react';
 import MedicationCard from './MedicationCard';
 import { Medication } from './types/prescriptionTypes';
 
@@ -11,13 +11,15 @@ interface MedicationsSectionProps {
   onMedicationChange: (index: number, field: keyof Medication, value: string) => void;
   onAddMedication: () => void;
   onRemoveMedication: (index: number) => void;
+  onSave: () => void;
 }
 
 const MedicationsSection: React.FC<MedicationsSectionProps> = ({
   medications,
   onMedicationChange,
   onAddMedication,
-  onRemoveMedication
+  onRemoveMedication,
+  onSave
 }) => {
   return (
     <Card>
@@ -26,15 +28,25 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({
           <Pill className="h-5 w-5 mr-2" />
           Medications
         </CardTitle>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onAddMedication}
-          className="flex items-center"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Add Medication
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onAddMedication}
+            className="flex items-center"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Medication
+          </Button>
+          <Button 
+            size="sm" 
+            onClick={onSave}
+            className="flex items-center bg-[#33C3F0] hover:bg-[#33C3F0]/90"
+          >
+            <Save className="h-4 w-4 mr-1" />
+            Save Prescription
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {medications.length === 0 ? (

@@ -32,6 +32,16 @@ const PrescriptionEditor: React.FC<PrescriptionEditorProps> = ({
     handleSave
   } = usePrescriptionEditor({ structuredData, onSave });
 
+  // Function to save and stay in edit mode
+  const handleSaveOnly = () => {
+    handleSave(true); // Save but stay in edit mode
+  };
+
+  // Function to submit and exit edit mode
+  const handleSubmit = () => {
+    handleSave(false); // Save and exit edit mode
+  };
+
   return (
     <div className="prescription-editor space-y-6">
       <PatientInfoCard
@@ -44,6 +54,7 @@ const PrescriptionEditor: React.FC<PrescriptionEditorProps> = ({
         onMedicationChange={handleMedicationChange}
         onAddMedication={handleAddMedication}
         onRemoveMedication={handleRemoveMedication}
+        onSave={handleSaveOnly}
       />
       
       <PrescriberInfoCard
@@ -60,8 +71,8 @@ const PrescriptionEditor: React.FC<PrescriptionEditorProps> = ({
           />
           <Label htmlFor="stay-in-edit-mode">Stay in edit mode after saving</Label>
         </div>
-        <Button onClick={handleSave} className="bg-[#33C3F0] hover:bg-[#33C3F0]/90">
-          Save Prescription
+        <Button onClick={handleSubmit} className="bg-[#33C3F0] hover:bg-[#33C3F0]/90">
+          Submit
         </Button>
       </div>
     </div>
