@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast"
-import { useMutation } from 'react-query';
-import { saveStructuredNote } from '@/services/notesService';
+import { useToast } from "@/components/ui/use-toast";
+import { useMutation } from '@tanstack/react-query';
+import { saveStructuredNote } from '@/services/structuredOutput/noteService';
 import { MedicalSections } from '../types';
 
 interface SaveNoteButtonProps {
@@ -31,29 +32,27 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
-  const mutation = useMutation(
-    () => saveStructuredNote(user.id, sections, structuredText, patientId, transcriptionId, selectedFormats),
-    {
-      onSuccess: () => {
-        setIsSaving(false);
-        toast({
-          title: "Success",
-          description: "Note saved successfully!",
-        });
-        if (onNoteSaved) {
-          onNoteSaved();
-        }
-      },
-      onError: (error: any) => {
-        setIsSaving(false);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message || "Failed to save note.",
-        });
-      },
-    }
-  );
+  const mutation = useMutation({
+    mutationFn: () => saveStructuredNote(user.id, sections, structuredText, patientId, transcriptionId, selectedFormats),
+    onSuccess: () => {
+      setIsSaving(false);
+      toast({
+        title: "Success",
+        description: "Note saved successfully!",
+      });
+      if (onNoteSaved) {
+        onNoteSaved();
+      }
+    },
+    onError: (error: any) => {
+      setIsSaving(false);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to save note.",
+      });
+    },
+  });
 
   const handleSaveNote = async () => {
     setIsSaving(true);
@@ -75,5 +74,3 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
     </Button>
   );
 };
-
-// Add any necessary imports if needed for compatibility
