@@ -55,7 +55,7 @@ export async function enhancePrescriptionData(structuredData: any, patientId?: s
     }
   }
   
-  // Get current user data for prescriber information - title field removed
+  // Get current user data for prescriber information with medical title beside name
   let prescriberInfo = {
     name: "Attending Physician",
     licenseNumber: "License number not specified",
@@ -68,14 +68,15 @@ export async function enhancePrescriptionData(structuredData: any, patientId?: s
     if (session?.user) {
       const userData = await getUserProfile(session.user.id);
       if (userData) {
-        // Format name properly with middle initial if available
+        // Format name properly with middle initial and medical title if available
         const firstName = userData.first_name || '';
         const middleName = userData.middle_name ? userData.middle_name.charAt(0) + '. ' : '';
         const lastName = userData.last_name || '';
         const nameExtension = userData.name_extension ? `, ${userData.name_extension}` : '';
+        const medicalTitle = userData.medical_title ? `, ${userData.medical_title}` : '';
         
         prescriberInfo = {
-          name: `${firstName} ${middleName}${lastName}${nameExtension}`.trim() || "Attending Physician",
+          name: `${firstName} ${middleName}${lastName}${nameExtension}${medicalTitle}`.trim() || "Attending Physician",
           licenseNumber: userData.prc_license || "License number not specified",
           s2Number: userData.s2_number || "",
           ptrNumber: userData.ptr_number || ""

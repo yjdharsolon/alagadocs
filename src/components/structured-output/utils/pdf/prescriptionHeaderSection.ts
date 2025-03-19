@@ -10,10 +10,10 @@ export const addHeaderSection = (
   margin: number,
   contentWidth: number
 ): number => {
-  // Extract doctor information
-  const doctorName = profileData?.medical_title 
-    ? `${profileData.first_name || ''} ${profileData.last_name || ''}, ${profileData.medical_title}` 
-    : `${profileData?.first_name || ''} ${profileData?.last_name || ''}`;
+  // Extract doctor information with medical title beside name
+  const doctorName = profileData ? (
+    `${profileData.first_name || ''} ${profileData.last_name || ''}${profileData.medical_title ? `, ${profileData.medical_title}` : ''}`
+  ) : '';
   
   const specialty = profileData?.profession || '';
   const contactNumber = profileData?.contact_number || '';

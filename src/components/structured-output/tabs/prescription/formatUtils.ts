@@ -19,21 +19,22 @@ export const formatMedications = (medications: any[]) => {
 };
 
 /**
- * Format prescriber information with professional details - title field removed
+ * Format prescriber information with professional details - title included beside name
  */
 export const formatPrescriberInfo = (prescriberInfo: any, structuredPrescriberInfo: any) => {
   if (!prescriberInfo) return String(structuredPrescriberInfo || "No prescriber information");
 
   let formattedInfo = '';
   
-  // Create properly formatted name without title
+  // Create properly formatted name with medical title beside name
   if (prescriberInfo.first_name || prescriberInfo.last_name) {
     const firstName = prescriberInfo.first_name || '';
     const middleName = prescriberInfo.middle_name ? prescriberInfo.middle_name.charAt(0) + '. ' : '';
     const lastName = prescriberInfo.last_name || '';
     const nameExtension = prescriberInfo.name_extension ? `, ${prescriberInfo.name_extension}` : '';
+    const medicalTitle = prescriberInfo.medical_title ? `, ${prescriberInfo.medical_title}` : '';
     
-    formattedInfo += `${firstName} ${middleName}${lastName}${nameExtension}\n`;
+    formattedInfo += `${firstName} ${middleName}${lastName}${nameExtension}${medicalTitle}\n`;
   } else if (structuredPrescriberInfo && structuredPrescriberInfo.name) {
     // Fall back to structured data if profile data not available
     formattedInfo += `${structuredPrescriberInfo.name}\n`;

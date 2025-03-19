@@ -2,7 +2,7 @@
 import { jsPDF } from 'jspdf';
 
 /**
- * Adds prescriber information section to a prescription PDF - title field removed
+ * Adds prescriber information section to a prescription PDF with title beside name
  */
 export const addPrescriberSection = (
   doc: jsPDF,
@@ -15,7 +15,7 @@ export const addPrescriberSection = (
   const footerY = pageHeight - margin - 30; // Position footer 30 points from bottom
   const pageWidth = doc.internal.pageSize.getWidth();
   
-  // Get prescriber name with proper formatting - title removed
+  // Get prescriber name with proper formatting - medical title included beside name
   let prescriberName = '';
   
   if (profileData) {
@@ -24,8 +24,9 @@ export const addPrescriberSection = (
     const middleName = profileData.middle_name ? profileData.middle_name.charAt(0) + '. ' : '';
     const lastName = profileData.last_name || '';
     const nameExtension = profileData.name_extension ? `, ${profileData.name_extension}` : '';
+    const medicalTitle = profileData.medical_title ? `, ${profileData.medical_title}` : '';
     
-    prescriberName = `${firstName} ${middleName}${lastName}${nameExtension}`.trim();
+    prescriberName = `${firstName} ${middleName}${lastName}${nameExtension}${medicalTitle}`.trim();
   } else if (typeof prescriberInfo === 'object') {
     // Use prescriber info from the prescription
     prescriberName = prescriberInfo.name || '';
