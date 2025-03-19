@@ -3,8 +3,7 @@
 // This helps maintain backward compatibility while organizing code better
 
 export { exportAsPDF } from './pdfExport';
-export { exportAsText } from './textExport';
-export { formatClipboardText } from './clipboardUtils';
+export { exportAsText, formatClipboardText } from './textExport';
 
 // Prescription-specific export utilities
 export const formatPrescriptionForExport = (sections: any) => {
@@ -24,8 +23,8 @@ export const formatPrescriptionForExport = (sections: any) => {
           ? sections.prescriberInformation
           : `Prescriber: ${sections.prescriberInformation.name || 'Unknown'}\nLicense: ${sections.prescriberInformation.licenseNumber || 'N/A'}`)
       : 'No prescriber information',
-    instructions: sections.instructions || 'No special instructions',
-    ...sections // Include any other sections that might be present
+    instructions: sections.instructions || 'No special instructions'
+    // Removed the spread operator to prevent non-string values from being included directly
   };
   
   return formattedData;

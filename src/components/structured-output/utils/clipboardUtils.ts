@@ -1,23 +1,9 @@
 
 import { MedicalSections } from '../types';
+import { formatClipboardText } from './textExport';
 
 /**
- * Formats structured data for clipboard copying
- * @param sections The structured data sections to format
- * @returns Formatted text ready for clipboard
+ * Re-exports the formatting function from textExport.ts
+ * This maintains backward compatibility with existing code
  */
-export const formatClipboardText = (sections: MedicalSections): string => {
-  let formattedText = '';
-  
-  Object.entries(sections).forEach(([key, value]) => {
-    if (value && typeof value === 'string' && value.trim() !== '') {
-      const sectionTitle = key.replace(/([A-Z])/g, ' $1')
-        .replace(/^./, str => str.toUpperCase())
-        .trim();
-      
-      formattedText += `${sectionTitle}:\n${value}\n\n`;
-    }
-  });
-  
-  return formattedText.trim();
-};
+export { formatClipboardText };

@@ -1,6 +1,50 @@
 
 import { MedicalSections } from '../types';
-import { formatClipboardText } from './clipboardUtils';
+
+/**
+ * Ensures a value is a string for safe use in export functions
+ */
+const ensureString = (value: any): string => {
+  if (value === undefined || value === null) {
+    return '';
+  }
+  
+  if (typeof value === 'string') {
+    return value;
+  }
+  
+  if (Array.isArray(value)) {
+    return value.map(item => ensureString(item)).join('\n');
+  }
+  
+  if (typeof value === 'object') {
+    return JSON.stringify(value, null, 2);
+  }
+  
+  return String(value);
+};
+
+/**
+ * Formats structured data for clipboard copying
+ * @param sections The structured data sections to format
+ * @returns Formatted text ready for clipboard or export
+ */
+const formatTextForExport = (sections: MedicalSections): string => {
+  let formattedText = '';
+  
+  Object.entries(sections).forEach(([key, value]) => {
+    const stringValue = ensureString(value);
+    if (stringValue) {
+      const sectionTitle = key.replace(/([A-Z])/g, ' $1')
+        .replace(/^./, str => str.toUpperCase())
+        .trim();
+      
+      formattedText += `${sectionTitle}:\n${stringValue}\n\n`;
+    }
+  });
+  
+  return formattedText.trim();
+};
 
 /**
  * Exports structured data as a text file
@@ -8,7 +52,7 @@ import { formatClipboardText } from './clipboardUtils';
  * @param patientName Optional patient name for the filename
  */
 export const exportAsText = (sections: MedicalSections, patientName?: string | null): void => {
-  const formattedText = formatClipboardText(sections);
+  const formattedText = formatTextForExport(sections);
   
   // Create a blob with the formatted text
   const blob = new Blob([formattedText], { type: 'text/plain' });
@@ -31,3 +75,6 @@ export const exportAsText = (sections: MedicalSections, patientName?: string | n
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
+
+// Export the formatter for other modules to use
+export { formatTextForExport as formatClipboardText };

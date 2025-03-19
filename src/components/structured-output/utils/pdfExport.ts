@@ -3,6 +3,29 @@ import { MedicalSections } from '../types';
 import { jsPDF } from 'jspdf';
 
 /**
+ * Ensures a value is a string for safe use in export functions
+ */
+const ensureString = (value: any): string => {
+  if (value === undefined || value === null) {
+    return '';
+  }
+  
+  if (typeof value === 'string') {
+    return value;
+  }
+  
+  if (Array.isArray(value)) {
+    return value.map(item => ensureString(item)).join('\n');
+  }
+  
+  if (typeof value === 'object') {
+    return JSON.stringify(value, null, 2);
+  }
+  
+  return String(value);
+};
+
+/**
  * Exports structured data as PDF
  * @param sections The structured data to export
  * @param patientName Optional patient name for the PDF title
@@ -28,7 +51,9 @@ export const exportAsPDF = (sections: MedicalSections, patientName?: string | nu
   
   // Add each section
   Object.entries(sections).forEach(([key, value]) => {
-    if (!value || value.trim() === '') return;
+    // Ensure value is a string and check if it's empty
+    const stringValue = ensureString(value);
+    if (!stringValue) return;
     
     // Format section title
     const sectionTitle = key
@@ -43,7 +68,7 @@ export const exportAsPDF = (sections: MedicalSections, patientName?: string | nu
     doc.setFont('helvetica', 'normal');
     
     // Add section content with word wrapping
-    const textLines = doc.splitTextToSize(value, contentWidth);
+    const textLines = doc.splitTextToSize(stringValue, contentWidth);
     yPosition += 5;
     
     // Check if we need a new page
