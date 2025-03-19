@@ -40,7 +40,7 @@ const PrescriberInfoCard: React.FC<PrescriberInfoCardProps> = ({
           />
         </div>
         <div>
-          <Label htmlFor="prescriberLicense">License/Registration Number</Label>
+          <Label htmlFor="prescriberLicense">PRC License Number</Label>
           <Input 
             id="prescriberLicense" 
             name="licenseNumber" 
