@@ -8,7 +8,7 @@ export const validateAndSavePrescription = (
   patientInfo: PatientInfo,
   medications: Medication[],
   prescriberInfo: PrescriberInfo,
-  onSave: (updatedData: MedicalSections) => void,
+  onSave: (updatedData: MedicalSections, stayInEditMode?: boolean) => void,
   stayInEditMode: boolean = false
 ): void => {
   try {
