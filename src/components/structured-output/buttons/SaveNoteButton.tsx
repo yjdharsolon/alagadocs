@@ -1,21 +1,18 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Loader2 } from 'lucide-react';
+import { Save } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast"
+import { useMutation } from 'react-query';
+import { saveStructuredNote } from '@/services/notesService';
 import { MedicalSections } from '../types';
-import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
-import { saveStructuredNote } from '@/services/structuredNote/saveNote';
 
 interface SaveNoteButtonProps {
   user: any;
   sections: MedicalSections;
   structuredText: string;
-  transcriptionId: string;
   patientId?: string | null;
+  transcriptionId: string;
   onNoteSaved?: () => void;
-  variant?: 'default' | 'outline' | 'secondary';
-  size?: 'default' | 'sm' | 'lg' | 'icon';
   selectedFormats?: Array<{
     formatType: string;
     structuredData: MedicalSections;
@@ -26,86 +23,57 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
   user,
   sections,
   structuredText,
+  patientId,
   transcriptionId,
-  patientId = null,
   onNoteSaved,
-  variant = 'default',
-  size = 'default',
   selectedFormats = []
 }) => {
+  const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = async () => {
-    if (!user?.id || !transcriptionId) {
-      toast.error('Missing required information to save note');
-      return;
+  const mutation = useMutation(
+    () => saveStructuredNote(user.id, sections, structuredText, patientId, transcriptionId, selectedFormats),
+    {
+      onSuccess: () => {
+        setIsSaving(false);
+        toast({
+          title: "Success",
+          description: "Note saved successfully!",
+        });
+        if (onNoteSaved) {
+          onNoteSaved();
+        }
+      },
+      onError: (error: any) => {
+        setIsSaving(false);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to save note.",
+        });
+      },
     }
-    
-    try {
-      setIsSaving(true);
-      
-      // If we have selected formats, save those. Otherwise, save the current sections
-      if (selectedFormats && selectedFormats.length > 0) {
-        console.log(`Saving ${selectedFormats.length} selected formats`);
-        
-        // Combine all selected formats into one note with format type markers
-        const combinedSections = selectedFormats.reduce((combined, format) => {
-          // Add a format type marker to each section
-          const formattedSections = Object.entries(format.structuredData).reduce((acc, [key, value]) => {
-            acc[key] = `[${format.formatType.toUpperCase()}] ${value}`;
-            return acc;
-          }, {} as MedicalSections);
-          
-          // Merge with other formats
-          return { ...combined, ...formattedSections };
-        }, {} as MedicalSections);
-        
-        const result = await saveStructuredNote(
-          user.id,
-          transcriptionId,
-          combinedSections,
-          patientId
-        );
-        
-        toast.success(`Successfully saved ${selectedFormats.length} selected format(s)`);
-      } else {
-        console.log('Saving note with data:', { userId: user.id, transcriptionId, sections, patientId });
-        
-        const result = await saveStructuredNote(
-          user.id,
-          transcriptionId,
-          sections,
-          patientId
-        );
-        
-        toast.success('Note saved successfully');
-      }
-      
-      if (onNoteSaved) {
-        onNoteSaved();
-      }
-    } catch (error) {
-      console.error('Error saving note:', error);
-      toast.error('Failed to save note');
-    } finally {
-      setIsSaving(false);
-    }
+  );
+
+  const handleSaveNote = async () => {
+    setIsSaving(true);
+    mutation.mutate();
   };
 
+  // Determine if save button should be disabled (when in Selection tab with no formats selected)
+  const hasSelectedFormats = selectedFormats && selectedFormats.length > 0;
+
   return (
-    <Button 
-      variant={variant} 
-      size={size} 
-      onClick={handleSave}
-      disabled={isSaving || (selectedFormats && selectedFormats.length === 0)}
-      className="flex items-center gap-2"
+    <Button
+      variant="outline"
+      className="bg-[#33C3F0] hover:bg-[#33C3F0]/90 text-white flex items-center gap-2"
+      onClick={handleSaveNote}
+      disabled={isSaving || (!hasSelectedFormats && selectedFormats.length > 0)}
     >
-      {isSaving ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Save className="h-4 w-4" />
-      )}
-      Save Note
+      <Save className="h-4 w-4" />
+      {isSaving ? 'Saving...' : 'Save Note'}
     </Button>
   );
 };
+
+// Add any necessary imports if needed for compatibility

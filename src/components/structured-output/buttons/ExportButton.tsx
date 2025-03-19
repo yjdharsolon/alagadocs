@@ -9,13 +9,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { FileDown, FileText, FileType } from 'lucide-react';
 import { MedicalSections } from '../types';
-import { exportAsPDF } from '../utils/pdfExport';
+import { exportAsPDF, exportPrescriptionAsPDF } from '../utils/exportUtils';
 import { exportAsText } from '../utils/textExport';
 import { toast } from 'sonner';
 
 interface ExportButtonProps {
   sections: MedicalSections;
   patientName?: string | null;
+  profileData?: any;
+  isPrescription?: boolean;
   variant?: 'default' | 'outline' | 'secondary';
   size?: 'default' | 'sm' | 'lg' | 'icon';
 }
@@ -23,6 +25,8 @@ interface ExportButtonProps {
 const ExportButton: React.FC<ExportButtonProps> = ({ 
   sections, 
   patientName,
+  profileData,
+  isPrescription = false,
   variant = 'outline',
   size = 'default'
 }) => {
@@ -33,8 +37,15 @@ const ExportButton: React.FC<ExportButtonProps> = ({
       setIsExporting(true);
       
       if (format === 'pdf') {
-        exportAsPDF(sections, patientName);
-        toast.success('Exported as PDF');
+        if (isPrescription) {
+          // Use the specialized prescription PDF exporter
+          exportPrescriptionAsPDF(sections, patientName, profileData);
+          toast.success('Exported prescription as PDF');
+        } else {
+          // Use the standard PDF exporter
+          exportAsPDF(sections, patientName);
+          toast.success('Exported as PDF');
+        }
       } else {
         exportAsText(sections, patientName);
         toast.success('Exported as text file');
