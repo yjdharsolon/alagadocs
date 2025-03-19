@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { MedicalSections } from '../../types';
 import { useProfileFields } from '@/hooks/useProfileFields';
