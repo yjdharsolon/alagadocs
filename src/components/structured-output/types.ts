@@ -31,7 +31,10 @@ export interface MedicalSections {
   prescriberInformation?: {
     name: string;
     licenseNumber: string;
-    signature: string;
+    signature?: string; // Make signature optional
+    s2Number?: string;  // Add S2 number
+    ptrNumber?: string; // Add PTR number
+    title?: string;     // Add title
   };
 }
 

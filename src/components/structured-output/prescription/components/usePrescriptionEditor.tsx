@@ -62,7 +62,7 @@ export const usePrescriptionEditor = ({
       : []
   );
   
-  // Initialize prescriberInfo with correct structure - removed signature field
+  // Initialize prescriberInfo with correct structure - signature field is now optional
   const [prescriberInfo, setPrescriberInfo] = useState({
     name: '',
     licenseNumber: '',
