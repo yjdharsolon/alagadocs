@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { MedicalSections } from '@/components/structured-output/types';
-import { structureText } from '@/services/structureService';
+import { structureText } from '@/services/structure';
 import { toast } from 'sonner';
 
 interface UseFormatGenerationProps {
