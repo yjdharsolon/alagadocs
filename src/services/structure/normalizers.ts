@@ -1,4 +1,3 @@
-
 import { MedicalSections } from '@/components/structured-output/types';
 
 /**
@@ -126,7 +125,7 @@ export const normalizeArray = (arr: any): any[] => {
       return [parsed];
     } catch (e) {
       // If can't parse, return as a single medication with name set to the string
-      return [{ name: arr, strength: '', dosageForm: '', sigInstructions: '', quantity: '', refills: '', specialInstructions: '' }];
+      return [{ genericName: arr, brandName: '', strength: '', dosageForm: '', sigInstructions: '', quantity: '', refills: '', specialInstructions: '' }];
     }
   }
   
@@ -134,10 +133,12 @@ export const normalizeArray = (arr: any): any[] => {
   if (Array.isArray(arr)) {
     return arr.map(item => {
       if (typeof item === 'string') {
-        return { name: item, strength: '', dosageForm: '', sigInstructions: '', quantity: '', refills: '', specialInstructions: '' };
+        return { genericName: item, brandName: '', strength: '', dosageForm: '', sigInstructions: '', quantity: '', refills: '', specialInstructions: '' };
       }
       return {
-        name: ensureString(item.name || ''),
+        // Map name to genericName for backward compatibility
+        genericName: ensureString(item.genericName || item.name || ''),
+        brandName: ensureString(item.brandName || ''),
         strength: ensureString(item.strength || ''),
         dosageForm: ensureString(item.dosageForm || ''),
         sigInstructions: ensureString(item.sigInstructions || ''),
@@ -151,7 +152,8 @@ export const normalizeArray = (arr: any): any[] => {
   // If it's an object but not an array, wrap in array
   if (typeof arr === 'object') {
     return [{
-      name: ensureString(arr.name || ''),
+      genericName: ensureString(arr.genericName || arr.name || ''),
+      brandName: ensureString(arr.brandName || ''),
       strength: ensureString(arr.strength || ''),
       dosageForm: ensureString(arr.dosageForm || ''),
       sigInstructions: ensureString(arr.sigInstructions || ''),

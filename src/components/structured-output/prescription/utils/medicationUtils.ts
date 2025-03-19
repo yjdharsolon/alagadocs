@@ -76,7 +76,7 @@ export const removeMedication = (medications: Medication[], index: number): Medi
   }
 };
 
-// Initialize medications array from structured data
+// Initialize medications array from structured data with proper handling of legacy format
 export const initializeMedications = (medications: any): Medication[] => {
   try {
     if (!medications) {
@@ -84,14 +84,24 @@ export const initializeMedications = (medications: any): Medication[] => {
     }
     
     if (Array.isArray(medications)) {
+      console.log('Initializing medications from array:', medications);
       return medications.map((med, index) => {
-        // Handle backward compatibility where medication might have 'name' instead of 'genericName'
+        // Properly handle the legacy 'name' field by mapping to genericName
         const genericName = med.genericName || med.name || '';
+        
+        // Initialize brandName separately (it might not exist in legacy data)
+        const brandName = med.brandName || '';
+        
+        // Log the mapping for debugging
+        if (med.name && !med.genericName) {
+          console.log(`Converting legacy name '${med.name}' to genericName`);
+        }
+        
         // Ensure all fields have at least empty string values to prevent null/undefined errors
         return {
           id: med.id || index + 1,
-          genericName,
-          brandName: med.brandName || '',
+          genericName, // Use the mapped genericName
+          brandName,   // Use the explicit brandName field
           strength: med.strength || '',
           dosageForm: med.dosageForm || '',
           sigInstructions: med.sigInstructions || '',

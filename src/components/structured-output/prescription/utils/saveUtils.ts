@@ -17,6 +17,8 @@ export const validateAndSavePrescription = (
       toast.warning("Some medications are missing required generic name");
     }
     
+    console.log('Saving medications:', medications);
+    
     // Prepare updated data with properly structured medications
     const updatedData: MedicalSections = {
       ...structuredData,
@@ -24,7 +26,7 @@ export const validateAndSavePrescription = (
       medications: medications.map(med => ({
         ...med,
         // Ensure both name and genericName are set for backward compatibility
-        name: med.genericName, // Set name field to match genericName for backward compatibility
+        name: med.genericName, // Set name field to match genericName for legacy system compatibility
       })),
       prescriberInformation: prescriberInfo
     };

@@ -99,7 +99,8 @@ function normalizeResponse(data: any, template?: { sections: string[] }): any {
         medications = data.medications.map((med: any, index: number) => {
           return {
             id: index + 1, // Add numbering to medications
-            name: ensureString(med.name),
+            genericName: ensureString(med.genericName || med.name || ''), // Prefer genericName but fall back to name
+            brandName: ensureString(med.brandName || ''), // Add brandName field
             strength: ensureString(med.strength),
             dosageForm: ensureString(med.dosageForm),
             sigInstructions: ensureString(med.sigInstructions),
@@ -113,7 +114,8 @@ function normalizeResponse(data: any, template?: { sections: string[] }): any {
         medications = [
           {
             id: 1, // Add numbering (single medication)
-            name: ensureString(data.medications.name || ''),
+            genericName: ensureString(data.medications.genericName || data.medications.name || ''),
+            brandName: ensureString(data.medications.brandName || ''),
             strength: ensureString(data.medications.strength || ''),
             dosageForm: ensureString(data.medications.dosageForm || ''),
             sigInstructions: ensureString(data.medications.sigInstructions || ''),
