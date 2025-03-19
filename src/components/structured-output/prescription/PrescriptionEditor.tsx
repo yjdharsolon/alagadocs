@@ -1,10 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MedicalSections } from '../types';
 import { Button } from '@/components/ui/button';
 import PatientInfoCard from './PatientInfoCard';
 import MedicationsSection from './MedicationsSection';
 import PrescriberInfoCard from './PrescriberInfoCard';
+import { useProfileFields } from '@/hooks/useProfileFields';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PrescriptionEditorProps {
   structuredData: MedicalSections;
@@ -26,6 +28,9 @@ const PrescriptionEditor: React.FC<PrescriptionEditorProps> = ({
   structuredData,
   onSave,
 }) => {
+  const { user } = useAuth();
+  const { profileData } = useProfileFields();
+
   // Extract only prescription-relevant data
   const [patientInfo, setPatientInfo] = useState(structuredData.patientInformation || {
     name: '',
@@ -49,11 +54,39 @@ const PrescriptionEditor: React.FC<PrescriptionEditorProps> = ({
       : []
   );
   
-  const [prescriberInfo, setPrescriberInfo] = useState(structuredData.prescriberInformation || {
+  // Initialize prescriberInfo with data from profile if available
+  const [prescriberInfo, setPrescriberInfo] = useState({
     name: '',
     licenseNumber: '',
+    s2Number: '',
+    ptrNumber: '',
     signature: ''
   });
+
+  // Update prescriberInfo when profileData changes
+  useEffect(() => {
+    if (profileData) {
+      const fullName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
+      
+      setPrescriberInfo(prev => ({
+        ...prev,
+        name: fullName || prev.name || '',
+        licenseNumber: profileData.prc_license || prev.licenseNumber || '',
+        s2Number: profileData.s2_number || prev.s2Number || '',
+        ptrNumber: profileData.ptr_number || prev.ptrNumber || '',
+      }));
+    }
+  }, [profileData]);
+
+  // Effect to initialize with structured data
+  useEffect(() => {
+    if (structuredData.prescriberInformation) {
+      setPrescriberInfo(prev => ({
+        ...prev,
+        ...(structuredData.prescriberInformation || {}),
+      }));
+    }
+  }, [structuredData.prescriberInformation]);
 
   // Handle patient info changes
   const handlePatientInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {

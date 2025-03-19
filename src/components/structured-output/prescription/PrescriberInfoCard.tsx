@@ -8,6 +8,8 @@ import { UserCircle } from 'lucide-react';
 interface PrescriberInfo {
   name: string;
   licenseNumber: string;
+  s2Number?: string;
+  ptrNumber?: string;
   signature: string;
 }
 
@@ -45,6 +47,26 @@ const PrescriberInfoCard: React.FC<PrescriberInfoCardProps> = ({
             id="prescriberLicense" 
             name="licenseNumber" 
             value={prescriberInfo.licenseNumber || ''} 
+            onChange={onChange} 
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="prescriberS2">S2 Number</Label>
+          <Input 
+            id="prescriberS2" 
+            name="s2Number" 
+            value={prescriberInfo.s2Number || ''} 
+            onChange={onChange} 
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="prescriberPTR">PTR Number</Label>
+          <Input 
+            id="prescriberPTR" 
+            name="ptrNumber" 
+            value={prescriberInfo.ptrNumber || ''} 
             onChange={onChange} 
             className="mt-1"
           />

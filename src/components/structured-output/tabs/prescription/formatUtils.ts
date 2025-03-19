@@ -27,9 +27,11 @@ export const formatPrescriberInfo = (prescriberInfo: any, structuredPrescriberIn
   let formattedInfo = '';
   const name = `${prescriberInfo.first_name || ''} ${prescriberInfo.middle_name ? prescriberInfo.middle_name.charAt(0) + '. ' : ''}${prescriberInfo.last_name || ''}${prescriberInfo.name_extension ? ', ' + prescriberInfo.name_extension : ''}`;
   
+  // Add doctor's name and title
   formattedInfo += `${name}${prescriberInfo.medical_title ? ', ' + prescriberInfo.medical_title : ''}\n`;
   formattedInfo += `${prescriberInfo.profession || ''}\n`;
   
+  // Add professional license information
   if (prescriberInfo.prc_license) {
     formattedInfo += `PRC License No: ${prescriberInfo.prc_license}\n`;
   }
@@ -42,6 +44,7 @@ export const formatPrescriberInfo = (prescriberInfo: any, structuredPrescriberIn
     formattedInfo += `S2 No: ${prescriberInfo.s2_number}\n`;
   }
   
+  // Add clinic information
   if (prescriberInfo.clinic_name) {
     formattedInfo += `\n${prescriberInfo.clinic_name}\n`;
   }
@@ -58,5 +61,6 @@ export const formatPrescriberInfo = (prescriberInfo: any, structuredPrescriberIn
     formattedInfo += `Contact: ${prescriberInfo.contact_number}\n`;
   }
   
+  // If no profile info is available, use structured prescriber info as fallback
   return formattedInfo || String(structuredPrescriberInfo || "No prescriber information");
 };
