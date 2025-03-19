@@ -62,7 +62,7 @@ export const usePrescriptionEditor = ({
       : []
   );
   
-  // Initialize prescriberInfo with correct structure - signature field is now optional
+  // Initialize prescriberInfo with correct structure - signature field is now removed
   const [prescriberInfo, setPrescriberInfo] = useState({
     name: '',
     licenseNumber: '',
@@ -71,10 +71,17 @@ export const usePrescriptionEditor = ({
     title: ''
   });
 
-  // Update prescriberInfo when profileData changes - fixed mapping
+  // Update prescriberInfo when profileData changes - improved formatting
   useEffect(() => {
     if (profileData) {
-      const fullName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
+      // Format name with proper spacing and include title if available
+      const firstName = profileData.first_name || '';
+      const middleName = profileData.middle_name ? `${profileData.middle_name.charAt(0)}. ` : '';
+      const lastName = profileData.last_name || '';
+      const nameExtension = profileData.name_extension ? `, ${profileData.name_extension}` : '';
+      const title = profileData.medical_title ? `, ${profileData.medical_title}` : '';
+      
+      const fullName = `${firstName} ${middleName}${lastName}${nameExtension}`.trim();
       
       setPrescriberInfo(prev => ({
         ...prev,

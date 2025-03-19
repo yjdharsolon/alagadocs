@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { MedicalSections } from '@/components/structured-output/types';
 import { getUserProfile } from './userService';
@@ -144,11 +145,10 @@ async function enhancePrescriptionData(structuredData: any, patientId?: string):
     }
   }
   
-  // Get current user data for prescriber information
+  // Get current user data for prescriber information with proper formatting
   let prescriberInfo = {
     name: "Attending Physician",
-    licenseNumber: "License number not specified",
-    signature: "[SIGNATURE]"
+    licenseNumber: "License number not specified"
   };
   
   try {
@@ -156,10 +156,19 @@ async function enhancePrescriptionData(structuredData: any, patientId?: string):
     if (session?.user) {
       const userData = await getUserProfile(session.user.id);
       if (userData) {
+        // Format name properly with middle initial if available
+        const firstName = userData.first_name || '';
+        const middleName = userData.middle_name ? userData.middle_name.charAt(0) + '. ' : '';
+        const lastName = userData.last_name || '';
+        const nameExtension = userData.name_extension ? `, ${userData.name_extension}` : '';
+        
         prescriberInfo = {
-          name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || "Attending Physician",
-          licenseNumber: userData.profession || "License number not specified",
-          signature: "[SIGNATURE]"
+          name: `${firstName} ${middleName}${lastName}${nameExtension}`.trim() || "Attending Physician",
+          licenseNumber: userData.prc_license || "License number not specified",
+          // title, s2Number and ptrNumber fields included if available
+          title: userData.medical_title || "",
+          s2Number: userData.s2_number || "",
+          ptrNumber: userData.ptr_number || ""
         };
       }
     }
