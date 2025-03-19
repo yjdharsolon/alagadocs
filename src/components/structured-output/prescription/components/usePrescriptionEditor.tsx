@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { MedicalSections } from '../../types';
 import { useProfileFields } from '@/hooks/useProfileFields';
@@ -118,21 +119,22 @@ export const usePrescriptionEditor = ({
     setMedications(updatedMedications);
   };
   
-  // Add a new medication
+  // Add a new medication at the top of the list instead of the bottom
   const handleAddMedication = () => {
-    setMedications([
-      ...medications,
-      {
-        id: medications.length + 1,
-        name: '',
-        strength: '',
-        dosageForm: '',
-        sigInstructions: '',
-        quantity: '',
-        refills: '',
-        specialInstructions: ''
-      }
-    ]);
+    // Create new medication with next ID
+    const newMedication = {
+      id: medications.length > 0 ? Math.max(...medications.map(med => med.id || 0)) + 1 : 1,
+      name: '',
+      strength: '',
+      dosageForm: '',
+      sigInstructions: '',
+      quantity: '',
+      refills: '',
+      specialInstructions: ''
+    };
+    
+    // Add new medication at the beginning of the array
+    setMedications([newMedication, ...medications]);
   };
   
   // Remove a medication
