@@ -103,12 +103,13 @@ export const filterStructuredDataByFormat = (data: MedicalSections, format: 'sta
   const filteredData: Partial<MedicalSections> = {};
   
   // Only include keys that are valid for this format
-  allowedKeys.forEach(key => {
+  for (const key of allowedKeys) {
     const typedKey = key as keyof MedicalSections;
     if (data[typedKey] !== undefined) {
-      filteredData[typedKey] = data[typedKey];
+      // Use type assertion to fix the type error
+      filteredData[typedKey] = data[typedKey] as any;
     }
-  });
+  }
   
   return filteredData as MedicalSections;
 };
