@@ -69,6 +69,11 @@ const DocumentContainer = ({
     console.log('[DocumentContainer] Received save with updatedData and stayInEditMode:', stayInEditMode);
     // Pass the stayInEditMode parameter to the parent's onSaveEdit
     onSaveEdit(updatedData, stayInEditMode);
+    
+    // If saving and exiting edit mode, call onNoteSaved to update state at the parent level
+    if (!stayInEditMode && onNoteSaved) {
+      onNoteSaved();
+    }
   };
 
   return (

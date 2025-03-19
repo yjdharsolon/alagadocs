@@ -76,7 +76,9 @@ export default function StructuredOutputPage() {
     setStructuredData,
     transcriptionData,
     audioUrl,
-    error
+    error,
+    patientInfo: enhancedPatientInfo,
+    transcriptionId
   });
 
   // Display appropriate loading state based on what's happening
