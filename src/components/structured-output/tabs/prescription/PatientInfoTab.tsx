@@ -9,10 +9,15 @@ interface PatientInfoTabProps {
 }
 
 const PatientInfoTab: React.FC<PatientInfoTabProps> = ({ patientInformation }) => {
+  // Format patient information for display
+  const formattedInfo = typeof patientInformation === 'string' 
+    ? patientInformation 
+    : formatContent(patientInformation);
+    
   return (
     <SectionContent 
       title="PATIENT INFORMATION" 
-      content={formatContent(patientInformation)} 
+      content={formattedInfo} 
     />
   );
 };
