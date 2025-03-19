@@ -8,26 +8,62 @@ interface DocumentViewProps {
 }
 
 const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
-  // Check if this is a SOAP format note
-  const isSoapFormat = 'subjective' in structuredData && 'objective' in structuredData &&
-                     !('chiefComplaint' in structuredData) && !('historyOfPresentIllness' in structuredData);
+  // Determine document format based on available fields
+  const getDocumentFormat = (): 'standard' | 'soap' | 'consultation' | 'prescription' => {
+    if ('subjective' in structuredData && 'objective' in structuredData) {
+      return 'soap';
+    } else if ('reasonForConsultation' in structuredData && 'impression' in structuredData) {
+      return 'consultation';
+    } else if ('patientInformation' in structuredData && 'prescriberInformation' in structuredData) {
+      return 'prescription';
+    } else {
+      return 'standard';
+    }
+  };
+  
+  const documentFormat = getDocumentFormat();
   
   // Define sections based on format
-  const sections = isSoapFormat ? [
-    { key: 'subjective', title: 'SUBJECTIVE' },
-    { key: 'objective', title: 'OBJECTIVE' },
-    { key: 'assessment', title: 'ASSESSMENT' },
-    { key: 'plan', title: 'PLAN' }
-  ] : [
-    { key: 'chiefComplaint', title: 'CHIEF COMPLAINT' },
-    { key: 'historyOfPresentIllness', title: 'HISTORY OF PRESENT ILLNESS' },
-    { key: 'pastMedicalHistory', title: 'PAST MEDICAL HISTORY' },
-    { key: 'medications', title: 'MEDICATIONS' },
-    { key: 'allergies', title: 'ALLERGIES' },
-    { key: 'physicalExamination', title: 'PHYSICAL EXAMINATION' },
-    { key: 'assessment', title: 'ASSESSMENT' },
-    { key: 'plan', title: 'PLAN' }
-  ];
+  let sections;
+  
+  switch (documentFormat) {
+    case 'soap':
+      sections = [
+        { key: 'subjective', title: 'SUBJECTIVE' },
+        { key: 'objective', title: 'OBJECTIVE' },
+        { key: 'assessment', title: 'ASSESSMENT' },
+        { key: 'plan', title: 'PLAN' }
+      ];
+      break;
+    case 'consultation':
+      sections = [
+        { key: 'reasonForConsultation', title: 'REASON FOR CONSULTATION' },
+        { key: 'history', title: 'HISTORY' },
+        { key: 'findings', title: 'FINDINGS' },
+        { key: 'impression', title: 'IMPRESSION' },
+        { key: 'recommendations', title: 'RECOMMENDATIONS' }
+      ];
+      break;
+    case 'prescription':
+      sections = [
+        { key: 'patientInformation', title: 'PATIENT INFORMATION' },
+        { key: 'medications', title: 'MEDICATIONS' },
+        { key: 'prescriberInformation', title: 'PRESCRIBER INFORMATION' }
+      ];
+      break;
+    default:
+      // Standard format
+      sections = [
+        { key: 'chiefComplaint', title: 'CHIEF COMPLAINT' },
+        { key: 'historyOfPresentIllness', title: 'HISTORY OF PRESENT ILLNESS' },
+        { key: 'pastMedicalHistory', title: 'PAST MEDICAL HISTORY' },
+        { key: 'medications', title: 'MEDICATIONS' },
+        { key: 'allergies', title: 'ALLERGIES' },
+        { key: 'physicalExamination', title: 'PHYSICAL EXAMINATION' },
+        { key: 'assessment', title: 'ASSESSMENT' },
+        { key: 'plan', title: 'PLAN' }
+      ];
+  }
 
   // Helper function to convert complex objects to strings for display
   const formatSectionContent = (content: any): string => {
