@@ -4,14 +4,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { UserCircle } from 'lucide-react';
+import { PatientInfo } from './types/prescriptionTypes';
 
 interface PatientInfoProps {
-  patientInfo: {
-    name: string;
-    sex: string;
-    age: string;
-    date: string;
-  };
+  patientInfo: PatientInfo;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 

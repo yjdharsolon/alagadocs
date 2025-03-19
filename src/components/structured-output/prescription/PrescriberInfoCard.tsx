@@ -4,13 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { UserCircle } from 'lucide-react';
-
-interface PrescriberInfo {
-  name: string;
-  licenseNumber: string;
-  s2Number?: string;
-  ptrNumber?: string;
-}
+import { PrescriberInfo } from './types/prescriptionTypes';
 
 interface PrescriberInfoCardProps {
   prescriberInfo: PrescriberInfo;
