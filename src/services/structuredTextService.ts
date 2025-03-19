@@ -1,6 +1,6 @@
 
 import { MedicalSections } from '@/components/structured-output/types';
-import { structureText } from './structureService';
+import { structureText } from './structure';
 import { 
   saveStructuredNote as saveNote,
   getStructuredNoteById,
