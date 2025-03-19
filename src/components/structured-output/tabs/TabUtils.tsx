@@ -28,33 +28,50 @@ export const formatContent = (content: any): string => {
  * Determines document format based on available fields
  */
 export const getDocumentFormat = (structuredData: MedicalSections): 'standard' | 'soap' | 'consultation' | 'prescription' => {
+  // Add debug to see what fields are available
+  console.log('Format detection running for data with keys:', Object.keys(structuredData));
+  
   // SOAP format detection
   if (structuredData.subjective && structuredData.objective) {
+    console.log('Format detected: SOAP');
     return 'soap';
   } 
   
   // Consultation format detection
   else if (structuredData.reasonForConsultation && 
           (structuredData.history || structuredData.findings || structuredData.impression || structuredData.recommendations)) {
+    console.log('Format detected: Consultation');
     return 'consultation';
   } 
   
   // Prescription format detection
-  else if ((structuredData.patientInformation || structuredData.medications) && 
+  else if ((structuredData.patientInformation || 
+            (Array.isArray(structuredData.medications) && structuredData.medications.length > 0)) && 
           structuredData.prescriberInformation) {
+    console.log('Format detected: Prescription');
     return 'prescription';
   } 
   
-  // Standard H&P format (default)
-  else {
+  // Standard H&P format - check for core fields
+  else if (structuredData.chiefComplaint || 
+          structuredData.historyOfPresentIllness ||
+          structuredData.assessment ||
+          structuredData.plan) {
+    console.log('Format detected: Standard (History & Physical)');
     return 'standard';
   }
+  
+  // Default to standard if no clear format detected
+  console.log('No specific format detected, defaulting to standard');
+  return 'standard';
 };
 
 /**
  * Gets the list of sections to display based on document format
  */
 export const getDocumentSections = (format: 'standard' | 'soap' | 'consultation' | 'prescription') => {
+  console.log('Getting document sections for format:', format);
+  
   switch (format) {
     case 'soap':
       return [
@@ -99,6 +116,8 @@ export const filterStructuredDataByFormat = (data: MedicalSections, format: 'sta
   const sections = getDocumentSections(format);
   const allowedKeys = sections.map(section => section.key);
   
+  console.log(`Filtering data for format ${format}, allowed keys:`, allowedKeys);
+  
   // Create a new object with only the allowed keys
   const filteredData: Partial<MedicalSections> = {};
   
@@ -110,6 +129,8 @@ export const filterStructuredDataByFormat = (data: MedicalSections, format: 'sta
       filteredData[typedKey] = data[typedKey] as any;
     }
   }
+  
+  console.log(`Filtered data for format ${format}:`, Object.keys(filteredData));
   
   return filteredData as MedicalSections;
 };

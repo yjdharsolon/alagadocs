@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { MedicalSections } from '@/components/structured-output/types';
 
@@ -21,30 +20,33 @@ export const structureText = async (
       throw new Error('Invalid or empty text provided');
     }
     
-    // Set template sections based on the role if not provided
-    if (!template) {
-      switch (role) {
-        case 'soap':
-          template = { sections: ['Subjective', 'Objective', 'Assessment', 'Plan'] };
-          break;
-        case 'history':
-          template = { sections: ['Chief Complaint', 'History of Present Illness', 'Past Medical History', 'Physical Examination', 'Assessment', 'Plan'] };
-          break;
-        case 'consultation':
-          template = { sections: ['Reason for Consultation', 'History', 'Findings', 'Impression', 'Recommendations'] };
-          break;
-        case 'prescription':
-          template = { sections: ['Patient Information', 'Medications', 'Prescriber Information'] };
-          break;
-      }
+    // Fix role mapping for History & Physical format
+    // If the role parameter is one of the format names, map it appropriately
+    let formattedRole = role;
+    let formattedTemplate = template;
+    
+    // Map roles to their proper format types
+    if (role === 'history') {
+      console.log('Converting "history" role to standard History & Physical format');
+      formattedTemplate = { 
+        sections: ['Chief Complaint', 'History of Present Illness', 'Past Medical History', 'Physical Examination', 'Assessment', 'Plan'] 
+      };
+    } else if (role === 'soap') {
+      formattedTemplate = { sections: ['Subjective', 'Objective', 'Assessment', 'Plan'] };
+    } else if (role === 'consultation') {
+      formattedTemplate = { sections: ['Reason for Consultation', 'History', 'Findings', 'Impression', 'Recommendations'] };
+    } else if (role === 'prescription') {
+      formattedTemplate = { sections: ['Patient Information', 'Medications', 'Prescriber Information'] };
     }
+    
+    console.log('Using formatted template:', formattedTemplate);
     
     // Call the edge function to structure the medical text
     const { data, error } = await supabase.functions.invoke('structure-medical-text', {
       body: { 
         text,
-        role,
-        template
+        role: formattedRole,
+        template: formattedTemplate
       }
     });
     
@@ -61,7 +63,9 @@ export const structureText = async (
     
     // If the response is already a MedicalSections object
     if (data && typeof data === 'object') {
-      return normalizeStructuredData(data, role);
+      const normalizedData = normalizeStructuredData(data, role);
+      console.log('Normalized data:', normalizedData);
+      return normalizedData;
     }
     
     // If the response is in the content field
@@ -70,10 +74,14 @@ export const structureText = async (
         // Try to parse the content as JSON if it's a string
         if (typeof data.content === 'string') {
           const parsedContent = JSON.parse(data.content);
-          return normalizeStructuredData(parsedContent, role);
+          const normalizedData = normalizeStructuredData(parsedContent, role);
+          console.log('Normalized data from content string:', normalizedData);
+          return normalizedData;
         } else {
           // If it's already an object, normalize it
-          return normalizeStructuredData(data.content, role);
+          const normalizedData = normalizeStructuredData(data.content, role);
+          console.log('Normalized data from content object:', normalizedData);
+          return normalizedData;
         }
       } catch (e) {
         console.error('Error parsing structured content:', e);
@@ -97,11 +105,17 @@ const normalizeStructuredData = (data: any, role: string): MedicalSections => {
   // Determine the format based on keys or role
   let format = 'standard';
   
+  // Debug data received
+  console.log('Normalizing data with keys:', Object.keys(data));
+  console.log('Role parameter:', role);
+  
+  // Improve format detection logic
   if (data.subjective !== undefined && data.objective !== undefined) {
     format = 'soap';
   } else if (data.reasonForConsultation !== undefined) {
     format = 'consultation';
-  } else if (data.patientInformation !== undefined || data.medications !== undefined) {
+  } else if (data.patientInformation !== undefined || 
+            (Array.isArray(data.medications) && typeof data.medications[0] === 'object')) {
     format = 'prescription';
   } else if (role === 'soap') {
     format = 'soap';
@@ -109,7 +123,13 @@ const normalizeStructuredData = (data: any, role: string): MedicalSections => {
     format = 'consultation';
   } else if (role === 'prescription') {
     format = 'prescription';
+  } else if (role === 'history' || 
+            (data.chiefComplaint !== undefined || 
+             data.historyOfPresentIllness !== undefined)) {
+    format = 'standard';
   }
+  
+  console.log('Detected format for normalization:', format);
   
   // Normalize based on format
   switch (format) {

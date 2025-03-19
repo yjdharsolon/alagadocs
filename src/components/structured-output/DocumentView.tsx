@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MedicalSections } from './types';
 import SectionView from './sections/SectionView';
 import { getDocumentFormat, getDocumentSections, filterStructuredDataByFormat } from './tabs/TabUtils';
@@ -9,6 +9,14 @@ interface DocumentViewProps {
 }
 
 const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
+  // Add debugging to see what format is detected and what data is available
+  useEffect(() => {
+    console.log('DocumentView received structuredData:', structuredData);
+    const format = getDocumentFormat(structuredData);
+    console.log('Detected document format:', format);
+    console.log('Filtered data:', filterStructuredDataByFormat(structuredData, format));
+  }, [structuredData]);
+  
   // Use the centralized format detection logic
   const documentFormat = getDocumentFormat(structuredData);
   
@@ -124,10 +132,23 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
     return JSON.stringify(content, null, 2);
   };
 
+  // Add debugging for empty sections
+  if (sections.length === 0 || Object.keys(filteredData).length === 0) {
+    console.error('No sections or filtered data available for format:', documentFormat);
+    console.log('Available sections:', sections);
+    console.log('Filtered data keys:', Object.keys(filteredData));
+  }
+
   return (
     <div className="document-view space-y-4 py-2">
       {sections.map(section => {
         const content = filteredData[section.key as keyof MedicalSections];
+        
+        // Debug any missing content
+        if (content === undefined) {
+          console.log(`Missing content for section ${section.key} in format ${documentFormat}`);
+        }
+        
         return content !== undefined && (
           <SectionView
             key={section.key}

@@ -87,9 +87,16 @@ export const useFormatGeneration = ({
       for (const formatType of formatTypes) {
         try {
           console.log(`Generating ${formatType.name} format...`);
-          const structuredResult = await structureText(transcriptionData.text, formatType.id);
+          
+          // Explicitly pass format type as role
+          const structuredResult = await structureText(
+            transcriptionData.text, 
+            formatType.id // Pass format type as role parameter
+          );
           
           if (structuredResult) {
+            console.log(`${formatType.name} format result:`, structuredResult);
+            
             // Format the text representation
             const formattedText = Object.entries(structuredResult)
               .map(([key, value]) => {
@@ -106,6 +113,10 @@ export const useFormatGeneration = ({
               structuredData: structuredResult,
               selected: formatType.id === 'history' // Select history format by default
             });
+            
+            console.log(`Added ${formatType.name} format to results`);
+          } else {
+            console.error(`No structured result returned for ${formatType.name} format`);
           }
         } catch (err) {
           console.error(`Error generating ${formatType.name} format:`, err);
@@ -113,15 +124,18 @@ export const useFormatGeneration = ({
       }
       
       if (formattedResults.length > 0) {
+        console.log('Setting formatted versions:', formattedResults);
         setFormattedVersions(formattedResults);
         
-        // Set the first format as the active one
+        // Set the first format as the active one - prioritize History & Physical
         const defaultFormat = formattedResults.find(f => f.formatType === 'history') || formattedResults[0];
+        console.log('Setting default format:', defaultFormat);
         setStructuredData(defaultFormat.structuredData);
         
         toast.success('Multiple format types generated successfully');
       } else {
         // If all format generations failed, try a basic structure instead
+        console.log('No formats generated, falling back to basic structure');
         await processTranscription();
         
         if (!structuredData) {
