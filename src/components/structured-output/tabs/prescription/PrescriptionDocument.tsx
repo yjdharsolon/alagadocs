@@ -9,10 +9,13 @@ interface PrescriptionDocumentProps {
 }
 
 const PrescriptionDocument: React.FC<PrescriptionDocumentProps> = ({ structuredData }) => {
+  // Extract patient name from the patient information object
+  const patientName = structuredData.patientInformation?.name || null;
+
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <ExportButton sections={structuredData} patientName={structuredData.patientInformation} />
+        <ExportButton sections={structuredData} patientName={patientName} />
       </div>
       <DocumentView structuredData={structuredData} />
     </div>
