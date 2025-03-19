@@ -26,13 +26,23 @@ export const formatPrescriberInfo = (prescriberInfo: any, structuredPrescriberIn
 
   let formattedInfo = '';
   
-  // Create name with title if available
+  // Create name
   const name = `${prescriberInfo.first_name || ''} ${prescriberInfo.middle_name ? prescriberInfo.middle_name.charAt(0) + '. ' : ''}${prescriberInfo.last_name || ''}${prescriberInfo.name_extension ? ', ' + prescriberInfo.name_extension : ''}`;
+  
+  // Get medical title - from either source
   const title = prescriberInfo.medical_title || (structuredPrescriberInfo && structuredPrescriberInfo.title ? structuredPrescriberInfo.title : '');
   
-  // Add doctor's name and title
-  formattedInfo += `${name}${title ? ', ' + title : ''}\n`;
-  formattedInfo += `${prescriberInfo.profession || ''}\n`;
+  // Add doctor's name
+  formattedInfo += `${name}\n`;
+  
+  // Add title on separate line if available
+  if (title) {
+    formattedInfo += `${title}\n`;
+  }
+  
+  if (prescriberInfo.profession) {
+    formattedInfo += `${prescriberInfo.profession}\n`;
+  }
   
   // Add professional license information
   if (prescriberInfo.prc_license || (structuredPrescriberInfo && structuredPrescriberInfo.licenseNumber)) {

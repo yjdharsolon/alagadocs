@@ -17,17 +17,17 @@ export const addPrescriberSection = (
   
   // Get prescriber name with proper formatting
   let prescriberName = '';
+  let title = '';
   
   if (profileData) {
     // Use profile data if available
     const name = `${profileData.first_name || ''} ${profileData.last_name || ''}`;
-    const title = profileData.medical_title || '';
-    prescriberName = title ? `${name}, ${title}` : name;
+    title = profileData.medical_title || '';
+    prescriberName = name;
   } else if (typeof prescriberInfo === 'object') {
     // Use prescriber info from the prescription
-    const name = prescriberInfo.name || '';
-    const title = prescriberInfo.title || '';
-    prescriberName = title ? `${name}, ${title}` : name;
+    prescriberName = prescriberInfo.name || '';
+    title = prescriberInfo.title || '';
   }
   
   // Get license information from profile data if available, otherwise fall back to prescriber info
@@ -39,10 +39,17 @@ export const addPrescriberSection = (
   const footerX = pageWidth - margin - (contentWidth * 0.3);
   let currentY = footerY;
   
-  // Add doctor name and title
+  // Add doctor's name
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.text(prescriberName, footerX, currentY);
+  
+  // Add title on the next line if available
+  if (title) {
+    currentY += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.text(title, footerX, currentY);
+  }
   
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
