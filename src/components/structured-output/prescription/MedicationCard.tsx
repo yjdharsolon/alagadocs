@@ -11,21 +11,21 @@ import { Medication } from './types/prescriptionTypes';
 interface MedicationCardProps {
   medication: Medication;
   index: number;
-  onFieldChange: (index: number, field: keyof Medication, value: string) => void;
+  onChange: (index: number, field: keyof Medication, value: string) => void;
   onRemove: (index: number) => void;
 }
 
 const MedicationCard: React.FC<MedicationCardProps> = ({
   medication,
   index,
-  onFieldChange,
+  onChange,
   onRemove
 }) => {
   // Helper function to handle input changes with logging
   const handleInputChange = (field: keyof Medication, value: string) => {
     console.log(`MedicationCard input change - Index: ${index}, Field: ${field}, Value: ${value}`);
     console.log(`Current medication data:`, JSON.stringify(medication, null, 2));
-    onFieldChange(index, field, value);
+    onChange(index, field, value);
   };
 
   // For debugging - log when component renders with its data
