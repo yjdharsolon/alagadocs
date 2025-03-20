@@ -10,17 +10,24 @@ import { MedicalRecordsSection } from '@/components/patient/MedicalRecordsSectio
 import { PatientInfoSection } from '@/components/patient/PatientInfoSection';
 import { usePatientDetails } from '@/hooks/usePatientDetails';
 import { usePatientRecords } from '@/hooks/usePatientRecords';
+import { useLocation } from 'react-router-dom';
 
 export default function PatientDetailsPage() {
   const { user } = useAuth();
+  const location = useLocation();
   const { patient } = usePatientDetails();
+  
+  // Get search state from location if available
+  const searchQuery = location.state?.searchQuery;
+  const searchResults = location.state?.searchResults;
+  
   const { 
     loading, 
     patientNotes, 
     handleStartConsultation, 
     handleEditPatient, 
     handleBack 
-  } = usePatientRecords(patient);
+  } = usePatientRecords(patient, searchQuery, searchResults);
 
   if (!patient) {
     return (

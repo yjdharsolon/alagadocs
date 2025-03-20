@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
 import { PatientPageHeader } from '@/components/patient/PatientPageHeader';
@@ -13,11 +13,26 @@ import { Patient } from '@/types/patient';
 export default function SelectPatientPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchResults, setSearchResults] = useState<Patient[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   
-  const handleSearchResults = (results: Patient[]) => {
+  // Load search state from location if available
+  useEffect(() => {
+    if (location.state?.searchResults) {
+      setSearchResults(location.state.searchResults);
+      setHasSearched(true);
+    }
+    
+    if (location.state?.searchQuery) {
+      setSearchQuery(location.state.searchQuery);
+    }
+  }, [location.state]);
+  
+  const handleSearchResults = (results: Patient[], query: string) => {
     setSearchResults(results);
+    setSearchQuery(query);
     setHasSearched(true);
   };
   
@@ -26,8 +41,14 @@ export default function SelectPatientPage() {
     sessionStorage.setItem('selectedPatient', JSON.stringify(patient));
     toast.success(`Selected patient: ${patient.first_name} ${patient.last_name}`);
     
-    // Navigate to patient details page instead of directly to upload
-    navigate('/patient-details', { state: { patient } });
+    // Navigate to patient details page with search context
+    navigate('/patient-details', { 
+      state: { 
+        patient,
+        searchQuery,
+        searchResults
+      } 
+    });
   };
   
   const handleCreatePatient = () => {
@@ -43,6 +64,7 @@ export default function SelectPatientPage() {
         <PatientSearchForm 
           onSearchResults={handleSearchResults} 
           userId={user?.id}
+          initialSearchQuery={searchQuery}
         />
         
         <PatientSearchResults 

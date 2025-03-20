@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,19 +9,30 @@ import { supabase } from '@/integrations/supabase/client';
 import { Patient } from '@/types/patient';
 
 interface PatientSearchFormProps {
-  onSearchResults: (results: Patient[]) => void;
+  onSearchResults: (results: Patient[], query: string) => void;
   userId: string | undefined;
+  initialSearchQuery?: string;
 }
 
 export const PatientSearchForm: React.FC<PatientSearchFormProps> = ({ 
   onSearchResults, 
-  userId 
+  userId,
+  initialSearchQuery = ''
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [isSearching, setIsSearching] = useState(false);
   
-  const handleSearchPatient = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Automatically search with initial query if provided
+  useEffect(() => {
+    if (initialSearchQuery && userId) {
+      handleSearchPatient(null, true);
+    }
+  }, [initialSearchQuery, userId]);
+  
+  const handleSearchPatient = async (e: React.FormEvent | null, isAutoSearch = false) => {
+    if (e) {
+      e.preventDefault();
+    }
     
     if (!searchQuery.trim()) {
       toast.error("Please enter a patient name or ID");
@@ -47,17 +58,19 @@ export const PatientSearchForm: React.FC<PatientSearchFormProps> = ({
         throw error;
       }
       
-      onSearchResults(data || []);
+      onSearchResults(data || [], searchQuery);
       
-      if (data && data.length > 0) {
-        toast.success(`Found ${data.length} patient(s) matching "${searchQuery}"`);
-      } else {
-        toast.error(`No patients found matching "${searchQuery}"`);
+      if (!isAutoSearch) {
+        if (data && data.length > 0) {
+          toast.success(`Found ${data.length} patient(s) matching "${searchQuery}"`);
+        } else {
+          toast.error(`No patients found matching "${searchQuery}"`);
+        }
       }
     } catch (error: any) {
       console.error('Error searching for patients:', error);
       toast.error(error.message || 'An error occurred while searching for patients');
-      onSearchResults([]);
+      onSearchResults([], searchQuery);
     } finally {
       setIsSearching(false);
     }
@@ -72,7 +85,7 @@ export const PatientSearchForm: React.FC<PatientSearchFormProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSearchPatient} className="flex gap-2">
+        <form onSubmit={(e) => handleSearchPatient(e)} className="flex gap-2">
           <Input 
             placeholder="Search patients..." 
             className="flex-1"

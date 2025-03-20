@@ -5,14 +5,14 @@ import { Patient } from '@/types/patient';
 import { getUserStructuredNotes } from '@/services/structuredNoteService';
 import { usePatientNavigation } from './usePatientNavigation';
 
-export const usePatientRecords = (patient: Patient | null) => {
+export const usePatientRecords = (patient: Patient | null, searchQuery?: string, searchResults?: Patient[]) => {
   const [loading, setLoading] = useState(true);
   const [patientNotes, setPatientNotes] = useState<any[]>([]);
   const { 
     handleStartConsultation, 
     handleEditPatient, 
     handleBack 
-  } = usePatientNavigation(patient);
+  } = usePatientNavigation(patient, searchQuery, searchResults);
   
   useEffect(() => {
     async function fetchPatientNotes() {

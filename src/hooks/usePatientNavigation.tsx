@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Patient } from '@/types/patient';
 
-export const usePatientNavigation = (patient: Patient | null) => {
+export const usePatientNavigation = (patient: Patient | null, searchQuery?: string, searchResults?: Patient[]) => {
   const navigate = useNavigate();
 
   const handleStartConsultation = () => {
@@ -23,7 +23,13 @@ export const usePatientNavigation = (patient: Patient | null) => {
   };
 
   const handleBack = () => {
-    navigate('/select-patient');
+    // Navigate back with search context if available
+    navigate('/select-patient', {
+      state: {
+        searchQuery,
+        searchResults
+      }
+    });
   };
 
   return {
