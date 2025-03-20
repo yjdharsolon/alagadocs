@@ -2,7 +2,11 @@
 import { processStringMedication, processIndividualMedication } from './medicationProcessors';
 
 /**
- * Ensures a value is a string
+ * Ensures a value is a string.
+ * Converts undefined, null, objects, and other non-string values to string representation.
+ * 
+ * @param value - The value to convert to a string
+ * @returns A string representation of the value, or empty string if undefined/null
  */
 export const ensureString = (value: any): string => {
   if (value === undefined || value === null) return '';
@@ -12,7 +16,12 @@ export const ensureString = (value: any): string => {
 };
 
 /**
- * Normalizes an object to ensure it has the expected properties
+ * Normalizes an object to ensure it has the expected properties.
+ * Uses a template object to define the expected structure.
+ * 
+ * @param obj - The source object to normalize
+ * @param template - A template object that defines the expected structure
+ * @returns A normalized object with all properties from the template
  */
 export const normalizeObject = (obj: any, template: any): any => {
   if (!obj || typeof obj !== 'object') {
@@ -28,7 +37,16 @@ export const normalizeObject = (obj: any, template: any): any => {
 };
 
 /**
- * Normalizes an array of medication objects
+ * Normalizes an array of medication objects or medication strings.
+ * Handles various input formats including:
+ * - JSON strings
+ * - Arrays of objects
+ * - Arrays of strings
+ * - Single medication objects
+ * - Single medication strings
+ * 
+ * @param arr - The source medication data to normalize 
+ * @returns An array of normalized medication objects
  */
 export const normalizeArray = (arr: any): any[] => {
   if (!arr) return [];

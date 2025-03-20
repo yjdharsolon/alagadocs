@@ -5,11 +5,14 @@ import { enhancePrescriptionData } from './prescriptionEnhancer';
 import { normalizeStructuredData } from './normalizers/dataNormalizer';
 
 /**
- * Structures transcribed text into medical note sections
- * @param text The transcribed text to structure
- * @param role The medical professional role (e.g., Doctor, Nurse)
- * @param template Optional custom template with sections
- * @param patientId Optional patient ID to include patient information
+ * Structures transcribed text into medical note sections using AI processing.
+ * This function is the primary entry point for converting raw transcribed text
+ * into structured medical notes in various formats.
+ * 
+ * @param text - The transcribed text to structure
+ * @param role - The medical professional role (e.g., Doctor, Nurse) or format type
+ * @param template - Optional custom template with sections to include
+ * @param patientId - Optional patient ID to include patient information
  * @returns The structured medical note sections
  */
 export const structureText = async (

@@ -3,7 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { getUserProfile } from '../userService';
 
 /**
- * Enhances prescription data with patient and user information
+ * Enhances prescription data with patient and user (prescriber) information.
+ * This function takes basic prescription data from the AI service and enriches it with:
+ * 1. Patient information from the database or session storage
+ * 2. Prescriber information from the current user's profile
+ * 
+ * @param structuredData - The base prescription data to enhance
+ * @param patientId - Optional patient ID to fetch patient data from database
+ * @returns Enhanced prescription data with complete patient and prescriber information
  */
 export async function enhancePrescriptionData(structuredData: any, patientId?: string): Promise<any> {
   // Get current date

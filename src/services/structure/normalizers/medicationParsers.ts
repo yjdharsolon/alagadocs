@@ -1,6 +1,15 @@
 
 /**
- * Enhanced parsing for medication strings that include brand names in parentheses and strength
+ * Parses a complex medication string that includes generic name, brand name in parentheses,
+ * and strength information.
+ * 
+ * For example: "Aspirin (Aspilets) 80mg" would be parsed into:
+ *   - genericName: "Aspirin"
+ *   - brandName: "Aspilets"
+ *   - strength: "80mg"
+ * 
+ * @param text - The medication string to parse
+ * @returns An object containing the genericName, brandName, and strength as separate components
  */
 export const parseComplexMedicationString = (text: string): { genericName: string, brandName: string, strength: string } => {
   // Regular expression to match "GenericName (BrandName) Strength"

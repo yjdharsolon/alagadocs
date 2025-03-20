@@ -3,7 +3,11 @@ import { parseComplexMedicationString } from './medicationParsers';
 import { ensureString } from './typeNormalizers';
 
 /**
- * Process a string medication format like "Aspirin (aspilets) 80mg"
+ * Processes a string medication format like "Aspirin (aspilets) 80mg".
+ * Parses the string to extract generic name, brand name, and strength information.
+ * 
+ * @param medicationString - A medication string to process (e.g., "Aspirin (aspilets) 80mg")
+ * @returns A medication object with parsed components and empty fields for other properties
  */
 export const processStringMedication = (medicationString: string) => {
   const { genericName, brandName, strength } = parseComplexMedicationString(medicationString);
@@ -22,7 +26,15 @@ export const processStringMedication = (medicationString: string) => {
 };
 
 /**
- * Process an individual medication object or string
+ * Processes an individual medication object or string into a standardized format.
+ * Handles multiple input formats:
+ * - String medications (e.g., "Aspirin (aspilets) 80mg")
+ * - Simple string medication names (e.g., "Metformin")
+ * - Object with genericName/name containing combined name format (e.g., {genericName: "Aspirin (aspilets)"})
+ * - Complete medication objects with all properties
+ * 
+ * @param item - A medication object or string to process
+ * @returns A normalized medication object with standardized properties
  */
 export const processIndividualMedication = (item: any) => {
   if (typeof item === 'string') {

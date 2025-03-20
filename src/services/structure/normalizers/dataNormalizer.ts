@@ -3,7 +3,13 @@ import { MedicalSections } from '@/components/structured-output/types';
 import { ensureString, normalizeObject, normalizeArray } from './typeNormalizers';
 
 /**
- * Normalize structured data to ensure consistent formats across all note types
+ * Normalizes structured data to ensure consistent formats across all note types.
+ * This function takes raw structured data and converts it to a standardized format
+ * based on the document type (standard medical history, SOAP note, consultation, or prescription).
+ * 
+ * @param data - The raw structured data from the AI service or database
+ * @param role - The medical professional role or document format type
+ * @returns A normalized MedicalSections object with consistent structure
  */
 export const normalizeStructuredData = (data: any, role: string): MedicalSections => {
   // Determine the format based on keys or role
