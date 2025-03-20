@@ -1,3 +1,4 @@
+
 /**
  * Converts a string to camelCase format
  */
@@ -59,6 +60,7 @@ IMPORTANT: You MUST return the structured information in this exact JSON format:
 - If certain medication details are not present, use "Not specified" as the value
 - Convert patient descriptions into proper medical terminology
 - Be accurate, concise, and follow standard medical writing practices
+- CRITICAL: DO NOT INVENT INFORMATION. If the input doesn't mention medications, return an empty array.
 - Ensure medications mentioned are available in the Philippines.`;
   }
 
@@ -102,7 +104,11 @@ IMPORTANT: You MUST return the structured information in this exact JSON format 
   "plan": "string"
 }
 
-Extract all relevant information from the transcription. If information is missing for a section, include that section with "Not documented" as the value. Convert patient descriptions into proper medical terminology (e.g., "Masakit ang batok ko pag-ising" becomes "Patient reports cervicalgia with morning stiffness"). Be accurate, concise, and follow standard medical writing practices.`;
+CRITICAL: DO NOT INVENT OR FABRICATE INFORMATION.
+- If the input is insufficient or doesn't contain information for certain sections, use "" (empty string) for that section.
+- Only structure information that is actually present in the input. Do not make up medical details.
+- If input is too brief (like a few words) or completely unrelated to medical content, return empty strings for all fields.
+- Be accurate and only include what's in the input text. No fabrication.`;
   }
 
   // Consultation note format
@@ -143,7 +149,13 @@ IMPORTANT: You MUST return the structured information in this exact JSON format 
   "recommendations": "string"
 }
 
-Extract all relevant information from the transcription. If information is missing for a section, include that section with "Not documented" as the value. Convert patient descriptions into proper medical terminology (e.g., "Masakit ang batok ko pag-ising" becomes "Patient reports cervicalgia with morning stiffness"). Be accurate, concise, and follow standard medical writing practices.`;
+CRITICAL INSTRUCTIONS:
+- DO NOT INVENT OR FABRICATE ANY INFORMATION.
+- If the input is insufficient or doesn't contain medical information for certain sections, use empty strings ("") for those sections.
+- Only structure information that is actually present in the input text. Do not make up medical details.
+- If the input is too brief (like a few words) or completely unrelated to medical content, return empty strings for all fields.
+- If there is no clear reason for consultation in the input, leave that field empty too.
+- Be extremely accurate and only include what's explicitly stated in the input. No fabrication whatsoever.`;
   }
 
   const standardSections = [
@@ -172,10 +184,13 @@ Follow these important guidelines:
 3. Use precise medical terminology while maintaining clarity and conciseness
 4. When mentioning medications, prioritize those available in Philippine pharmacies, providing both generic and branded options when applicable
 5. Maintain a professional tone and follow standardized medical writing practices
+6. CRITICAL: DO NOT INVENT OR FABRICATE ANY INFORMATION. If the input doesn't contain information for a section, use an empty string ("").
+7. Only structure information that is actually present in the input. Do not make up medical details.
+8. If input is too brief or completely unrelated to medical content, return empty strings for all fields.
 
 IMPORTANT: You MUST return the structured information in JSON format with these sections as keys with camelCase format. ALL VALUES MUST BE STRINGS, not objects or arrays.
-If certain sections are not present in the transcription, include the key with an empty string or "Not documented" as the value.
-Be accurate, concise and professional in your structuring. Do not invent information not present in the transcription.
+If the input doesn't contain information for certain sections, include the key with an empty string as the value.
+Be accurate and professional in your structuring. Do not invent information not present in the input.
 
 Example response format (using camelCase for keys):
 {

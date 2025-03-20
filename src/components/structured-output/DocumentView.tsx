@@ -15,14 +15,19 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
     const format = getDocumentFormat(structuredData);
     console.log('Detected document format:', format);
     
+    // Check if all sections are empty
+    const allEmpty = Object.values(structuredData).every(val => 
+      !val || 
+      (typeof val === 'string' && val.trim() === '') ||
+      (Array.isArray(val) && val.length === 0) ||
+      (typeof val === 'object' && Object.keys(val).length === 0)
+    );
+    
+    console.log('All sections empty:', allEmpty);
+    
     // Debug medications specifically to check brand names
     if (structuredData.medications && Array.isArray(structuredData.medications)) {
       console.log('DocumentView medication data:', JSON.stringify(structuredData.medications, null, 2));
-      
-      structuredData.medications.forEach((med, index) => {
-        console.log(`Med ${index + 1} - Brand name property exists:`, 'brandName' in med);
-        console.log(`Med ${index + 1} - Brand name value:`, med.brandName);
-      });
     }
   }, [structuredData]);
   
@@ -34,6 +39,14 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
   
   // Get sections based on format
   const sections = getDocumentSections(documentFormat);
+  
+  // Check if all sections are empty
+  const allEmpty = Object.values(filteredData).every(val => 
+    !val || 
+    (typeof val === 'string' && val.trim() === '') ||
+    (Array.isArray(val) && val.length === 0) ||
+    (typeof val === 'object' && Object.keys(val).length === 0)
+  );
 
   // Helper function to convert complex objects to strings for display
   const formatSectionContent = (content: any): string => {
@@ -47,6 +60,10 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
     
     // Handle arrays of objects (like medications)
     if (Array.isArray(content)) {
+      if (content.length === 0) {
+        return '';
+      }
+      
       return content.map(item => {
         if (typeof item === 'string') {
           return item;
@@ -61,6 +78,8 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
             const genericName = item.genericName || item.name || '';
             const brandName = item.brandName ? ` (${item.brandName})` : '';
             
+            if (!genericName && !brandName) return '';
+            
             medString += `${genericName}${brandName}`;
             if (item.strength) medString += ` ${item.strength}`;
             if (item.dosage) medString += `: ${item.dosage}`;
@@ -71,24 +90,25 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
             if (item.refills) medString += `\nRefills: ${item.refills}`;
             if (item.specialInstructions) medString += `\nSpecial Instructions: ${item.specialInstructions}`;
             
-            return medString || JSON.stringify(item);
+            return medString || '';
           }
           
           // Create a readable string representation of the object
-          return Object.entries(item)
+          const formattedEntries = Object.entries(item)
             .filter(([_, value]) => value) // Only include properties with values
-            .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`)
-            .join('\n');
+            .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`);
+            
+          return formattedEntries.length > 0 ? formattedEntries.join('\n') : '';
         }
         
         return String(item);
-      }).join('\n\n');
+      }).filter(item => item).join('\n\n'); // Filter out empty items
     }
     
     // Handle patient information object for prescription format
     if (content && typeof content === 'object' && documentFormat === 'prescription') {
       if ('name' in content || 'sex' in content || 'age' in content) {
-        return Object.entries(content)
+        const formattedEntries = Object.entries(content)
           .filter(([_, value]) => value) // Only include properties with values
           .map(([key, value]) => {
             const formattedKey = key
@@ -96,36 +116,40 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
               .replace(/^./, str => str.toUpperCase());
             
             if (value && typeof value === 'object' && !Array.isArray(value)) {
-              return `${formattedKey}:\n${Object.entries(value)
+              const subEntries = Object.entries(value)
                 .filter(([_, subValue]) => subValue) // Only include properties with values
-                .map(([subKey, subValue]) => `  ${subKey}: ${subValue}`)
-                .join('\n')}`;
+                .map(([subKey, subValue]) => `  ${subKey}: ${subValue}`);
+                
+              return subEntries.length > 0 ? 
+                `${formattedKey}:\n${subEntries.join('\n')}` : '';
             }
             
             return `${formattedKey}: ${value}`;
-          })
-          .join('\n');
+          });
+          
+        return formattedEntries.length > 0 ? formattedEntries.join('\n') : '';
       }
     }
     
     // Handle prescriber information object for prescription format
     if (content && typeof content === 'object' && documentFormat === 'prescription') {
       if ('name' in content || 'licenseNumber' in content) {
-        return Object.entries(content)
+        const formattedEntries = Object.entries(content)
           .filter(([_, value]) => value) // Only include properties with values
           .map(([key, value]) => {
             const formattedKey = key
               .replace(/([A-Z])/g, ' $1')
               .replace(/^./, str => str.toUpperCase());
             return `${formattedKey}: ${value}`;
-          })
-          .join('\n');
+          });
+          
+        return formattedEntries.length > 0 ? formattedEntries.join('\n') : '';
       }
     }
     
     // Default object handling for other sections
     if (content && typeof content === 'object') {
-      return Object.entries(content)
+      const formattedEntries = Object.entries(content)
         .filter(([_, value]) => value) // Only include properties with values
         .map(([key, value]) => {
           const formattedKey = key
@@ -137,39 +161,54 @@ const DocumentView: React.FC<DocumentViewProps> = ({ structuredData }) => {
           }
           
           return `${formattedKey}: ${value}`;
-        })
-        .join('\n');
+        });
+        
+      return formattedEntries.length > 0 ? formattedEntries.join('\n') : '';
     }
     
     // Fall back to JSON stringify for any other types
     return JSON.stringify(content, null, 2);
   };
 
-  // Add debugging for empty sections
-  if (sections.length === 0 || Object.keys(filteredData).length === 0) {
-    console.error('No sections or filtered data available for format:', documentFormat);
-    console.log('Available sections:', sections);
-    console.log('Filtered data keys:', Object.keys(filteredData));
+  // Display a message when all sections are empty
+  if (allEmpty) {
+    return (
+      <div className="document-view py-4">
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-amber-800">
+          <h3 className="text-lg font-medium mb-2">No Content Generated</h3>
+          <p>The system couldn't generate structured content from your input. Please provide more detailed medical information.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="document-view space-y-4 py-2">
       {sections.map(section => {
         const content = filteredData[section.key as keyof MedicalSections];
+        const formattedContent = formatSectionContent(content);
         
-        // Debug any missing content
-        if (content === undefined) {
-          console.log(`Missing content for section ${section.key} in format ${documentFormat}`);
-        }
-        
-        return content !== undefined && (
+        // Only show sections that have content
+        return content !== undefined && formattedContent.trim() !== '' && (
           <SectionView
             key={section.key}
             title={section.title}
-            content={formatSectionContent(content)}
+            content={formattedContent}
           />
         );
       })}
+      
+      {/* If no sections have content but allEmpty check didn't catch it (edge case) */}
+      {sections.length > 0 && sections.every(section => {
+        const content = filteredData[section.key as keyof MedicalSections];
+        const formattedContent = formatSectionContent(content);
+        return !content || formattedContent.trim() === '';
+      }) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-amber-800">
+          <h3 className="text-lg font-medium mb-2">No Content Generated</h3>
+          <p>The system couldn't generate structured content from your input. Please provide more detailed medical information.</p>
+        </div>
+      )}
     </div>
   );
 };

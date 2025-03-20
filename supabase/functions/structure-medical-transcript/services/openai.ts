@@ -11,6 +11,12 @@ export async function structureWithOpenAI(text: string, role: string, template?:
     throw new Error('OPENAI_API_KEY is not set');
   }
   
+  // Check if input is too brief or empty
+  if (!text || text.trim().length < 10) {
+    console.log("Input text is too brief, returning empty structured format");
+    return JSON.stringify(getEmptyFormat(template));
+  }
+  
   const systemPrompt = getSystemPrompt(role, template);
   
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -54,9 +60,64 @@ export async function structureWithOpenAI(text: string, role: string, template?:
 }
 
 /**
+ * Returns an empty format based on template type
+ */
+function getEmptyFormat(template?: { sections: string[] }): any {
+  // Determine the format type based on the template
+  if (template?.sections) {
+    if (template.sections.includes('Subjective')) {
+      return {
+        subjective: "",
+        objective: "",
+        assessment: "",
+        plan: ""
+      };
+    } else if (template.sections.includes('Reason for Consultation')) {
+      return {
+        reasonForConsultation: "",
+        history: "",
+        findings: "",
+        impression: "",
+        recommendations: ""
+      };
+    } else if (template.sections.includes('Prescription')) {
+      return {
+        medications: [],
+        patientInformation: {},
+        prescriberInformation: {}
+      };
+    }
+  }
+  
+  // Default to standard history & physical format
+  return {
+    chiefComplaint: "",
+    historyOfPresentIllness: "",
+    pastMedicalHistory: "",
+    medications: "",
+    allergies: "",
+    physicalExamination: "",
+    assessment: "",
+    plan: ""
+  };
+}
+
+/**
  * Normalizes the OpenAI response to ensure consistent formats
  */
 function normalizeResponse(data: any, template?: { sections: string[] }): any {
+  // Check if all values are empty strings - if so, return early with empty format
+  const allEmpty = Object.values(data).every(val => 
+    val === "" || val === "Not documented" || 
+    (Array.isArray(val) && val.length === 0) ||
+    (typeof val === 'object' && Object.keys(val).length === 0)
+  );
+  
+  if (allEmpty) {
+    console.log("All values empty, returning empty format");
+    return getEmptyFormat(template);
+  }
+  
   // Determine the format type based on the template or data fields
   let formatType = 'standard';
   
@@ -64,11 +125,11 @@ function normalizeResponse(data: any, template?: { sections: string[] }): any {
     if (template.sections.includes('Subjective')) formatType = 'soap';
     else if (template.sections.includes('Reason for Consultation')) formatType = 'consultation';
     else if (template.sections.includes('Prescription')) formatType = 'prescription';
-  } else if (data.subjective && data.objective) {
+  } else if (data.subjective !== undefined) {
     formatType = 'soap';
-  } else if (data.reasonForConsultation) {
+  } else if (data.reasonForConsultation !== undefined) {
     formatType = 'consultation';
-  } else if (data.medications) {
+  } else if (data.medications !== undefined) {
     formatType = 'prescription';
   }
   
@@ -95,7 +156,7 @@ function normalizeResponse(data: any, template?: { sections: string[] }): any {
       
       // Ensure medications is an array of objects
       let medications = [];
-      if (Array.isArray(data.medications)) {
+      if (Array.isArray(data.medications) && data.medications.length > 0) {
         medications = data.medications.map((med: any, index: number) => {
           return {
             id: index + 1, // Add numbering to medications
@@ -109,7 +170,7 @@ function normalizeResponse(data: any, template?: { sections: string[] }): any {
             specialInstructions: ensureString(med.specialInstructions)
           };
         });
-      } else if (typeof data.medications === 'object') {
+      } else if (typeof data.medications === 'object' && data.medications !== null) {
         // Handle case where medications is an object, not an array
         medications = [
           {
@@ -124,8 +185,6 @@ function normalizeResponse(data: any, template?: { sections: string[] }): any {
             specialInstructions: ensureString(data.medications.specialInstructions || '')
           }
         ];
-      } else {
-        medications = [];
       }
       
       // Return just the medications array - patient and prescriber info
@@ -152,11 +211,15 @@ function normalizeResponse(data: any, template?: { sections: string[] }): any {
 }
 
 /**
- * Ensures a value is a string
+ * Ensures a value is a string and removes placeholder text if it's just that
  */
 function ensureString(value: any): string {
   if (value === undefined || value === null) return '';
-  if (typeof value === 'string') return value;
+  if (typeof value === 'string') {
+    // Return empty string for placeholder values
+    if (value === 'Not documented' || value === 'Not specified') return '';
+    return value;
+  }
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
 }

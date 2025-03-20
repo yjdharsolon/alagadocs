@@ -19,6 +19,18 @@ export const normalizeStructuredData = (data: any, role: string): MedicalSection
   console.log('Normalizing data with keys:', Object.keys(data));
   console.log('Role parameter:', role);
   
+  // Check if data is essentially empty
+  const isEmpty = !data || Object.keys(data).length === 0 || Object.values(data).every(val => 
+    val === "" || val === undefined || val === null ||
+    (Array.isArray(val) && val.length === 0) ||
+    (typeof val === 'object' && Object.keys(val).length === 0)
+  );
+  
+  if (isEmpty) {
+    console.log('Data is empty, returning appropriate empty format');
+    return getEmptyStructure(role);
+  }
+  
   // Improve format detection logic
   if (data.subjective !== undefined && data.objective !== undefined) {
     format = 'soap';
@@ -89,3 +101,54 @@ export const normalizeStructuredData = (data: any, role: string): MedicalSection
       };
   }
 };
+
+/**
+ * Returns an appropriate empty structure based on format
+ */
+function getEmptyStructure(role: string): MedicalSections {
+  switch (role) {
+    case 'soap':
+      return {
+        subjective: '',
+        objective: '',
+        assessment: '',
+        plan: ''
+      };
+    case 'consultation':
+      return {
+        reasonForConsultation: '',
+        history: '',
+        findings: '',
+        impression: '',
+        recommendations: ''
+      };
+    case 'prescription':
+      return {
+        patientInformation: {
+          name: '',
+          sex: '',
+          age: '',
+          date: '',
+        },
+        medications: [],
+        prescriberInformation: {
+          name: '',
+          licenseNumber: '',
+          s2Number: '',
+          ptrNumber: '',
+          title: ''
+        }
+      };
+    default:
+      return {
+        chiefComplaint: '',
+        historyOfPresentIllness: '',
+        pastMedicalHistory: '',
+        medications: '',
+        allergies: '',
+        physicalExamination: '',
+        assessment: '',
+        plan: ''
+      };
+  }
+}
