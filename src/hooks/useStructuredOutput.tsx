@@ -13,6 +13,11 @@ interface UseStructuredOutputPageParams {
   transcriptionData: any;
   audioUrl?: string;
   error: string | null;
+  patientInfo: {
+    id: string | null;
+    name: string | null;
+  };
+  transcriptionId?: string;
 }
 
 export const useStructuredOutputPage = ({
@@ -20,7 +25,9 @@ export const useStructuredOutputPage = ({
   setStructuredData,
   transcriptionData,
   audioUrl,
-  error
+  error,
+  patientInfo,
+  transcriptionId
 }: UseStructuredOutputPageParams) => {
   const navigate = useNavigate();
   const [isEditMode, setIsEditMode] = useState(false);

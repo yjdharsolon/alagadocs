@@ -54,12 +54,7 @@ export default function StructuredOutputPage() {
     transcriptionData,
     audioUrl,
     error,
-    patientInfo: {
-      ...patientInfo,
-      dateOfBirth: patientDetails.dateOfBirth,
-      age: patientDetails.age,
-      gender: patientDetails.gender
-    },
+    patientInfo,
     transcriptionId
   });
 
