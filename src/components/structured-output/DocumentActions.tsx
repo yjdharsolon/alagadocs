@@ -26,6 +26,7 @@ interface DocumentActionsProps {
     formatType: string;
     structuredData: MedicalSections;
   }>;
+  refreshData?: () => void;  // Add the refreshData prop to the interface
 }
 
 const DocumentActions = ({
@@ -39,7 +40,8 @@ const DocumentActions = ({
   onNoteSaved,
   onEndConsult,
   noteSaved = false,
-  selectedFormats = []
+  selectedFormats = [],
+  refreshData  // Destructure the refreshData prop
 }: DocumentActionsProps) => {
   const handleEndConsult = () => {
     console.log('End consultation triggered from DocumentActions');
@@ -63,6 +65,7 @@ const DocumentActions = ({
             transcriptionId={transcriptionId || ''}
             onNoteSaved={onNoteSaved}
             selectedFormats={selectedFormats}
+            refreshData={refreshData}  // Pass refreshData to SaveNoteButton if needed
           />
           <CopyButton sections={structuredData} />
           <ExportButton sections={structuredData} />
