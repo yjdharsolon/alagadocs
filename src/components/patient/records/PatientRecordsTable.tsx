@@ -6,6 +6,7 @@ import { File } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { formatContent } from '@/components/structured-output/utils/contentFormatter';
+import { Badge } from '@/components/ui/badge';
 
 interface PatientRecordsTableProps {
   patientNotes: any[];
@@ -18,6 +19,25 @@ export const PatientRecordsTable: React.FC<PatientRecordsTableProps> = ({
 
   const handleViewNote = (noteId: string) => {
     navigate(`/structured-output?noteId=${noteId}`);
+  };
+
+  /**
+   * Formats the note type for display
+   */
+  const formatNoteType = (formatType: string | null): string => {
+    if (!formatType) return 'Standard';
+    
+    // Map format types to display names
+    const formatDisplayNames: Record<string, string> = {
+      'standard': 'Standard',
+      'soap': 'SOAP Note',
+      'consultation': 'Consultation',
+      'history': 'H&P',
+      'prescription': 'Prescription'
+    };
+    
+    return formatDisplayNames[formatType.toLowerCase()] || 
+           formatType.charAt(0).toUpperCase() + formatType.slice(1);
   };
 
   /**
@@ -65,6 +85,7 @@ export const PatientRecordsTable: React.FC<PatientRecordsTableProps> = ({
       <TableHeader>
         <TableRow>
           <TableHead>Date</TableHead>
+          <TableHead>Type</TableHead>
           <TableHead>Content Preview</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
@@ -72,11 +93,17 @@ export const PatientRecordsTable: React.FC<PatientRecordsTableProps> = ({
       <TableBody>
         {patientNotes.map((note) => {
           const preview = createContentPreview(note.content);
+          const formattedType = formatNoteType(note.format_type);
           
           return (
             <TableRow key={note.id}>
               <TableCell>
                 {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline" className="capitalize">
+                  {formattedType}
+                </Badge>
               </TableCell>
               <TableCell>{preview}</TableCell>
               <TableCell className="text-right">
