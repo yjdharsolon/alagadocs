@@ -31,6 +31,7 @@ interface DocumentContainerProps {
   }>;
   refreshData?: () => void;
   updateDataDirectly?: (data: MedicalSections) => void;
+  disableRefreshAfterSave?: boolean;
 }
 
 const DocumentContainer = ({
@@ -46,7 +47,8 @@ const DocumentContainer = ({
   noteSaved = false,
   selectedFormats = [],
   refreshData,
-  updateDataDirectly
+  updateDataDirectly,
+  disableRefreshAfterSave = false
 }: DocumentContainerProps) => {
   // Log medications whenever structuredData changes to track data flow
   useEffect(() => {
@@ -66,9 +68,10 @@ const DocumentContainer = ({
       isEditMode,
       noteSaved,
       hasRefreshData: !!refreshData,
-      hasUpdateDataDirectly: !!updateDataDirectly
+      hasUpdateDataDirectly: !!updateDataDirectly,
+      disableRefreshAfterSave
     });
-  }, [structuredData, isEditMode, noteSaved, refreshData, updateDataDirectly]);
+  }, [structuredData, isEditMode, noteSaved, refreshData, updateDataDirectly, disableRefreshAfterSave]);
   
   // Detect document format
   const documentFormat = getDocumentFormat(structuredData);
@@ -106,7 +109,8 @@ const DocumentContainer = ({
     console.log('[DocumentContainer] State before save:', {
       isEditMode,
       stayInEditMode,
-      noteSaved
+      noteSaved,
+      disableRefreshAfterSave
     });
     
     // Pass the stayInEditMode parameter to the parent's onSaveEdit
@@ -123,13 +127,15 @@ const DocumentContainer = ({
         updateDataDirectly(updatedData);
       }
       
-      // Still perform the normal refresh as a backup
-      if (refreshData) {
+      // Only perform refresh if not disabled
+      if (refreshData && !disableRefreshAfterSave) {
         console.log('[DocumentContainer] Scheduling background refresh after save');
         setTimeout(() => {
           refreshData();
           console.log('[DocumentContainer] Background refresh completed');
         }, 200);
+      } else if (disableRefreshAfterSave) {
+        console.log('[DocumentContainer] Refresh after save disabled - skipping refresh');
       }
     }
   };
@@ -159,6 +165,7 @@ const DocumentContainer = ({
           selectedFormats={selectedFormats}
           refreshData={refreshData}
           updateDataDirectly={updateDataDirectly}
+          disableRefreshAfterSave={disableRefreshAfterSave}
         />
       </div>
       

@@ -48,7 +48,8 @@ export default function StructuredOutputPage() {
     handleRetry,
     handleNoteSaved,
     handleEndConsult,
-    noteSaved
+    noteSaved,
+    disableRefreshAfterSave
   } = useStructuredOutputPage({
     structuredData,
     setStructuredData,
@@ -58,6 +59,11 @@ export default function StructuredOutputPage() {
     patientInfo,
     transcriptionId
   });
+
+  // Log state related to refresh protection
+  useEffect(() => {
+    console.log('[StructuredOutputPage] disableRefreshAfterSave changed:', disableRefreshAfterSave);
+  }, [disableRefreshAfterSave]);
 
   // Move all effects together to maintain consistent hook order
   useEffect(() => {
@@ -162,6 +168,7 @@ export default function StructuredOutputPage() {
           onToggleFormatSelection={toggleFormatSelection}
           refreshData={refreshData}
           updateDataDirectly={updateDataDirectly}
+          disableRefreshAfterSave={disableRefreshAfterSave}
         />
       </div>
     </Layout>
