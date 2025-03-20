@@ -1,17 +1,16 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
-import { useMutation } from '@tanstack/react-query';
-import { saveStructuredNote } from '@/services/structuredNote/saveNote';
 import { MedicalSections } from '../types';
+import { saveUserNote } from '@/services/noteService';
+import { toast } from 'sonner';
 
 interface SaveNoteButtonProps {
   user: any;
   sections: MedicalSections;
   structuredText: string;
-  patientId?: string | null;
+  patientId: string | null;
   transcriptionId: string;
   onNoteSaved?: () => void;
   selectedFormats?: Array<{
@@ -20,109 +19,87 @@ interface SaveNoteButtonProps {
   }>;
   refreshData?: () => void;
   updateDataDirectly?: (data: MedicalSections) => void;
+  disableRefreshAfterSave?: boolean;
 }
 
-export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
-  user,
-  sections,
-  structuredText,
-  patientId,
+export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({ 
+  user, 
+  sections, 
+  structuredText, 
+  patientId, 
   transcriptionId,
   onNoteSaved,
   selectedFormats = [],
   refreshData,
-  updateDataDirectly
+  updateDataDirectly,
+  disableRefreshAfterSave
 }) => {
-  const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Log what we're about to save to help with debugging
-  const logSaveData = () => {
-    console.log('Saving note with sections:', sections);
-    if (sections.medications) {
-      console.log('Medications data being saved:', 
-        Array.isArray(sections.medications) 
-          ? JSON.stringify(sections.medications, null, 2) 
-          : sections.medications
-      );
+  const [isSaving, setIsSaving] = React.useState(false);
+  
+  const handleSave = async () => {
+    if (!user) {
+      toast.error('You must be logged in to save notes');
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      console.log('Saving note with formats:', selectedFormats.length > 0 
+        ? selectedFormats.map(f => f.formatType).join(', ')
+        : 'single format');
       
-      // Additional logging to ensure brand names are preserved
-      if (Array.isArray(sections.medications)) {
-        sections.medications.forEach((med: any, index: number) => {
-          console.log(`Medication ${index + 1} - Brand name:`, med.brandName);
-          console.log(`Medication ${index + 1} - Generic name:`, med.genericName);
+      // If we have selected formats, save those
+      if (selectedFormats.length > 0) {
+        // Save each selected format
+        for (const format of selectedFormats) {
+          await saveUserNote({
+            userId: user.id,
+            patientId: patientId || undefined,
+            transcriptionId,
+            content: format.structuredData,
+            formatType: format.formatType
+          });
+        }
+      } else {
+        // Save the current format only
+        await saveUserNote({
+          userId: user.id,
+          patientId: patientId || undefined,
+          transcriptionId,
+          content: sections
         });
       }
-    }
-  };
-
-  const mutation = useMutation({
-    mutationFn: async () => {
-      logSaveData();
-      return saveStructuredNote(
-        user.id,
-        transcriptionId,
-        sections,
-        patientId
-      );
-    },
-    onSuccess: (data) => {
-      setIsSaving(false);
-      toast({
-        title: "Success",
-        description: "Note saved successfully!",
-      });
       
-      // Log the saved note ID
-      console.log('Note saved successfully with ID:', data?.id || 'unknown');
+      toast.success('Note saved successfully');
       
-      // First, immediately update the UI with the data we just saved
-      // This ensures what the user sees matches what they saved without waiting for a refresh
-      if (updateDataDirectly) {
-        console.log('Directly updating UI with saved data');
-        updateDataDirectly(sections);
-      }
-      
-      // Call refreshData to ensure data is fresh after saving (as a backup)
-      if (refreshData) {
-        console.log('Scheduling background data refresh after successful save');
-        // Use a longer timeout to ensure the database has time to update
-        setTimeout(() => {
-          refreshData();
-          console.log('Background data refresh completed');
-        }, 800);
-      }
-      
+      // Call the callback if provided
       if (onNoteSaved) {
         onNoteSaved();
       }
-    },
-    onError: (error: any) => {
+      
+      // Only refresh data if not disabled
+      if (refreshData && !disableRefreshAfterSave) {
+        console.log('[SaveNoteButton] Refreshing data after save');
+        refreshData();
+      } else if (disableRefreshAfterSave) {
+        console.log('[SaveNoteButton] Data refresh after save is disabled');
+      }
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast.error('Failed to save note');
+    } finally {
       setIsSaving(false);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to save note.",
-      });
-    },
-  });
-
-  const handleSaveNote = async () => {
-    setIsSaving(true);
-    mutation.mutate();
+    }
   };
-
-  // Determine if save button should be disabled (when in Selection tab with no formats selected)
-  const hasSelectedFormats = selectedFormats && selectedFormats.length > 0;
-
+  
   return (
-    <Button
-      variant="outline"
-      className="bg-[#33C3F0] hover:bg-[#33C3F0]/90 text-white flex items-center gap-2"
-      onClick={handleSaveNote}
-      disabled={isSaving || (!hasSelectedFormats && selectedFormats.length === 0)}
+    <Button 
+      variant="default" 
+      onClick={handleSave}
+      disabled={isSaving}
     >
-      <Save className="h-4 w-4" />
+      <Save className="mr-2 h-4 w-4" />
       {isSaving ? 'Saving...' : 'Save Note'}
     </Button>
   );

@@ -28,6 +28,7 @@ interface DocumentActionsProps {
   }>;
   refreshData?: () => void;
   updateDataDirectly?: (data: MedicalSections) => void;
+  disableRefreshAfterSave?: boolean;
 }
 
 const DocumentActions = ({
@@ -43,7 +44,8 @@ const DocumentActions = ({
   noteSaved = false,
   selectedFormats = [],
   refreshData,
-  updateDataDirectly
+  updateDataDirectly,
+  disableRefreshAfterSave
 }: DocumentActionsProps) => {
   const handleEndConsult = () => {
     console.log('End consultation triggered from DocumentActions');
@@ -66,6 +68,7 @@ const DocumentActions = ({
             selectedFormats={selectedFormats}
             refreshData={refreshData}
             updateDataDirectly={updateDataDirectly}
+            disableRefreshAfterSave={disableRefreshAfterSave}
           />
           <CopyButton sections={structuredData} />
           <ExportButton sections={structuredData} />

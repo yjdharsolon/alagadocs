@@ -41,7 +41,8 @@ export const useStructuredOutputPage = ({
   const {
     isEditMode,
     handleToggleEditMode,
-    handleSaveEdit
+    handleSaveEdit,
+    disableRefreshAfterSave
   } = useEditMode({ 
     setStructuredData, 
     transcriptionId,
@@ -110,6 +111,7 @@ export const useStructuredOutputPage = ({
     handleRetry,
     handleNoteSaved,
     handleEndConsult,
-    noteSaved
+    noteSaved,
+    disableRefreshAfterSave
   };
 };
