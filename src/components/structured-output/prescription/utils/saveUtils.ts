@@ -30,6 +30,14 @@ export const validateAndSavePrescription = (
       prescriberInformation: prescriberInfo
     };
     
+    console.log("[validateAndSavePrescription] Final updatedData structure:", JSON.stringify({
+      hasPatientInfo: !!updatedData.patientInformation,
+      medicationsCount: Array.isArray(updatedData.medications) ? updatedData.medications.length : 'not array',
+      hasPrescriberInfo: !!updatedData.prescriberInformation,
+      otherKeys: Object.keys(updatedData).filter(k => 
+        !['patientInformation', 'medications', 'prescriberInformation'].includes(k))
+    }));
+    
     console.log("[validateAndSavePrescription] Final updatedData.medications:", JSON.stringify(updatedData.medications, null, 2));
     
     // Pass the stayInEditMode flag to the callback so the parent can decide to stay in edit mode

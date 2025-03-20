@@ -59,6 +59,17 @@ const DocumentContainer = ({
     }
   }, [structuredData]);
   
+  // Log when component props change
+  useEffect(() => {
+    console.log('[DocumentContainer] Component received props update:', {
+      hasStructuredData: !!structuredData,
+      isEditMode,
+      noteSaved,
+      hasRefreshData: !!refreshData,
+      hasUpdateDataDirectly: !!updateDataDirectly
+    });
+  }, [structuredData, isEditMode, noteSaved, refreshData, updateDataDirectly]);
+  
   // Detect document format
   const documentFormat = getDocumentFormat(structuredData);
   
@@ -90,6 +101,13 @@ const DocumentContainer = ({
           : updatedData.medications
       );
     }
+    
+    // Track state before passing to parent handler
+    console.log('[DocumentContainer] State before save:', {
+      isEditMode,
+      stayInEditMode,
+      noteSaved
+    });
     
     // Pass the stayInEditMode parameter to the parent's onSaveEdit
     onSaveEdit(updatedData, stayInEditMode);
@@ -150,6 +168,7 @@ const DocumentContainer = ({
         <EditableDocumentView 
           structuredData={structuredData} 
           onSave={handleSaveEdit}
+          updateDataDirectly={updateDataDirectly}
         />
       ) : (
         <DocumentView structuredData={structuredData} />

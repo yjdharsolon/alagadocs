@@ -23,16 +23,34 @@ const EditableDocumentView = ({
   const [viewFormat, setViewFormat] = useState<'paragraph' | 'bullets'>('paragraph');
   const [currentlyEditingId, setCurrentlyEditingId] = useState<string | null>(null);
   
+  // Log component initialization
+  console.log('[EditableDocumentView] Initialized with structuredData:', JSON.stringify({
+    hasPatientInfo: !!structuredData.patientInformation,
+    medicationsCount: structuredData.medications ? 
+      (Array.isArray(structuredData.medications) ? structuredData.medications.length : 'not array') : 
+      'none',
+    updateDataDirectlyProvided: !!updateDataDirectly
+  }));
+  
   // Detect document format
   const documentFormat = getDocumentFormat(structuredData);
+  console.log('[EditableDocumentView] Detected document format:', documentFormat);
   
   // For prescription format, use the specialized editor
   if (documentFormat === 'prescription') {
+    console.log('[EditableDocumentView] Rendering PrescriptionEditor');
     return (
       <PrescriptionEditor 
         structuredData={structuredData}
         onSave={(updatedData, stayInEditMode = false) => {
-          console.log('[EditableDocumentView] Received save with updatedData and stayInEditMode:', stayInEditMode);
+          console.log('[EditableDocumentView] PrescriptionEditor onSave called with stayInEditMode:', stayInEditMode);
+          console.log('[EditableDocumentView] Updated data medications:', 
+            updatedData.medications ? 
+              (Array.isArray(updatedData.medications) ? 
+                JSON.stringify(updatedData.medications, null, 2) : 
+                'not array') : 
+              'none');
+          
           if (onSave) {
             console.log('[EditableDocumentView] Calling parent onSave with stayInEditMode:', stayInEditMode);
             // Pass both the updatedData and stayInEditMode flag to the parent onSave
@@ -57,6 +75,7 @@ const EditableDocumentView = ({
   ];
 
   const handleContentChange = (sectionId: keyof MedicalSections, content: string) => {
+    console.log(`[EditableDocumentView] Content changed for section: ${sectionId}`);
     setEditableData(prev => ({
       ...prev,
       [sectionId]: content
@@ -65,6 +84,7 @@ const EditableDocumentView = ({
   };
 
   const handleEditStart = (sectionId: string) => {
+    console.log(`[EditableDocumentView] Started editing section: ${sectionId}`);
     setCurrentlyEditingId(sectionId);
   };
 
@@ -84,6 +104,13 @@ const EditableDocumentView = ({
   const handleSave = (e?: React.MouseEvent) => {
     if (e) e.preventDefault(); // Prevent form submission
     
+    console.log('[EditableDocumentView] handleSave called, editableData:', JSON.stringify({
+      hasPatientInfo: !!editableData.patientInformation,
+      medicationsCount: editableData.medications ? 
+        (Array.isArray(editableData.medications) ? editableData.medications.length : 'not array') : 
+        'none'
+    }));
+    
     if (onSave) {
       // For standard formats, we don't stay in edit mode after saving
       onSave(editableData, false);
@@ -97,6 +124,7 @@ const EditableDocumentView = ({
 
   // Function to toggle between paragraph and bullets view format
   const toggleFormat = (newFormat: 'paragraph' | 'bullets') => {
+    console.log(`[EditableDocumentView] Toggled format from ${viewFormat} to ${newFormat}`);
     setViewFormat(newFormat);
   };
 
