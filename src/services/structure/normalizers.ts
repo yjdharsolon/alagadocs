@@ -1,4 +1,6 @@
+
 import { MedicalSections } from '@/components/structured-output/types';
+import { parseMedicationName } from '@/components/structured-output/tabs/prescription/formatUtils';
 
 /**
  * Normalize structured data to ensure consistent formats across all note types
@@ -121,9 +123,40 @@ export const normalizeArray = (arr: any): any[] => {
       if (Array.isArray(parsed)) {
         return parsed;
       }
+      // Check if it's a medication string, like "Aspirin (aspilets) 80mg"
+      if (typeof parsed === 'string' && (parsed.includes('(') || !parsed.startsWith('{'))) {
+        const { genericName, brandName } = parseMedicationName(parsed);
+        return [{ 
+          genericName, 
+          brandName, 
+          strength: '', 
+          dosageForm: '', 
+          sigInstructions: '', 
+          quantity: '', 
+          refills: '', 
+          specialInstructions: '' 
+        }];
+      }
+      
       // If parsed but not an array, wrap in array
       return [parsed];
     } catch (e) {
+      // Check if it's a medication string that needs parsing
+      if (arr.includes('(')) {
+        const { genericName, brandName } = parseMedicationName(arr);
+        console.log(`Parsed medication string: "${arr}" -> Generic: "${genericName}", Brand: "${brandName}"`);
+        return [{ 
+          genericName, 
+          brandName,
+          strength: '', 
+          dosageForm: '', 
+          sigInstructions: '', 
+          quantity: '', 
+          refills: '', 
+          specialInstructions: '' 
+        }];
+      }
+      
       // If can't parse, return as a single medication with name set to the string
       return [{ genericName: arr, brandName: '', strength: '', dosageForm: '', sigInstructions: '', quantity: '', refills: '', specialInstructions: '' }];
     }
@@ -133,12 +166,54 @@ export const normalizeArray = (arr: any): any[] => {
   if (Array.isArray(arr)) {
     return arr.map(item => {
       if (typeof item === 'string') {
-        return { genericName: item, brandName: '', strength: '', dosageForm: '', sigInstructions: '', quantity: '', refills: '', specialInstructions: '' };
+        // Parse medication strings in "GenericName (BrandName) Strength" format
+        if (item.includes('(')) {
+          const { genericName, brandName } = parseMedicationName(item);
+          return { 
+            genericName, 
+            brandName, 
+            strength: '', 
+            dosageForm: '', 
+            sigInstructions: '', 
+            quantity: '', 
+            refills: '', 
+            specialInstructions: '' 
+          };
+        }
+        return { 
+          genericName: item, 
+          brandName: '', 
+          strength: '', 
+          dosageForm: '', 
+          sigInstructions: '', 
+          quantity: '', 
+          refills: '', 
+          specialInstructions: '' 
+        };
       }
+      
+      // Handle objects that might have genericName and name fields
+      const genericNameValue = item.genericName || item.name || '';
+      let brandNameValue = item.brandName || '';
+      
+      // If genericName contains a format like "Generic (Brand)", parse it
+      if (genericNameValue.includes('(') && genericNameValue.includes(')') && !brandNameValue) {
+        const { genericName, brandName } = parseMedicationName(genericNameValue);
+        return {
+          genericName,
+          brandName,
+          strength: ensureString(item.strength || ''),
+          dosageForm: ensureString(item.dosageForm || ''),
+          sigInstructions: ensureString(item.sigInstructions || ''),
+          quantity: ensureString(item.quantity || ''),
+          refills: ensureString(item.refills || ''),
+          specialInstructions: ensureString(item.specialInstructions || '')
+        };
+      }
+      
       return {
-        // Map name to genericName for backward compatibility
-        genericName: ensureString(item.genericName || item.name || ''),
-        brandName: ensureString(item.brandName || ''),
+        genericName: genericNameValue,
+        brandName: brandNameValue,
         strength: ensureString(item.strength || ''),
         dosageForm: ensureString(item.dosageForm || ''),
         sigInstructions: ensureString(item.sigInstructions || ''),
@@ -151,9 +226,27 @@ export const normalizeArray = (arr: any): any[] => {
   
   // If it's an object but not an array, wrap in array
   if (typeof arr === 'object') {
+    const genericNameValue = arr.genericName || arr.name || '';
+    let brandNameValue = arr.brandName || '';
+    
+    // If genericName contains "(BrandName)", extract it
+    if (genericNameValue.includes('(') && genericNameValue.includes(')') && !brandNameValue) {
+      const { genericName, brandName } = parseMedicationName(genericNameValue);
+      return [{
+        genericName,
+        brandName,
+        strength: ensureString(arr.strength || ''),
+        dosageForm: ensureString(arr.dosageForm || ''),
+        sigInstructions: ensureString(arr.sigInstructions || ''),
+        quantity: ensureString(arr.quantity || ''),
+        refills: ensureString(arr.refills || ''),
+        specialInstructions: ensureString(arr.specialInstructions || '')
+      }];
+    }
+    
     return [{
-      genericName: ensureString(arr.genericName || arr.name || ''),
-      brandName: ensureString(arr.brandName || ''),
+      genericName: genericNameValue,
+      brandName: brandNameValue,
       strength: ensureString(arr.strength || ''),
       dosageForm: ensureString(arr.dosageForm || ''),
       sigInstructions: ensureString(arr.sigInstructions || ''),

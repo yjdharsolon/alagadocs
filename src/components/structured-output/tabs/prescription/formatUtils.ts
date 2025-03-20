@@ -2,6 +2,34 @@
 import { MedicalSections } from '../../types';
 
 /**
+ * Parse medication text to extract generic name and brand name
+ * This function handles formats like "Aspirin (aspilets) 80 mg"
+ */
+export const parseMedicationName = (medicationText: string): { genericName: string, brandName: string } => {
+  if (!medicationText) return { genericName: 'Not specified', brandName: '' };
+  
+  try {
+    // Regular expression to match pattern: GenericName (BrandName) Strength
+    const regex = /^([^(]+)\s*(?:\(([^)]+)\))?\s*(.*)$/;
+    const matches = medicationText.match(regex);
+    
+    if (matches) {
+      const genericName = matches[1]?.trim() || 'Not specified';
+      const brandName = matches[2]?.trim() || '';
+      
+      console.log(`Parsed medication: "${medicationText}" -> Generic: "${genericName}", Brand: "${brandName}"`);
+      return { genericName, brandName };
+    }
+    
+    // If no match with pattern, return the whole string as generic name
+    return { genericName: medicationText.trim(), brandName: '' };
+  } catch (error) {
+    console.error('Error parsing medication name:', error);
+    return { genericName: medicationText, brandName: '' };
+  }
+};
+
+/**
  * Format medications to show numbering
  */
 export const formatMedications = (medications: any[]) => {
@@ -13,13 +41,34 @@ export const formatMedications = (medications: any[]) => {
     try {
       const medNumber = med.id || (index + 1);
       
+      // Handle case where medication might be a simple string from transcription
+      if (typeof med === 'string') {
+        const { genericName, brandName } = parseMedicationName(med);
+        console.log(`Medication string "${med}" parsed as generic: "${genericName}", brand: "${brandName}"`);
+        
+        return `${medNumber}. ${genericName}${brandName ? ` (${brandName})` : ''} 
+    Sig: Not specified
+    Quantity: Not specified
+    Refills: Not specified`;
+      }
+      
       // Format medication with generic and brand name (if available)
-      const genericName = med.genericName || med.name || 'Not specified'; // For backward compatibility
-      const brandName = med.brandName && med.brandName.trim() !== '' ? ` (${med.brandName})` : '';
+      let genericName = med.genericName || med.name || 'Not specified'; // For backward compatibility
+      let brandName = med.brandName || '';
       
-      console.log(`Medication ${medNumber} - Generic Name: "${genericName}", Brand Name: "${med.brandName || 'none'}", Formatted Brand: "${brandName}"`);
+      // If genericName contains a pattern like "Generic (Brand)", parse it
+      if (genericName.includes('(') && genericName.includes(')') && !brandName) {
+        const parsedNames = parseMedicationName(genericName);
+        genericName = parsedNames.genericName;
+        brandName = parsedNames.brandName;
+      }
       
-      return `${medNumber}. ${genericName}${brandName} ${med.strength || ''} (${med.dosageForm || 'Not specified'})
+      // Format brand name with parentheses if it exists
+      const formattedBrandName = brandName && brandName.trim() !== '' ? ` (${brandName})` : '';
+      
+      console.log(`Medication ${medNumber} - Generic Name: "${genericName}", Brand Name: "${brandName}", Formatted Brand: "${formattedBrandName}"`);
+      
+      return `${medNumber}. ${genericName}${formattedBrandName} ${med.strength || ''} (${med.dosageForm || 'Not specified'})
     Sig: ${med.sigInstructions || 'Not specified'}
     Quantity: ${med.quantity || 'Not specified'}
     Refills: ${med.refills || 'Not specified'}
@@ -91,3 +140,4 @@ export const formatPrescriberInfo = (prescriberInfo: any, structuredPrescriberIn
   // If no profile info is available, use structured prescriber info as fallback
   return formattedInfo || String(structuredPrescriberInfo || "No prescriber information");
 };
+
