@@ -1,5 +1,4 @@
-
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { MedicalSections } from '@/components/structured-output/types';
 import { toast } from 'sonner';
 import { saveStructuredNote } from '@/services/structuredNote/saveNote';
@@ -15,10 +14,18 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
   const [isEditMode, setIsEditMode] = useState(false);
   const { user } = useAuth();
   const [noteSaved, setNoteSaved] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState<MedicalSections | null>(null);
 
   const handleToggleEditMode = useCallback(() => {
     setIsEditMode(!isEditMode);
   }, [isEditMode]);
+
+  useEffect(() => {
+    if (!isEditMode && lastSavedData) {
+      setStructuredData(lastSavedData);
+      setLastSavedData(null);
+    }
+  }, [isEditMode, lastSavedData, setStructuredData]);
 
   const handleSaveEdit = useCallback(async (updatedData: MedicalSections, stayInEditMode = false) => {
     console.log('[useEditMode] handleSaveEdit called with:', { 
@@ -31,17 +38,14 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
       transcriptionId
     });
     
-    // Ensure medications are preserved exactly as provided without normalization
     const dataToSave = {
       ...updatedData,
-      // Make sure medications array is preserved as-is without any transformation
       medications: updatedData.medications
     };
     
-    // First update the data - this will trigger re-renders with the new data
     setStructuredData(dataToSave);
+    setLastSavedData(dataToSave);
     
-    // Save to database if we have a transcription ID and user
     if (transcriptionId && user?.id) {
       try {
         await saveStructuredNote(
@@ -58,7 +62,6 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
       }
     }
     
-    // Only exit edit mode if stayInEditMode is false
     if (!stayInEditMode) {
       console.log('[useEditMode] Exiting edit mode as requested');
       setIsEditMode(false);

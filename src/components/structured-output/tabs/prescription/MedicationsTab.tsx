@@ -21,6 +21,7 @@ const MedicationsTab: React.FC<MedicationsTabProps> = ({ medications }) => {
       medications.forEach((med, index) => {
         if (typeof med === 'object') {
           console.log(`Med ${index + 1} - Generic Name:`, med.genericName);
+          console.log(`Med ${index + 1} - Brand name property exists:`, 'brandName' in med);
           console.log(`Med ${index + 1} - Brand name value:`, med.brandName);
           console.log(`Med ${index + 1} - Strength:`, med.strength);
           console.log(`Med ${index + 1} - Special Instructions:`, med.specialInstructions);
