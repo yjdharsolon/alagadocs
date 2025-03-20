@@ -27,7 +27,8 @@ export default function StructuredOutputPage() {
     activeFormatType,
     handleFormatTypeChange,
     toggleFormatSelection,
-    getSelectedFormats
+    getSelectedFormats,
+    refreshData
   } = useStructuredOutputData();
   
   // Attempt to get additional patient data from session storage
@@ -111,6 +112,17 @@ export default function StructuredOutputPage() {
     );
   }
 
+  // Add effect to log medications data when it changes
+  React.useEffect(() => {
+    if (structuredData?.medications) {
+      console.log('[StructuredOutputPage] Current medications in structuredData:', 
+        Array.isArray(structuredData.medications) 
+          ? JSON.stringify(structuredData.medications, null, 2) 
+          : structuredData.medications
+      );
+    }
+  }, [structuredData?.medications]);
+
   return (
     <Layout>
       <div className="container mx-auto py-4 px-4">
@@ -149,6 +161,7 @@ export default function StructuredOutputPage() {
           activeFormatType={activeFormatType}
           onFormatTypeChange={handleFormatTypeChange}
           onToggleFormatSelection={toggleFormatSelection}
+          refreshData={refreshData}
         />
       </div>
     </Layout>

@@ -22,7 +22,8 @@ export const useStructuredOutputData = () => {
     audioUrl,
     transcriptionId,
     location,
-    noteId
+    noteId,
+    refreshData
   } = useNoteLoader({ patientInfo });
   
   // Generate different format types
@@ -69,6 +70,7 @@ export const useStructuredOutputData = () => {
     activeFormatType,
     handleFormatTypeChange,
     toggleFormatSelection,
-    getSelectedFormats
+    getSelectedFormats,
+    refreshData
   };
 };

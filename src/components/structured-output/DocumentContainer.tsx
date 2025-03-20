@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Separator } from '@/components/ui/separator';
 import DocumentView from './DocumentView';
 import EditableDocumentView from './EditableDocumentView';
@@ -29,6 +29,7 @@ interface DocumentContainerProps {
     formatType: string;
     structuredData: MedicalSections;
   }>;
+  refreshData?: () => void;
 }
 
 const DocumentContainer = ({
@@ -42,8 +43,20 @@ const DocumentContainer = ({
   onNoteSaved,
   onEndConsult,
   noteSaved = false,
-  selectedFormats = []
+  selectedFormats = [],
+  refreshData
 }: DocumentContainerProps) => {
+  // Log medications whenever structuredData changes
+  useEffect(() => {
+    if (structuredData && structuredData.medications) {
+      console.log('[DocumentContainer] Current medications in structuredData:', 
+        Array.isArray(structuredData.medications) 
+          ? JSON.stringify(structuredData.medications, null, 2) 
+          : structuredData.medications
+      );
+    }
+  }, [structuredData]);
+  
   // Detect document format
   const documentFormat = getDocumentFormat(structuredData);
   
@@ -67,12 +80,20 @@ const DocumentContainer = ({
 
   const handleSaveEdit = (updatedData: MedicalSections, stayInEditMode?: boolean) => {
     console.log('[DocumentContainer] Received save with updatedData and stayInEditMode:', stayInEditMode);
+    console.log('[DocumentContainer] Updated medications:', updatedData.medications);
+    
     // Pass the stayInEditMode parameter to the parent's onSaveEdit
     onSaveEdit(updatedData, stayInEditMode);
     
     // If saving and exiting edit mode, call onNoteSaved to update state at the parent level
     if (!stayInEditMode && onNoteSaved) {
       onNoteSaved();
+      
+      // Force data refresh when exiting edit mode
+      if (refreshData) {
+        console.log('[DocumentContainer] Refreshing data after save');
+        refreshData();
+      }
     }
   };
 
@@ -99,6 +120,7 @@ const DocumentContainer = ({
           onEndConsult={onEndConsult}
           noteSaved={noteSaved}
           selectedFormats={selectedFormats}
+          refreshData={refreshData}
         />
       </div>
       

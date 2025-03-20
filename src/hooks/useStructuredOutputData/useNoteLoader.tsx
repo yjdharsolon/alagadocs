@@ -20,12 +20,18 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
   const [processingText, setProcessingText] = useState(false);
   const [structuredData, setStructuredData] = useState<MedicalSections | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dataRefreshKey, setDataRefreshKey] = useState(0);
   
   const transcriptionData = location.state?.transcriptionData;
   const audioUrl = location.state?.audioUrl;
   const transcriptionId = location.state?.transcriptionId;
 
-  // Load data on component mount
+  // Function to force a data refresh
+  const refreshData = () => {
+    setDataRefreshKey(prev => prev + 1);
+  };
+
+  // Load data on component mount or when refreshData is called
   useEffect(() => {
     const loadNote = async () => {
       if (noteId) {
@@ -33,6 +39,11 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
           setLoading(true);
           const note = await getStructuredNoteById(noteId);
           if (note?.content) {
+            console.log('Loaded note from database:', note.content);
+            // For medications, ensure we log what was received
+            if (note.content.medications) {
+              console.log('Loaded medications:', note.content.medications);
+            }
             setStructuredData(note.content);
           } else {
             setError('Note not found');
@@ -44,6 +55,11 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
           setLoading(false);
         }
       } else if (location.state?.structuredData) {
+        console.log('Using structured data from location state:', location.state.structuredData);
+        // For medications, ensure we log what was received
+        if (location.state.structuredData.medications) {
+          console.log('State medications:', location.state.structuredData.medications);
+        }
         setStructuredData(location.state.structuredData);
         setLoading(false);
       } else if (transcriptionData && transcriptionData.text) {
@@ -56,7 +72,7 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
     };
 
     loadNote();
-  }, [noteId, location.state, transcriptionData]);
+  }, [noteId, location.state, transcriptionData, dataRefreshKey]);
 
   return {
     loading,
@@ -71,6 +87,7 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
     audioUrl,
     transcriptionId,
     location,
-    noteId
+    noteId,
+    refreshData
   };
 };

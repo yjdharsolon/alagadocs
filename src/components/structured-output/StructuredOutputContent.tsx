@@ -37,6 +37,7 @@ interface StructuredOutputContentProps {
   activeFormatType?: string;
   onFormatTypeChange?: (formatType: string) => void;
   onToggleFormatSelection?: (formatType: string) => void;
+  refreshData?: () => void;
 }
 
 const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
@@ -55,7 +56,8 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
   formattedVersions = [],
   activeFormatType = '',
   onFormatTypeChange,
-  onToggleFormatSelection
+  onToggleFormatSelection,
+  refreshData
 }) => {
   // The loading states are now handled at the page level, 
   // so this component only needs to handle the data or error cases
@@ -119,6 +121,7 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
                   onEndConsult={onEndConsult}
                   noteSaved={noteSaved}
                   selectedFormats={selectedFormats}
+                  refreshData={refreshData}
                 />
               </TabsContent>
             );
@@ -148,6 +151,7 @@ const StructuredOutputContent: React.FC<StructuredOutputContentProps> = ({
           onNoteSaved={onNoteSaved}
           onEndConsult={onEndConsult}
           noteSaved={noteSaved}
+          refreshData={refreshData}
         />
       )}
     </div>
