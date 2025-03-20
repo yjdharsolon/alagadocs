@@ -55,7 +55,7 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
   };
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       logSaveData();
       return saveStructuredNote(
         user.id,
@@ -80,7 +80,8 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
         // Add a small delay to ensure the database has time to update
         setTimeout(() => {
           refreshData();
-        }, 100);
+          console.log('Data refresh triggered');
+        }, 500);
       }
       
       if (onNoteSaved) {

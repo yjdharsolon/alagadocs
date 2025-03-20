@@ -23,7 +23,7 @@ export const useStructuredOutputData = () => {
     transcriptionId,
     location,
     noteId,
-    refreshData
+    refreshData: refreshNoteData
   } = useNoteLoader({ patientInfo });
   
   // Generate different format types
@@ -59,8 +59,9 @@ export const useStructuredOutputData = () => {
   // Create a dedicated refresh function that ensures complete data reload
   const handleCompleteRefresh = () => {
     console.log('Performing complete data refresh');
+    
     // Force a complete reload of data
-    refreshData();
+    refreshNoteData();
     
     // If there are formatted versions, also refresh the active format
     if (formattedVersions.length > 0 && activeFormatType) {
@@ -68,7 +69,12 @@ export const useStructuredOutputData = () => {
       const currentFormat = formattedVersions.find(f => f.formatType === activeFormatType);
       if (currentFormat) {
         console.log('Refreshing active format:', activeFormatType);
-        setStructuredData(currentFormat.structuredData);
+        
+        // Update the UI with the current format data
+        setTimeout(() => {
+          console.log('Setting structured data from active format');
+          setStructuredData(currentFormat.structuredData);
+        }, 100);
       }
     }
   };

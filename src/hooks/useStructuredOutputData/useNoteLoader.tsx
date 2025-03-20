@@ -26,10 +26,13 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
   const audioUrl = location.state?.audioUrl;
   const transcriptionId = location.state?.transcriptionId;
 
-  // Function to force a data refresh
+  // Function to force a data refresh with improved logging
   const refreshData = () => {
     console.log('Data refresh requested - incrementing refresh key');
+    // Force UI to update by incrementing the refresh key
     setDataRefreshKey(prev => prev + 1);
+    // Clear any existing errors on refresh
+    setError(null);
   };
 
   // Normalize medication data to ensure consistent structure
@@ -74,10 +77,15 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
     const loadNote = async () => {
       if (noteId) {
         try {
+          console.log(`Loading note with ID: ${noteId}, refresh key: ${dataRefreshKey}`);
           setLoading(true);
+          
+          // Add a small delay to ensure database consistency
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
           const note = await getStructuredNoteById(noteId);
           if (note?.content) {
-            console.log('Loaded note from database:', note.content);
+            console.log('Loaded note from database:', JSON.stringify(note.content, null, 2));
             
             // Create a deep copy of the content to avoid reference issues
             const contentCopy = JSON.parse(JSON.stringify(note.content));
@@ -91,6 +99,7 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
             
             setStructuredData(contentCopy);
           } else {
+            console.error('Note not found for ID:', noteId);
             setError('Note not found');
           }
         } catch (error) {
