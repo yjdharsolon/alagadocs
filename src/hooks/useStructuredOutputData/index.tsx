@@ -81,7 +81,8 @@ export const useStructuredOutputData = () => {
           setTimeout(() => {
             if (structuredData) {
               console.log('Regenerating formatted versions with latest data');
-              generateFormats(structuredData);
+              // Fixed: Removed the argument being passed to generateFormats
+              generateFormats();
             }
           }, 200);
         }, 300);
