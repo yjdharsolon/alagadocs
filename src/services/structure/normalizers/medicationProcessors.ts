@@ -8,11 +8,13 @@
 import {
   processStringMedication,
   processIndividualMedication,
-  parseComplexMedicationString
+  parseComplexMedicationString,
+  ensureString
 } from './medicationParsers/index';
 
 export {
   processStringMedication,
   processIndividualMedication,
-  parseComplexMedicationString
+  parseComplexMedicationString,
+  ensureString
 };
