@@ -27,13 +27,16 @@ export const validateAndSavePrescription = (
           typeof structuredData.medications) : 
         'undefined');
     
+    // Deep clone the data to avoid reference issues
+    const clonedMedications = JSON.parse(JSON.stringify(medications));
+    
     // Prepare updated data with properly structured medications
     // IMPORTANT: We're now preserving ALL fields without any transformation
     const updatedData: MedicalSections = {
       ...structuredData,
-      patientInformation: patientInfo,
-      medications: medications, // Store the array directly without any transformation
-      prescriberInformation: prescriberInfo
+      patientInformation: { ...patientInfo },
+      medications: clonedMedications, // Use the cloned array
+      prescriberInformation: { ...prescriberInfo }
     };
     
     console.log("[validateAndSavePrescription] Final updatedData structure:", JSON.stringify({
@@ -53,6 +56,7 @@ export const validateAndSavePrescription = (
     // Call stack trace to identify the caller
     console.log("[validateAndSavePrescription] Call stack:", new Error().stack);
     
+    // Call the save function
     onSave(updatedData, stayInEditMode);
     
     const message = stayInEditMode ? "Prescription saved" : "Prescription submitted successfully";

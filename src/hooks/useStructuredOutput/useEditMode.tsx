@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { MedicalSections } from '@/components/structured-output/types';
 import { toast } from 'sonner';
@@ -48,6 +47,7 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
             JSON.stringify(lastSavedData.medications, null, 2) : lastSavedData.medications);
       }
             
+      // Apply the saved data to the UI
       setStructuredData(lastSavedData);
       
       // Only clear lastSavedData if we've successfully passed it to setStructuredData
@@ -101,12 +101,15 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
         console.log('[useEditMode] Cloned medications for saving:', JSON.stringify(dataToSave.medications, null, 2));
       }
       
-      // Update UI state immediately
+      // CRITICAL CHANGE: Update UI state immediately with cloned data
+      // This ensures what's displayed matches what was edited, regardless of DB save
       setStructuredData(dataToSave);
+      
+      // Keep track of the edited data 
       setLastSavedData(dataToSave);
       console.log('[useEditMode] Updated lastSavedData with cloned data');
       
-      // Persist to database if possible
+      // Persist to database if possible (in background)
       if (transcriptionId && user?.id) {
         try {
           console.log('[useEditMode] Saving to database...');
@@ -122,6 +125,8 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
         } catch (error) {
           console.error('Error saving note to database:', error);
           toast.error('Failed to save document to database');
+          // Important: We DON'T revert the UI even if DB save fails
+          // User still sees their edited content
         }
       } else {
         console.log('[useEditMode] Not saving to database - missing transcriptionId or user.id');

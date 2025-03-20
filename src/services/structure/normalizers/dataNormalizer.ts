@@ -31,13 +31,19 @@ export const normalizeStructuredData = (data: any, role: string): MedicalSection
     return getEmptyStructure(role);
   }
   
+  // Preserve medications array if it exists and is an array
+  // This ensures we don't lose medication data during normalization
+  const hasMedicationArray = data.medications && Array.isArray(data.medications);
+  console.log('Has medication array:', hasMedicationArray, 
+    hasMedicationArray ? `with ${data.medications.length} items` : '');
+  
   // Improve format detection logic
   if (data.subjective !== undefined && data.objective !== undefined) {
     format = 'soap';
   } else if (data.reasonForConsultation !== undefined) {
     format = 'consultation';
   } else if (data.patientInformation !== undefined || 
-            (Array.isArray(data.medications) && typeof data.medications[0] === 'object')) {
+            (hasMedicationArray && typeof data.medications[0] === 'object')) {
     format = 'prescription';
   } else if (role === 'soap') {
     format = 'soap';
@@ -52,6 +58,26 @@ export const normalizeStructuredData = (data: any, role: string): MedicalSection
   }
   
   console.log('Detected format for normalization:', format);
+  
+  // Special handling for prescription data to ensure we don't lose medication arrays
+  if (format === 'prescription' && hasMedicationArray) {
+    console.log('Special handling for prescription medications array');
+    return {
+      patientInformation: normalizeObject(data.patientInformation, {
+        name: '',
+        sex: '',
+        age: '',
+        date: '',
+      }),
+      medications: data.medications, // Preserve the complete medications array
+      prescriberInformation: normalizeObject(data.prescriberInformation, {
+        name: '',
+        licenseNumber: '',
+        s2Number: '',
+        ptrNumber: ''
+      })
+    };
+  }
   
   // Normalize based on format
   switch (format) {

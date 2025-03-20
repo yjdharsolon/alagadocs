@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Separator } from '@/components/ui/separator';
 import DocumentView from './DocumentView';
 import EditableDocumentView from './EditableDocumentView';
@@ -50,6 +50,15 @@ const DocumentContainer = ({
   updateDataDirectly,
   disableRefreshAfterSave = false
 }: DocumentContainerProps) => {
+  // Store a local copy of the latest data to ensure UI consistency
+  const [localData, setLocalData] = useState<MedicalSections>(structuredData);
+  
+  // Update local data when structuredData changes
+  useEffect(() => {
+    console.log('[DocumentContainer] structuredData changed, updating local data');
+    setLocalData(structuredData);
+  }, [structuredData]);
+  
   // Log medications whenever structuredData changes to track data flow
   useEffect(() => {
     if (structuredData && structuredData.medications) {
@@ -74,10 +83,10 @@ const DocumentContainer = ({
   }, [structuredData, isEditMode, noteSaved, refreshData, updateDataDirectly, disableRefreshAfterSave]);
   
   // Detect document format
-  const documentFormat = getDocumentFormat(structuredData);
+  const documentFormat = getDocumentFormat(localData);
   
   // Filter data by format
-  const filteredData = filterStructuredDataByFormat(structuredData, documentFormat);
+  const filteredData = filterStructuredDataByFormat(localData, documentFormat);
   
   const getStructuredText = () => {
     return Object.entries(filteredData)
@@ -94,6 +103,7 @@ const DocumentContainer = ({
 
   const structuredText = getStructuredText();
 
+  // Enhanced version that updates local state and optionally passes to parent
   const handleSaveEdit = (updatedData: MedicalSections, stayInEditMode?: boolean) => {
     console.log('[DocumentContainer] Received save with updatedData and stayInEditMode:', stayInEditMode);
     
@@ -104,6 +114,9 @@ const DocumentContainer = ({
           : updatedData.medications
       );
     }
+    
+    // Update local state immediately
+    setLocalData(updatedData);
     
     // Track state before passing to parent handler
     console.log('[DocumentContainer] State before save:', {
@@ -137,6 +150,18 @@ const DocumentContainer = ({
       } else if (disableRefreshAfterSave) {
         console.log('[DocumentContainer] Refresh after save disabled - skipping refresh');
       }
+    }
+  };
+  
+  // Custom handler for direct UI updates
+  const handleDirectUpdate = (updatedData: MedicalSections) => {
+    console.log('[DocumentContainer] Direct update received');
+    // Immediately update local state
+    setLocalData(updatedData);
+    
+    // Also pass to parent if available
+    if (updateDataDirectly) {
+      updateDataDirectly(updatedData);
     }
   };
 
@@ -173,12 +198,12 @@ const DocumentContainer = ({
       
       {isEditMode ? (
         <EditableDocumentView 
-          structuredData={structuredData} 
+          structuredData={localData} 
           onSave={handleSaveEdit}
-          updateDataDirectly={updateDataDirectly}
+          updateDataDirectly={handleDirectUpdate}
         />
       ) : (
-        <DocumentView structuredData={structuredData} />
+        <DocumentView structuredData={localData} />
       )}
     </>
   );

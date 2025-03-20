@@ -1,5 +1,5 @@
 
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useEffect } from 'react';
 import { MedicalSections } from './types';
 import { toast } from 'sonner';
 import { getDocumentFormat } from './tabs/TabUtils';
@@ -19,7 +19,10 @@ const EditableDocumentView = ({
   onSave,
   updateDataDirectly
 }: EditableDocumentViewProps) => {
-  const [editableData, setEditableData] = useState<MedicalSections>({...structuredData});
+  // Initialize editable data as a deep clone to avoid reference issues
+  const [editableData, setEditableData] = useState<MedicalSections>(
+    JSON.parse(JSON.stringify(structuredData))
+  );
   const [viewFormat, setViewFormat] = useState<'paragraph' | 'bullets'>('paragraph');
   const [currentlyEditingId, setCurrentlyEditingId] = useState<string | null>(null);
   
@@ -31,6 +34,13 @@ const EditableDocumentView = ({
       'none',
     updateDataDirectlyProvided: !!updateDataDirectly
   }));
+  
+  // Update editable data when structuredData changes
+  useEffect(() => {
+    console.log('[EditableDocumentView] structuredData updated, refreshing editable data');
+    // Deep clone to avoid reference issues
+    setEditableData(JSON.parse(JSON.stringify(structuredData)));
+  }, [structuredData]);
   
   // Detect document format
   const documentFormat = getDocumentFormat(structuredData);
@@ -50,6 +60,13 @@ const EditableDocumentView = ({
                 JSON.stringify(updatedData.medications, null, 2) : 
                 'not array') : 
               'none');
+          
+          // Always update the UI directly regardless of onSave availability
+          if (updateDataDirectly) {
+            console.log('[EditableDocumentView] Directly updating UI with prescription data');
+            // Use a deep clone to avoid reference issues
+            updateDataDirectly(JSON.parse(JSON.stringify(updatedData)));
+          }
           
           if (onSave) {
             console.log('[EditableDocumentView] Calling parent onSave with stayInEditMode:', stayInEditMode);
@@ -110,6 +127,13 @@ const EditableDocumentView = ({
         (Array.isArray(editableData.medications) ? editableData.medications.length : 'not array') : 
         'none'
     }));
+    
+    // Always update UI directly first
+    if (updateDataDirectly) {
+      console.log('[EditableDocumentView] Directly updating UI');
+      // Use deep clone to avoid reference issues
+      updateDataDirectly(JSON.parse(JSON.stringify(editableData)));
+    }
     
     if (onSave) {
       // For standard formats, we don't stay in edit mode after saving

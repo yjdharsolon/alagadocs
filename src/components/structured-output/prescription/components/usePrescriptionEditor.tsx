@@ -160,8 +160,9 @@ export const usePrescriptionEditor = ({
       hasPrescriberInfo: !!updatedData.prescriberInformation
     }));
     
-    // Use direct update if available
-    if (updateDataDirectly && !shouldStayInEditMode) {
+    // ALWAYS use direct update regardless of stayInEditMode
+    // This is critical to ensure UI always shows latest data
+    if (updateDataDirectly) {
       console.log('[usePrescriptionEditor] Directly updating UI with prescription data');
       updateDataDirectly(updatedData);
     }
