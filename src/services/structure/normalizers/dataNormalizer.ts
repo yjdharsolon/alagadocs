@@ -83,8 +83,7 @@ export const normalizeStructuredData = (data: any, role: string): MedicalSection
           name: '',
           licenseNumber: '',
           s2Number: '',
-          ptrNumber: '',
-          title: ''
+          ptrNumber: ''
         })
       };
     default:
@@ -135,8 +134,7 @@ function getEmptyStructure(role: string): MedicalSections {
           name: '',
           licenseNumber: '',
           s2Number: '',
-          ptrNumber: '',
-          title: ''
+          ptrNumber: ''
         }
       };
     default:
