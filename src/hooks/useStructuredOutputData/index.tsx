@@ -56,6 +56,23 @@ export const useStructuredOutputData = () => {
     setStructuredData
   });
 
+  // Create a dedicated refresh function that ensures complete data reload
+  const handleCompleteRefresh = () => {
+    console.log('Performing complete data refresh');
+    // Force a complete reload of data
+    refreshData();
+    
+    // If there are formatted versions, also refresh the active format
+    if (formattedVersions.length > 0 && activeFormatType) {
+      // Find the currently active format and reload it
+      const currentFormat = formattedVersions.find(f => f.formatType === activeFormatType);
+      if (currentFormat) {
+        console.log('Refreshing active format:', activeFormatType);
+        setStructuredData(currentFormat.structuredData);
+      }
+    }
+  };
+
   return {
     loading,
     processingText,
@@ -71,6 +88,6 @@ export const useStructuredOutputData = () => {
     handleFormatTypeChange,
     toggleFormatSelection,
     getSelectedFormats,
-    refreshData
+    refreshData: handleCompleteRefresh  // Use the enhanced refresh function
   };
 };

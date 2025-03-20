@@ -43,6 +43,14 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
           ? JSON.stringify(sections.medications, null, 2) 
           : sections.medications
       );
+      
+      // Additional logging to ensure brand names are preserved
+      if (Array.isArray(sections.medications)) {
+        sections.medications.forEach((med: any, index: number) => {
+          console.log(`Medication ${index + 1} - Brand name:`, med.brandName);
+          console.log(`Medication ${index + 1} - Generic name:`, med.genericName);
+        });
+      }
     }
   };
 
@@ -56,17 +64,23 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
         patientId
       );
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setIsSaving(false);
       toast({
         title: "Success",
         description: "Note saved successfully!",
       });
       
+      // Log the saved note ID
+      console.log('Note saved successfully with ID:', data?.id || 'unknown');
+      
       // Call refreshData to ensure data is fresh after saving
       if (refreshData) {
-        console.log('Refreshing data after successful save');
-        refreshData();
+        console.log('Triggering data refresh after successful save');
+        // Add a small delay to ensure the database has time to update
+        setTimeout(() => {
+          refreshData();
+        }, 100);
       }
       
       if (onNoteSaved) {

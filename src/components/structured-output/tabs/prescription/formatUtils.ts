@@ -1,3 +1,4 @@
+
 import { MedicalSections } from '../../types';
 
 /**
@@ -35,7 +36,7 @@ export const parseMedicationName = (medicationText: string): { genericName: stri
 export const formatMedications = (medications: any[]) => {
   if (!medications || !Array.isArray(medications)) return "No medications specified";
   
-  console.log('Formatting medications:', JSON.stringify(medications, null, 2));
+  console.log('Formatting medications for display:', JSON.stringify(medications, null, 2));
   
   return medications.map((med, index) => {
     try {
@@ -55,17 +56,28 @@ export const formatMedications = (medications: any[]) => {
       // When dealing with medication objects, always explicitly check for brandName presence
       console.log(`Med ${medNumber} - Complete object:`, JSON.stringify(med, null, 2));
       
-      // Brand name handling with guard against undefined
+      // Brand name handling with careful null/undefined check
       let displayBrandName = '';
       if (med.brandName !== undefined && med.brandName !== null && med.brandName !== '') {
+        console.log(`Med ${medNumber} - Including brand name:`, med.brandName);
         displayBrandName = ` (${med.brandName})`;
+      } else {
+        console.log(`Med ${medNumber} - No brand name to display`);
       }
       
-      return `${medNumber}. ${med.genericName || 'Not specified'}${displayBrandName}${med.strength ? ` ${med.strength}` : ''} ${med.dosageForm ? `(${med.dosageForm})` : ''}
-    Sig: ${med.sigInstructions || 'Not specified'}
-    Quantity: ${med.quantity || 'Not specified'}
-    Refills: ${med.refills || 'Not specified'}
-    ${med.specialInstructions ? `Special Instructions: ${med.specialInstructions}` : ''}
+      const genericName = med.genericName || med.name || 'Not specified';
+      const strength = med.strength ? ` ${med.strength}` : '';
+      const dosageForm = med.dosageForm ? ` (${med.dosageForm})` : '';
+      const sigInstructions = med.sigInstructions || 'Not specified';
+      const quantity = med.quantity || 'Not specified';
+      const refills = med.refills || 'Not specified';
+      const specialInstructions = med.specialInstructions ? `Special Instructions: ${med.specialInstructions}` : '';
+      
+      return `${medNumber}. ${genericName}${displayBrandName}${strength}${dosageForm}
+    Sig: ${sigInstructions}
+    Quantity: ${quantity}
+    Refills: ${refills}
+    ${specialInstructions}
     `;
     } catch (error) {
       console.error('Error formatting medication:', error, med);

@@ -21,6 +21,74 @@ export const useStructuredNoteData = ({
   const [structuredData, setStructuredData] = useState<MedicalSections | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Normalize medication data to ensure consistent structure across the application
+  const normalizeMedicationData = (medications: any): any[] => {
+    try {
+      if (!medications) return [];
+      
+      // Handle case where medications might be a string
+      if (typeof medications === 'string') {
+        console.log('Converting string medication to object:', medications);
+        return [{
+          id: 1,
+          genericName: medications,
+          brandName: '',
+          strength: '',
+          dosageForm: '',
+          sigInstructions: '',
+          quantity: '',
+          refills: '',
+          specialInstructions: ''
+        }];
+      }
+      
+      // Process array of medications
+      if (Array.isArray(medications)) {
+        console.log('Normalizing array of medications:', JSON.stringify(medications, null, 2));
+        
+        return medications.map((med, index) => {
+          // Handle string medications
+          if (typeof med === 'string') {
+            return {
+              id: index + 1,
+              genericName: med,
+              brandName: '',
+              strength: '',
+              dosageForm: '',
+              sigInstructions: '',
+              quantity: '',
+              refills: '',
+              specialInstructions: ''
+            };
+          }
+          
+          // Ensure medication object has all required properties
+          const processedMed = {
+            id: med.id || index + 1,
+            genericName: med.genericName || med.name || '',
+            brandName: med.brandName !== undefined ? med.brandName : '',
+            strength: med.strength || '',
+            dosageForm: med.dosageForm || '',
+            sigInstructions: med.sigInstructions || '',
+            quantity: med.quantity || '',
+            refills: med.refills || '',
+            specialInstructions: med.specialInstructions || ''
+          };
+          
+          console.log(`Normalized medication ${index + 1}:`, processedMed);
+          return processedMed;
+        });
+      }
+      
+      // If it's neither a string nor an array, return an empty array
+      console.warn('Medications is neither string nor array:', medications);
+      return [];
+    } catch (error) {
+      console.error('Error normalizing medications:', error);
+      return [];
+    }
+  };
+
   // Load note by ID if provided
   useEffect(() => {
     async function loadNoteById() {
@@ -36,33 +104,11 @@ export const useStructuredNoteData = ({
           // Deep copy the content to avoid reference issues
           const contentCopy = JSON.parse(JSON.stringify(note.content));
           
-          // Log and normalize medication data specifically
+          // Normalize medication data consistently
           if (contentCopy.medications) {
             console.log('Original medications data:', contentCopy.medications);
-            
-            // If medications is an array, ensure each item has the required properties
-            if (Array.isArray(contentCopy.medications)) {
-              contentCopy.medications = contentCopy.medications.map((med: any, index: number) => {
-                const processedMed = typeof med === 'string' 
-                  ? { genericName: med, brandName: '', id: index + 1 } 
-                  : { ...med, id: med.id || index + 1 };
-                
-                // Ensure all medication objects have the expected properties
-                return {
-                  genericName: processedMed.genericName || processedMed.name || '',
-                  brandName: processedMed.brandName || '',
-                  strength: processedMed.strength || '',
-                  dosageForm: processedMed.dosageForm || '',
-                  sigInstructions: processedMed.sigInstructions || '',
-                  quantity: processedMed.quantity || '',
-                  refills: processedMed.refills || '',
-                  specialInstructions: processedMed.specialInstructions || '',
-                  id: processedMed.id
-                };
-              });
-              
-              console.log('Normalized medications data:', contentCopy.medications);
-            }
+            contentCopy.medications = normalizeMedicationData(contentCopy.medications);
+            console.log('Normalized medications data:', contentCopy.medications);
           }
           
           setStructuredData(contentCopy);
@@ -96,32 +142,11 @@ export const useStructuredNoteData = ({
         // Deep copy and normalize the content
         const contentCopy = JSON.parse(JSON.stringify(existingData.content));
         
-        // Process medications data if present
+        // Process medications data consistently
         if (contentCopy.medications) {
           console.log('Original existing medications data:', contentCopy.medications);
-          
-          if (Array.isArray(contentCopy.medications)) {
-            contentCopy.medications = contentCopy.medications.map((med: any, index: number) => {
-              const processedMed = typeof med === 'string' 
-                ? { genericName: med, brandName: '', id: index + 1 } 
-                : { ...med, id: med.id || index + 1 };
-              
-              // Ensure all medication objects have the expected properties
-              return {
-                genericName: processedMed.genericName || processedMed.name || '',
-                brandName: processedMed.brandName || '',
-                strength: processedMed.strength || '',
-                dosageForm: processedMed.dosageForm || '',
-                sigInstructions: processedMed.sigInstructions || '',
-                quantity: processedMed.quantity || '',
-                refills: processedMed.refills || '',
-                specialInstructions: processedMed.specialInstructions || '',
-                id: processedMed.id
-              };
-            });
-            
-            console.log('Normalized existing medications data:', contentCopy.medications);
-          }
+          contentCopy.medications = normalizeMedicationData(contentCopy.medications);
+          console.log('Normalized existing medications data:', contentCopy.medications);
         }
         
         setStructuredData(contentCopy);

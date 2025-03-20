@@ -28,7 +28,45 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
 
   // Function to force a data refresh
   const refreshData = () => {
+    console.log('Data refresh requested - incrementing refresh key');
     setDataRefreshKey(prev => prev + 1);
+  };
+
+  // Normalize medication data to ensure consistent structure
+  const normalizeMedicationData = (medications: any[]): any[] => {
+    if (!medications || !Array.isArray(medications)) return [];
+    
+    console.log('Normalizing medication data:', JSON.stringify(medications, null, 2));
+    
+    return medications.map((med, index) => {
+      // Handle string medications
+      if (typeof med === 'string') {
+        return {
+          id: index + 1,
+          genericName: med,
+          brandName: '',
+          strength: '',
+          dosageForm: '',
+          sigInstructions: '',
+          quantity: '',
+          refills: '',
+          specialInstructions: ''
+        };
+      }
+      
+      // Handle medication objects - ensure all required properties exist
+      return {
+        id: med.id || index + 1,
+        genericName: med.genericName || med.name || '',
+        brandName: med.brandName || '',
+        strength: med.strength || '',
+        dosageForm: med.dosageForm || '',
+        sigInstructions: med.sigInstructions || '',
+        quantity: med.quantity || '',
+        refills: med.refills || '',
+        specialInstructions: med.specialInstructions || ''
+      };
+    });
   };
 
   // Load data on component mount or when refreshData is called
@@ -40,11 +78,18 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
           const note = await getStructuredNoteById(noteId);
           if (note?.content) {
             console.log('Loaded note from database:', note.content);
-            // For medications, ensure we log what was received
-            if (note.content.medications) {
-              console.log('Loaded medications:', note.content.medications);
+            
+            // Create a deep copy of the content to avoid reference issues
+            const contentCopy = JSON.parse(JSON.stringify(note.content));
+            
+            // Normalize medication data specifically
+            if (contentCopy.medications) {
+              console.log('Original loaded medications:', contentCopy.medications);
+              contentCopy.medications = normalizeMedicationData(contentCopy.medications);
+              console.log('Normalized loaded medications:', contentCopy.medications);
             }
-            setStructuredData(note.content);
+            
+            setStructuredData(contentCopy);
           } else {
             setError('Note not found');
           }
@@ -56,11 +101,18 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
         }
       } else if (location.state?.structuredData) {
         console.log('Using structured data from location state:', location.state.structuredData);
-        // For medications, ensure we log what was received
-        if (location.state.structuredData.medications) {
-          console.log('State medications:', location.state.structuredData.medications);
+        
+        // Deep copy and normalize the location state data
+        const contentCopy = JSON.parse(JSON.stringify(location.state.structuredData));
+        
+        // Normalize medication data
+        if (contentCopy.medications) {
+          console.log('Original state medications:', contentCopy.medications);
+          contentCopy.medications = normalizeMedicationData(contentCopy.medications);
+          console.log('Normalized state medications:', contentCopy.medications);
         }
-        setStructuredData(location.state.structuredData);
+        
+        setStructuredData(contentCopy);
         setLoading(false);
       } else if (transcriptionData && transcriptionData.text) {
         // Just mark as not loading - processTranscription will be called separately
