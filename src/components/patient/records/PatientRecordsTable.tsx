@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { File } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { formatContent } from '@/components/structured-output/utils/contentFormatter';
 
 interface PatientRecordsTableProps {
   patientNotes: any[];
@@ -19,6 +20,46 @@ export const PatientRecordsTable: React.FC<PatientRecordsTableProps> = ({
     navigate(`/structured-output?noteId=${noteId}`);
   };
 
+  /**
+   * Creates a preview of content, safely handling different data types
+   */
+  const createContentPreview = (content: any): string => {
+    if (!content) return 'No content';
+    
+    try {
+      // Handle different content formats
+      if (typeof content === 'string') {
+        return content.substring(0, 60) + (content.length > 60 ? '...' : '');
+      }
+      
+      // For objects, find the first non-empty value to display
+      if (typeof content === 'object') {
+        // Special handling for prescription format
+        if (content.medications || content.patientInformation) {
+          if (content.medications && Array.isArray(content.medications) && content.medications.length > 0) {
+            const med = content.medications[0];
+            const medName = med.genericName || med.name || 'Medication';
+            return `Prescription: ${medName}` + (content.medications.length > 1 ? ` (+${content.medications.length - 1} more)` : '');
+          }
+          return 'Prescription';
+        }
+        
+        // Standard format (SOAP, etc.)
+        const keys = Object.keys(content);
+        for (const key of keys) {
+          if (content[key] && typeof content[key] === 'string' && content[key].trim() !== '') {
+            return content[key].substring(0, 60) + (content[key].length > 60 ? '...' : '');
+          }
+        }
+      }
+      
+      return 'Content available';
+    } catch (error) {
+      console.error('Error creating content preview:', error);
+      return 'Error displaying content';
+    }
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -30,16 +71,14 @@ export const PatientRecordsTable: React.FC<PatientRecordsTableProps> = ({
       </TableHeader>
       <TableBody>
         {patientNotes.map((note) => {
-          const sections = note.content || {};
-          const firstSection = Object.values(sections)[0] as string || '';
-          const preview = firstSection.substring(0, 60) + (firstSection.length > 60 ? '...' : '');
+          const preview = createContentPreview(note.content);
           
           return (
             <TableRow key={note.id}>
               <TableCell>
                 {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
               </TableCell>
-              <TableCell>{preview || 'No content'}</TableCell>
+              <TableCell>{preview}</TableCell>
               <TableCell className="text-right">
                 <Button 
                   variant="outline" 
