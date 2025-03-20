@@ -21,7 +21,8 @@ import { toast } from 'sonner';
 
 export const usePrescriptionEditor = ({
   structuredData,
-  onSave
+  onSave,
+  updateDataDirectly
 }: UsePrescriptionEditorProps): PrescriptionEditorState => {
   const { user } = useAuth();
   const { profileData } = useProfileFields();
@@ -136,6 +137,20 @@ export const usePrescriptionEditor = ({
     // Use forceStayInEditMode if provided, otherwise use the stayInEditMode state
     const shouldStayInEditMode = forceStayInEditMode !== undefined ? forceStayInEditMode : stayInEditMode;
     console.log('shouldStayInEditMode calculated as:', shouldStayInEditMode);
+    
+    // Prepare updated data
+    const updatedData: MedicalSections = {
+      ...structuredData,
+      patientInformation: patientInfo,
+      medications: medications, 
+      prescriberInformation: prescriberInfo
+    };
+    
+    // Use direct update if available
+    if (updateDataDirectly && !shouldStayInEditMode) {
+      console.log('[usePrescriptionEditor] Directly updating UI with prescription data');
+      updateDataDirectly(updatedData);
+    }
     
     validateAndSavePrescription(
       structuredData,

@@ -3,6 +3,7 @@ import { usePatientInfo } from './usePatientInfo';
 import { useNoteLoader } from './useNoteLoader';
 import { useFormatGeneration } from './useFormatGeneration';
 import { useFormatManagement } from './useFormatManagement';
+import { MedicalSections } from '@/components/structured-output/types';
 
 export const useStructuredOutputData = () => {
   // Get patient info from various sources
@@ -56,6 +57,31 @@ export const useStructuredOutputData = () => {
     setStructuredData
   });
 
+  // Direct update function to update the UI without relying on database refresh
+  const updateDataDirectly = (updatedData: MedicalSections) => {
+    console.log('Directly updating UI with saved data');
+    
+    // Update the core structured data
+    setStructuredData(updatedData);
+    
+    // If we have formatted versions, update the appropriate one
+    if (formattedVersions.length > 0 && activeFormatType) {
+      console.log('Updating formatted version for type:', activeFormatType);
+      
+      const updatedFormats = formattedVersions.map(format => {
+        if (format.formatType === activeFormatType) {
+          return {
+            ...format,
+            structuredData: updatedData
+          };
+        }
+        return format;
+      });
+      
+      setFormattedVersions(updatedFormats);
+    }
+  };
+
   // Create a dedicated refresh function that ensures complete data reload
   const handleCompleteRefresh = () => {
     console.log('Performing complete data refresh');
@@ -81,7 +107,6 @@ export const useStructuredOutputData = () => {
           setTimeout(() => {
             if (structuredData) {
               console.log('Regenerating formatted versions with latest data');
-              // Fixed: Removed the argument being passed to generateFormats
               generateFormats();
             }
           }, 200);
@@ -105,6 +130,7 @@ export const useStructuredOutputData = () => {
     handleFormatTypeChange,
     toggleFormatSelection,
     getSelectedFormats,
-    refreshData: handleCompleteRefresh  // Use the enhanced refresh function
+    refreshData: handleCompleteRefresh,  // Keep the original refresh function
+    updateDataDirectly  // Add the new direct update function
   };
 };

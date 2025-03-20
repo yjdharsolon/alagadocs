@@ -19,6 +19,7 @@ interface SaveNoteButtonProps {
     structuredData: MedicalSections;
   }>;
   refreshData?: () => void;
+  updateDataDirectly?: (data: MedicalSections) => void;
 }
 
 export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
@@ -29,7 +30,8 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
   transcriptionId,
   onNoteSaved,
   selectedFormats = [],
-  refreshData
+  refreshData,
+  updateDataDirectly
 }) => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
@@ -74,14 +76,20 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
       // Log the saved note ID
       console.log('Note saved successfully with ID:', data?.id || 'unknown');
       
-      // Call refreshData to ensure data is fresh after saving
+      // First, immediately update the UI with the data we just saved
+      // This ensures what the user sees matches what they saved without waiting for a refresh
+      if (updateDataDirectly) {
+        console.log('Directly updating UI with saved data');
+        updateDataDirectly(sections);
+      }
+      
+      // Call refreshData to ensure data is fresh after saving (as a backup)
       if (refreshData) {
-        console.log('Triggering data refresh after successful save');
-        // Add a longer delay to ensure the database has time to update
-        // This is critical for ensuring we get fresh data
+        console.log('Scheduling background data refresh after successful save');
+        // Use a longer timeout to ensure the database has time to update
         setTimeout(() => {
           refreshData();
-          console.log('Data refresh triggered');
+          console.log('Background data refresh completed');
         }, 800);
       }
       

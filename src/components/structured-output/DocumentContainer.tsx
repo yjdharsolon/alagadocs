@@ -30,6 +30,7 @@ interface DocumentContainerProps {
     structuredData: MedicalSections;
   }>;
   refreshData?: () => void;
+  updateDataDirectly?: (data: MedicalSections) => void;
 }
 
 const DocumentContainer = ({
@@ -44,7 +45,8 @@ const DocumentContainer = ({
   onEndConsult,
   noteSaved = false,
   selectedFormats = [],
-  refreshData
+  refreshData,
+  updateDataDirectly
 }: DocumentContainerProps) => {
   // Log medications whenever structuredData changes to track data flow
   useEffect(() => {
@@ -97,13 +99,18 @@ const DocumentContainer = ({
       console.log('[DocumentContainer] Exiting edit mode, calling onNoteSaved');
       onNoteSaved();
       
-      // Force data refresh when exiting edit mode
+      // Use the direct update function to immediately update the UI
+      if (updateDataDirectly) {
+        console.log('[DocumentContainer] Directly updating UI with edited data');
+        updateDataDirectly(updatedData);
+      }
+      
+      // Still perform the normal refresh as a backup
       if (refreshData) {
-        console.log('[DocumentContainer] Requesting data refresh after save');
-        // Add a delay to ensure the save completes before refreshing
+        console.log('[DocumentContainer] Scheduling background refresh after save');
         setTimeout(() => {
           refreshData();
-          console.log('[DocumentContainer] Data refresh executed');
+          console.log('[DocumentContainer] Background refresh completed');
         }, 200);
       }
     }
@@ -133,6 +140,7 @@ const DocumentContainer = ({
           noteSaved={noteSaved}
           selectedFormats={selectedFormats}
           refreshData={refreshData}
+          updateDataDirectly={updateDataDirectly}
         />
       </div>
       

@@ -28,7 +28,8 @@ export default function StructuredOutputPage() {
     handleFormatTypeChange,
     toggleFormatSelection,
     getSelectedFormats,
-    refreshData
+    refreshData,
+    updateDataDirectly
   } = useStructuredOutputData();
   
   // Attempt to get additional patient data from session storage
@@ -160,6 +161,7 @@ export default function StructuredOutputPage() {
           onFormatTypeChange={handleFormatTypeChange}
           onToggleFormatSelection={toggleFormatSelection}
           refreshData={refreshData}
+          updateDataDirectly={updateDataDirectly}
         />
       </div>
     </Layout>

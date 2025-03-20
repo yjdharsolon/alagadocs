@@ -12,11 +12,13 @@ import { usePrescriptionEditor } from './components/usePrescriptionEditor';
 interface PrescriptionEditorProps {
   structuredData: MedicalSections;
   onSave: (updatedData: MedicalSections, stayInEditMode?: boolean) => void;
+  updateDataDirectly?: (data: MedicalSections) => void;
 }
 
 const PrescriptionEditor: React.FC<PrescriptionEditorProps> = ({
   structuredData,
   onSave,
+  updateDataDirectly
 }) => {
   const {
     patientInfo,
@@ -30,7 +32,11 @@ const PrescriptionEditor: React.FC<PrescriptionEditorProps> = ({
     handlePrescriberInfoChange,
     toggleStayInEditMode,
     handleSave
-  } = usePrescriptionEditor({ structuredData, onSave });
+  } = usePrescriptionEditor({ 
+    structuredData, 
+    onSave,
+    updateDataDirectly 
+  });
 
   // Function to save and stay in edit mode
   const handleSaveOnly = () => {
