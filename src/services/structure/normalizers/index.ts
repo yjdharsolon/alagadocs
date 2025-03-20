@@ -14,7 +14,7 @@ import {
   processStringMedication,
   processIndividualMedication,
   parseComplexMedicationString
-} from './medicationProcessors';
+} from './medicationParsers';
 
 /**
  * This index file exports all normalizer utilities from their respective modules.

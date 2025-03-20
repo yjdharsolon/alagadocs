@@ -1,5 +1,4 @@
-
-import { processStringMedication, processIndividualMedication } from './medicationProcessors';
+import { processStringMedication, processIndividualMedication, ensureString } from './medicationParsers';
 
 /**
  * Ensures a value is a string.
@@ -8,12 +7,7 @@ import { processStringMedication, processIndividualMedication } from './medicati
  * @param value - The value to convert to a string
  * @returns A string representation of the value, or empty string if undefined/null
  */
-export const ensureString = (value: any): string => {
-  if (value === undefined || value === null) return '';
-  if (typeof value === 'string') return value;
-  if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
-};
+export { ensureString };
 
 /**
  * Normalizes an object to ensure it has the expected properties.
