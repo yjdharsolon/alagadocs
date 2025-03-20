@@ -59,6 +59,19 @@ export const usePrescriptionEditor = ({
     ptrNumber: ''
   });
 
+  // Update medications when structuredData changes and medications aren't empty
+  useEffect(() => {
+    if (structuredData.medications && 
+        Array.isArray(structuredData.medications) && 
+        structuredData.medications.length > 0) {
+      console.log('[usePrescriptionEditor] Updating medications from structuredData:', 
+        JSON.stringify(structuredData.medications, null, 2));
+      
+      const initialMedications = initializeMedications(structuredData.medications);
+      setMedications(initialMedications);
+    }
+  }, [structuredData.medications]);
+
   // Update prescriberInfo when profileData changes
   useEffect(() => {
     if (profileData) {
@@ -142,6 +155,19 @@ export const usePrescriptionEditor = ({
     // Use forceStayInEditMode if provided, otherwise use the stayInEditMode state
     const shouldStayInEditMode = forceStayInEditMode !== undefined ? forceStayInEditMode : stayInEditMode;
     
+    // CRITICAL: Make a deep copy of medications to avoid reference issues
+    const medicationsCopy = medications.map((med, index) => ({
+      id: med.id || index + 1,
+      genericName: med.genericName || '',
+      brandName: med.brandName || '',
+      strength: med.strength || '',
+      dosageForm: med.dosageForm || '',
+      sigInstructions: med.sigInstructions || '',
+      quantity: med.quantity || '',
+      refills: med.refills || '',
+      specialInstructions: med.specialInstructions || ''
+    }));
+    
     // CRITICAL: Always update UI directly first before any other operations
     if (updateDataDirectly) {
       console.log('[usePrescriptionEditor] Directly updating UI with prescription data');
@@ -149,20 +175,20 @@ export const usePrescriptionEditor = ({
       // Prepare a complete data object with everything needed
       const directUpdateData: MedicalSections = {
         ...structuredData,
-        patientInformation: patientInfo,
-        medications: JSON.parse(JSON.stringify(medications)), // Deep clone to avoid reference issues
-        prescriberInformation: prescriberInfo
+        patientInformation: { ...patientInfo },
+        medications: JSON.parse(JSON.stringify(medicationsCopy)), // Extra deep clone for safety
+        prescriberInformation: { ...prescriberInfo }
       };
       
       // Update UI state immediately
       updateDataDirectly(directUpdateData);
     }
     
-    // Now handle the regular save flow, which may involve database updates
+    // Now handle the regular save flow with known-good copies of the data
     validateAndSavePrescription(
       structuredData,
       patientInfo,
-      medications,
+      medicationsCopy, // Use our safe copy
       prescriberInfo,
       onSave,
       shouldStayInEditMode

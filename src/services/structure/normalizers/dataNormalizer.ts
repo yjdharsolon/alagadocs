@@ -66,6 +66,23 @@ export const normalizeStructuredData = (data: any, role: string): MedicalSection
     // Create a deep clone of the medication array to avoid reference issues
     const medicationsClone = JSON.parse(JSON.stringify(data.medications));
     
+    // Ensure each medication has all required properties to prevent data loss
+    const processedMedications = medicationsClone.map((med: any, index: number) => {
+      return {
+        id: med.id || index + 1,
+        genericName: med.genericName || med.name || '',
+        brandName: med.brandName !== undefined ? med.brandName : '',
+        strength: med.strength || '',
+        dosageForm: med.dosageForm || '',
+        sigInstructions: med.sigInstructions || '',
+        quantity: med.quantity || '',
+        refills: med.refills || '',
+        specialInstructions: med.specialInstructions || ''
+      };
+    });
+    
+    console.log('Processed medications:', JSON.stringify(processedMedications, null, 2));
+    
     return {
       patientInformation: normalizeObject(data.patientInformation, {
         name: '',
@@ -73,7 +90,7 @@ export const normalizeStructuredData = (data: any, role: string): MedicalSection
         age: '',
         date: '',
       }),
-      medications: medicationsClone, // Use the cloned array to preserve all properties
+      medications: processedMedications, // Use the fully processed array
       prescriberInformation: normalizeObject(data.prescriberInformation, {
         name: '',
         licenseNumber: '',
@@ -101,6 +118,8 @@ export const normalizeStructuredData = (data: any, role: string): MedicalSection
         recommendations: ensureString(data.recommendations)
       };
     case 'prescription':
+      // This code path handles prescription without existing medications array
+      // or when the medications property isn't an array
       return {
         patientInformation: normalizeObject(data.patientInformation, {
           name: '',
@@ -108,7 +127,35 @@ export const normalizeStructuredData = (data: any, role: string): MedicalSection
           age: '',
           date: '',
         }),
-        medications: normalizeArray(data.medications),
+        medications: normalizeArray(data.medications).map((med: any, index: number) => {
+          // If medications is just a string, convert to object
+          if (typeof med === 'string') {
+            return {
+              id: index + 1,
+              genericName: med,
+              brandName: '',
+              strength: '',
+              dosageForm: '',
+              sigInstructions: '',
+              quantity: '',
+              refills: '',
+              specialInstructions: ''
+            };
+          }
+          
+          // Ensure all medication objects have consistent structure
+          return {
+            id: med.id || index + 1,
+            genericName: med.genericName || med.name || '',
+            brandName: med.brandName !== undefined ? med.brandName : '',
+            strength: med.strength || '',
+            dosageForm: med.dosageForm || '',
+            sigInstructions: med.sigInstructions || '',
+            quantity: med.quantity || '',
+            refills: med.refills || '',
+            specialInstructions: med.specialInstructions || ''
+          };
+        }),
         prescriberInformation: normalizeObject(data.prescriberInformation, {
           name: '',
           licenseNumber: '',

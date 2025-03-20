@@ -24,6 +24,22 @@ export const validateAndSavePrescription = (
     // Create a complete deep clone to avoid reference issues
     const clonedMedications = JSON.parse(JSON.stringify(medications));
     
+    // Ensure cloned medications maintain all properties
+    for (let i = 0; i < clonedMedications.length; i++) {
+      // Ensure each medication has all required fields
+      clonedMedications[i] = {
+        id: clonedMedications[i].id || i + 1,
+        genericName: clonedMedications[i].genericName || '',
+        brandName: clonedMedications[i].brandName || '',
+        strength: clonedMedications[i].strength || '',
+        dosageForm: clonedMedications[i].dosageForm || '',
+        sigInstructions: clonedMedications[i].sigInstructions || '',
+        quantity: clonedMedications[i].quantity || '',
+        refills: clonedMedications[i].refills || '',
+        specialInstructions: clonedMedications[i].specialInstructions || ''
+      };
+    }
+    
     // Prepare updated data with properly structured medications
     const updatedData: MedicalSections = {
       ...structuredData,

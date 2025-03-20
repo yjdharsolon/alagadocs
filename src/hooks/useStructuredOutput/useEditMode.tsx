@@ -86,8 +86,24 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
     setSaveInProgress(true);
     
     try {
-      // Deep clone to avoid reference issues
+      // Create a completely independent deep clone that won't be affected by reference issues
       const dataToSave = JSON.parse(JSON.stringify(updatedData));
+      
+      // Ensure medications are properly preserved if they exist
+      if (dataToSave.medications && Array.isArray(dataToSave.medications)) {
+        console.log('[useEditMode] Ensuring all medication properties are preserved');
+        dataToSave.medications = dataToSave.medications.map((med, index) => ({
+          id: med.id || index + 1,
+          genericName: med.genericName || '',
+          brandName: med.brandName || '',
+          strength: med.strength || '',
+          dosageForm: med.dosageForm || '',
+          sigInstructions: med.sigInstructions || '',
+          quantity: med.quantity || '',
+          refills: med.refills || '',
+          specialInstructions: med.specialInstructions || ''
+        }));
+      }
       
       console.log('[useEditMode] Data prepared for saving:', 
         JSON.stringify({
@@ -101,32 +117,40 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
         console.log('[useEditMode] Cloned medications for saving:', JSON.stringify(dataToSave.medications, null, 2));
       }
       
-      // CRITICAL CHANGE: Update UI state immediately with cloned data
-      // This ensures what's displayed matches what was edited, regardless of DB save
-      setStructuredData(dataToSave);
+      // Update UI state FIRST with a fresh clone of data
+      const uiData = JSON.parse(JSON.stringify(dataToSave));
+      setStructuredData(uiData);
       
-      // Keep track of the edited data 
+      // Keep track of the edited data for when edit mode is toggled off
       setLastSavedData(dataToSave);
       console.log('[useEditMode] Updated lastSavedData with cloned data');
       
-      // Persist to database if possible (in background)
+      // Set note as saved to update UI state
+      setNoteSaved(true);
+      
+      // Persist to database if possible - But don't wait for it to complete
       if (transcriptionId && user?.id) {
         try {
-          console.log('[useEditMode] Saving to database...');
-          const saveResult = await saveStructuredNote(
-            user.id,
-            transcriptionId,
-            dataToSave,
-            patientId
-          );
-          console.log('[useEditMode] Save result:', saveResult);
-          setNoteSaved(true);
-          toast.success('Document saved to database successfully');
+          console.log('[useEditMode] Starting database save (in background)...');
+          
+          // Use a setTimeout to ensure UI updates happen first
+          setTimeout(async () => {
+            try {
+              const saveResult = await saveStructuredNote(
+                user.id,
+                transcriptionId,
+                dataToSave,
+                patientId
+              );
+              console.log('[useEditMode] Background save result:', saveResult);
+              toast.success('Document saved to database successfully');
+            } catch (error) {
+              console.error('Error in background save:', error);
+              toast.error('Warning: Changes saved to screen but database update failed');
+            }
+          }, 0);
         } catch (error) {
-          console.error('Error saving note to database:', error);
-          toast.error('Failed to save document to database');
-          // Important: We DON'T revert the UI even if DB save fails
-          // User still sees their edited content
+          console.error('Error setting up background save:', error);
         }
       } else {
         console.log('[useEditMode] Not saving to database - missing transcriptionId or user.id');
@@ -151,7 +175,7 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
       setTimeout(() => {
         console.log('[useEditMode] Re-enabling data refresh after save');
         setDisableRefreshAfterSave(false);
-      }, 1500);
+      }, 2000); // Increased timeout to ensure UI is fully updated
     }
   }, [setStructuredData, transcriptionId, user, patientId, saveInProgress]);
 
