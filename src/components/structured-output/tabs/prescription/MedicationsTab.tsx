@@ -17,11 +17,10 @@ const MedicationsTab: React.FC<MedicationsTabProps> = ({ medications }) => {
     if (Array.isArray(medications)) {
       console.log('Medications is an array with length:', medications.length);
       
-      // Log each medication for debugging
+      // Log the structure of each medication for debugging
       medications.forEach((med, index) => {
         if (typeof med === 'object') {
           console.log(`Med ${index + 1} - Generic Name:`, med.genericName);
-          console.log(`Med ${index + 1} - Brand name property exists:`, 'brandName' in med);
           console.log(`Med ${index + 1} - Brand name value:`, med.brandName);
           console.log(`Med ${index + 1} - Strength:`, med.strength);
         } else {
@@ -33,21 +32,13 @@ const MedicationsTab: React.FC<MedicationsTabProps> = ({ medications }) => {
     }
   }, [medications]);
   
-  // Process medications before rendering if needed
-  const processedMedications = React.useMemo(() => {
-    if (!Array.isArray(medications)) return medications;
-    
-    // No additional processing needed here as formatMedications handles it
-    return medications;
-  }, [medications]);
-
   return (
     <SectionContent 
       title="MEDICATIONS" 
       content={
-        Array.isArray(processedMedications)
-          ? formatMedications(processedMedications)
-          : formatContent(processedMedications)
+        Array.isArray(medications)
+          ? formatMedications(medications)
+          : formatContent(medications)
       } 
     />
   );

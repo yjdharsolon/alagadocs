@@ -1,4 +1,3 @@
-
 import { MedicalSections } from '../../types';
 
 /**
@@ -146,4 +145,3 @@ export const formatPrescriberInfo = (prescriberInfo: any, structuredPrescriberIn
   // If no profile info is available, use structured prescriber info as fallback
   return formattedInfo || String(structuredPrescriberInfo || "No prescriber information");
 };
-
