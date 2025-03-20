@@ -15,7 +15,7 @@ export const formatMedications = (medications: any[]) => {
       
       // Format medication with generic and brand name (if available)
       const genericName = med.genericName || med.name || 'Not specified'; // For backward compatibility
-      const brandName = med.brandName ? ` (${med.brandName})` : '';
+      const brandName = med.brandName && med.brandName.trim() !== '' ? ` (${med.brandName})` : '';
       
       console.log(`Medication ${medNumber} - Generic Name: "${genericName}", Brand Name: "${med.brandName || 'none'}", Formatted Brand: "${brandName}"`);
       

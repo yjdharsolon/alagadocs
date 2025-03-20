@@ -65,6 +65,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
             value={medication.brandName || ''} 
             onChange={(e) => handleInputChange('brandName', e.target.value)} 
             className="mt-1"
+            placeholder="Enter brand name if applicable"
           />
         </div>
         <div>
