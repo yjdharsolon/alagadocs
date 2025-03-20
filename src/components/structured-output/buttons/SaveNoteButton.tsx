@@ -32,7 +32,7 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
   selectedFormats = [],
   refreshData,
   updateDataDirectly,
-  disableRefreshAfterSave
+  disableRefreshAfterSave = true // Default to true to disable refresh
 }) => {
   const [isSaving, setIsSaving] = React.useState(false);
   
@@ -48,6 +48,7 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
       console.log('Saving note with formats:', selectedFormats.length > 0 
         ? selectedFormats.map(f => f.formatType).join(', ')
         : 'single format');
+      console.log('[SaveNoteButton] Refresh after save is:', disableRefreshAfterSave ? 'DISABLED' : 'enabled');
       
       // If we have selected formats, save those
       if (selectedFormats.length > 0) {
@@ -78,13 +79,8 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
         onNoteSaved();
       }
       
-      // Only refresh data if not disabled
-      if (refreshData && !disableRefreshAfterSave) {
-        console.log('[SaveNoteButton] Refreshing data after save');
-        refreshData();
-      } else if (disableRefreshAfterSave) {
-        console.log('[SaveNoteButton] Data refresh after save is disabled');
-      }
+      // Skip refresh completely - we're forcing disableRefreshAfterSave to be true
+      console.log('[SaveNoteButton] Skipping data refresh after save - refresh is disabled');
     } catch (error) {
       console.error('Error saving note:', error);
       toast.error('Failed to save note');

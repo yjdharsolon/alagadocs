@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Separator } from '@/components/ui/separator';
 import DocumentView from './DocumentView';
@@ -48,7 +47,7 @@ const DocumentContainer = ({
   selectedFormats = [],
   refreshData,
   updateDataDirectly,
-  disableRefreshAfterSave = false
+  disableRefreshAfterSave = true
 }: DocumentContainerProps) => {
   // Store a local copy of the latest data to ensure UI consistency
   const [localData, setLocalData] = useState<MedicalSections>(structuredData);
@@ -123,7 +122,7 @@ const DocumentContainer = ({
       isEditMode,
       stayInEditMode,
       noteSaved,
-      disableRefreshAfterSave
+      disableRefreshAfterSave: true
     });
     
     // Pass the stayInEditMode parameter to the parent's onSaveEdit
@@ -140,16 +139,8 @@ const DocumentContainer = ({
         updateDataDirectly(updatedData);
       }
       
-      // Only perform refresh if not disabled
-      if (refreshData && !disableRefreshAfterSave) {
-        console.log('[DocumentContainer] Scheduling background refresh after save');
-        setTimeout(() => {
-          refreshData();
-          console.log('[DocumentContainer] Background refresh completed');
-        }, 200);
-      } else if (disableRefreshAfterSave) {
-        console.log('[DocumentContainer] Refresh after save disabled - skipping refresh');
-      }
+      // Skip refresh completely - we're forcing disableRefreshAfterSave to be true
+      console.log('[DocumentContainer] Skipping background refresh after save - refresh is disabled');
     }
   };
   
@@ -190,7 +181,7 @@ const DocumentContainer = ({
           selectedFormats={selectedFormats}
           refreshData={refreshData}
           updateDataDirectly={updateDataDirectly}
-          disableRefreshAfterSave={disableRefreshAfterSave}
+          disableRefreshAfterSave={true}
         />
       </div>
       

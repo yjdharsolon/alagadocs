@@ -16,10 +16,11 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
   const [noteSaved, setNoteSaved] = useState(false);
   const [lastSavedData, setLastSavedData] = useState<MedicalSections | null>(null);
   const [saveInProgress, setSaveInProgress] = useState(false);
-  const [disableRefreshAfterSave, setDisableRefreshAfterSave] = useState(false);
+  const [disableRefreshAfterSave, setDisableRefreshAfterSave] = useState(true);
   
   console.log(`[useEditMode] Initialized with transcriptionId: ${transcriptionId}, patientId: ${patientId}`);
   console.log('[useEditMode] Initial lastSavedData state:', lastSavedData ? 'has data' : 'null');
+  console.log('[useEditMode] Refresh after save is DISABLED permanently');
 
   const handleToggleEditMode = useCallback(() => {
     console.log(`[useEditMode] Toggle edit mode from ${isEditMode} to ${!isEditMode}`);
@@ -80,7 +81,7 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
       return;
     }
     
-    // Set flag to disable refresh after save temporarily
+    // Ensure refresh after save is always disabled
     setDisableRefreshAfterSave(true);
     
     setSaveInProgress(true);
@@ -170,12 +171,8 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
     } finally {
       setSaveInProgress(false);
       
-      // Reset the refresh disable flag after a short delay
-      // to ensure the data is properly saved before allowing refreshes
-      setTimeout(() => {
-        console.log('[useEditMode] Re-enabling data refresh after save');
-        setDisableRefreshAfterSave(false);
-      }, 2000); // Increased timeout to ensure UI is fully updated
+      // Never reset the refresh disable flag - keep it disabled permanently
+      console.log('[useEditMode] Refresh after save remains permanently disabled');
     }
   }, [setStructuredData, transcriptionId, user, patientId, saveInProgress]);
 
