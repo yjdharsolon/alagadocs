@@ -46,7 +46,7 @@ const DocumentContainer = ({
   selectedFormats = [],
   refreshData
 }: DocumentContainerProps) => {
-  // Log medications whenever structuredData changes
+  // Log medications whenever structuredData changes to track data flow
   useEffect(() => {
     if (structuredData && structuredData.medications) {
       console.log('[DocumentContainer] Current medications in structuredData:', 
@@ -80,19 +80,31 @@ const DocumentContainer = ({
 
   const handleSaveEdit = (updatedData: MedicalSections, stayInEditMode?: boolean) => {
     console.log('[DocumentContainer] Received save with updatedData and stayInEditMode:', stayInEditMode);
-    console.log('[DocumentContainer] Updated medications:', updatedData.medications);
+    
+    if (updatedData.medications) {
+      console.log('[DocumentContainer] Updated medications:', 
+        Array.isArray(updatedData.medications) 
+          ? JSON.stringify(updatedData.medications, null, 2) 
+          : updatedData.medications
+      );
+    }
     
     // Pass the stayInEditMode parameter to the parent's onSaveEdit
     onSaveEdit(updatedData, stayInEditMode);
     
     // If saving and exiting edit mode, call onNoteSaved to update state at the parent level
     if (!stayInEditMode && onNoteSaved) {
+      console.log('[DocumentContainer] Exiting edit mode, calling onNoteSaved');
       onNoteSaved();
       
       // Force data refresh when exiting edit mode
       if (refreshData) {
-        console.log('[DocumentContainer] Refreshing data after save');
-        refreshData();
+        console.log('[DocumentContainer] Requesting data refresh after save');
+        // Add a delay to ensure the save completes before refreshing
+        setTimeout(() => {
+          refreshData();
+          console.log('[DocumentContainer] Data refresh executed');
+        }, 200);
       }
     }
   };

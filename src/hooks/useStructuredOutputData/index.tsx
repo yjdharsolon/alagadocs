@@ -60,21 +60,31 @@ export const useStructuredOutputData = () => {
   const handleCompleteRefresh = () => {
     console.log('Performing complete data refresh');
     
-    // Force a complete reload of data
+    // Force a complete reload of data first
     refreshNoteData();
     
-    // If there are formatted versions, also refresh the active format
+    // If there are formatted versions, we need to make sure they also get refreshed
     if (formattedVersions.length > 0 && activeFormatType) {
-      // Find the currently active format and reload it
+      // Find the currently active format
       const currentFormat = formattedVersions.find(f => f.formatType === activeFormatType);
       if (currentFormat) {
         console.log('Refreshing active format:', activeFormatType);
         
-        // Update the UI with the current format data
+        // Update the UI with the current format data after a short delay
+        // This delay ensures the base data has been refreshed first
         setTimeout(() => {
           console.log('Setting structured data from active format');
           setStructuredData(currentFormat.structuredData);
-        }, 100);
+          
+          // After updating the structured data, update the formatted versions
+          // This ensures all formats reflect the latest data
+          setTimeout(() => {
+            if (structuredData) {
+              console.log('Regenerating formatted versions with latest data');
+              generateFormats(structuredData);
+            }
+          }, 200);
+        }, 300);
       }
     }
   };

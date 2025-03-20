@@ -21,16 +21,29 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
   const [structuredData, setStructuredData] = useState<MedicalSections | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dataRefreshKey, setDataRefreshKey] = useState(0);
+  const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
   
   const transcriptionData = location.state?.transcriptionData;
   const audioUrl = location.state?.audioUrl;
   const transcriptionId = location.state?.transcriptionId;
 
-  // Function to force a data refresh with improved logging
+  // Enhanced function to force a data refresh with improved logging and throttling
   const refreshData = () => {
-    console.log('Data refresh requested - incrementing refresh key');
+    const currentTime = Date.now();
+    const timeSinceLastRefresh = currentTime - lastRefreshTime;
+    
+    console.log(`Data refresh requested - Time since last refresh: ${timeSinceLastRefresh}ms`);
+    
+    // Throttle refreshes to prevent multiple rapid refreshes
+    if (timeSinceLastRefresh < 500) {
+      console.log('Refresh throttled - too soon since last refresh');
+      return;
+    }
+    
+    console.log('Executing refresh - incrementing refresh key');
     // Force UI to update by incrementing the refresh key
     setDataRefreshKey(prev => prev + 1);
+    setLastRefreshTime(currentTime);
     // Clear any existing errors on refresh
     setError(null);
   };
@@ -80,8 +93,8 @@ export const useNoteLoader = ({ patientInfo }: UseNoteLoaderProps) => {
           console.log(`Loading note with ID: ${noteId}, refresh key: ${dataRefreshKey}`);
           setLoading(true);
           
-          // Add a small delay to ensure database consistency
-          await new Promise(resolve => setTimeout(resolve, 300));
+          // Add a longer delay to ensure database consistency
+          await new Promise(resolve => setTimeout(resolve, 500));
           
           const note = await getStructuredNoteById(noteId);
           if (note?.content) {

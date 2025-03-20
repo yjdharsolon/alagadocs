@@ -77,11 +77,12 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
       // Call refreshData to ensure data is fresh after saving
       if (refreshData) {
         console.log('Triggering data refresh after successful save');
-        // Add a small delay to ensure the database has time to update
+        // Add a longer delay to ensure the database has time to update
+        // This is critical for ensuring we get fresh data
         setTimeout(() => {
           refreshData();
           console.log('Data refresh triggered');
-        }, 500);
+        }, 800);
       }
       
       if (onNoteSaved) {
