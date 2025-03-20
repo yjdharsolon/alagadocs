@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { MedicalSections } from '@/components/structured-output/types';
 import { enhancePrescriptionData } from './prescriptionEnhancer';
-import { normalizeStructuredData } from './normalizers';
+import { normalizeStructuredData } from './normalizers/dataNormalizer';
 
 /**
  * Structures transcribed text into medical note sections
