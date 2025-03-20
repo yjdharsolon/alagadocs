@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import StructuredOutputHeader from '@/components/structured-output/StructuredOutputHeader';
@@ -38,31 +38,7 @@ export default function StructuredOutputPage() {
     gender?: string;
   }>({});
   
-  React.useEffect(() => {
-    try {
-      const storedPatient = sessionStorage.getItem('selectedPatient');
-      if (storedPatient) {
-        const patientData = JSON.parse(storedPatient);
-        setPatientDetails({
-          dateOfBirth: patientData.date_of_birth,
-          age: patientData.age,
-          gender: patientData.gender
-        });
-      }
-    } catch (error) {
-      console.error('Error retrieving patient details:', error);
-    }
-  }, []);
-  
-  // Enhance patientInfo with demographic data
-  const enhancedPatientInfo = React.useMemo(() => ({
-    ...patientInfo,
-    dateOfBirth: patientDetails.dateOfBirth,
-    age: patientDetails.age,
-    gender: patientDetails.gender
-  }), [patientInfo, patientDetails]);
-  
-  // Use the navigation and edit mode hook
+  // Use the navigation and edit mode hook - Make sure all hooks are called unconditionally
   const {
     isEditMode,
     handleBackClick,
@@ -78,9 +54,42 @@ export default function StructuredOutputPage() {
     transcriptionData,
     audioUrl,
     error,
-    patientInfo: enhancedPatientInfo,
+    patientInfo: {
+      ...patientInfo,
+      dateOfBirth: patientDetails.dateOfBirth,
+      age: patientDetails.age,
+      gender: patientDetails.gender
+    },
     transcriptionId
   });
+
+  // Move all effects together to maintain consistent hook order
+  useEffect(() => {
+    try {
+      const storedPatient = sessionStorage.getItem('selectedPatient');
+      if (storedPatient) {
+        const patientData = JSON.parse(storedPatient);
+        setPatientDetails({
+          dateOfBirth: patientData.date_of_birth,
+          age: patientData.age,
+          gender: patientData.gender
+        });
+      }
+    } catch (error) {
+      console.error('Error retrieving patient details:', error);
+    }
+  }, []);
+  
+  // This effect needs to always be present, not conditionally 
+  useEffect(() => {
+    if (structuredData?.medications) {
+      console.log('[StructuredOutputPage] Current medications in structuredData:', 
+        Array.isArray(structuredData.medications) 
+          ? JSON.stringify(structuredData.medications, null, 2) 
+          : structuredData.medications
+      );
+    }
+  }, [structuredData?.medications]);
 
   // Display appropriate loading state based on what's happening
   if (loading || processingText) {
@@ -112,17 +121,6 @@ export default function StructuredOutputPage() {
     );
   }
 
-  // Add effect to log medications data when it changes
-  React.useEffect(() => {
-    if (structuredData?.medications) {
-      console.log('[StructuredOutputPage] Current medications in structuredData:', 
-        Array.isArray(structuredData.medications) 
-          ? JSON.stringify(structuredData.medications, null, 2) 
-          : structuredData.medications
-      );
-    }
-  }, [structuredData?.medications]);
-
   return (
     <Layout>
       <div className="container mx-auto py-4 px-4">
@@ -147,7 +145,12 @@ export default function StructuredOutputPage() {
           processingText={false}
           structuredData={structuredData}
           error={error}
-          patientInfo={enhancedPatientInfo}
+          patientInfo={{
+            ...patientInfo,
+            dateOfBirth: patientDetails.dateOfBirth,
+            age: patientDetails.age,
+            gender: patientDetails.gender
+          }}
           user={user}
           transcriptionId={transcriptionId || ''}
           isEditMode={isEditMode}
