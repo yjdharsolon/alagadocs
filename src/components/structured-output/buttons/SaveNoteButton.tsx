@@ -18,6 +18,7 @@ interface SaveNoteButtonProps {
     formatType: string;
     structuredData: MedicalSections;
   }>;
+  refreshData?: () => void; // Added refreshData prop to interface
 }
 
 export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
@@ -27,7 +28,8 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
   patientId,
   transcriptionId,
   onNoteSaved,
-  selectedFormats = []
+  selectedFormats = [],
+  refreshData // Destructure the new prop
 }) => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
@@ -45,6 +47,13 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
         title: "Success",
         description: "Note saved successfully!",
       });
+      
+      // Call refreshData to ensure data is fresh after saving
+      if (refreshData) {
+        console.log('Refreshing data after successful save');
+        refreshData();
+      }
+      
       if (onNoteSaved) {
         onNoteSaved();
       }
