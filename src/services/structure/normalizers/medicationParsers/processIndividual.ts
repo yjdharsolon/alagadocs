@@ -1,6 +1,7 @@
 
 import { parseComplexMedicationString } from './parseComplexString';
 import { ensureString } from './stringUtils';
+import { processStringMedication } from './processString';
 
 /**
  * Processes an individual medication object or string into a standardized format.
@@ -56,21 +57,5 @@ export const processIndividualMedication = (item: any) => {
     quantity: ensureString(item.quantity || ''),
     refills: ensureString(item.refills || ''),
     specialInstructions: ensureString(item.specialInstructions || '')
-  };
-};
-
-// Helper function that needs to be in this same file
-const processStringMedication = (medicationString: string) => {
-  const { genericName, brandName, strength } = parseComplexMedicationString(medicationString);
-  
-  return { 
-    genericName, 
-    brandName,
-    strength, 
-    dosageForm: '', 
-    sigInstructions: '', 
-    quantity: '', 
-    refills: '', 
-    specialInstructions: '' 
   };
 };
