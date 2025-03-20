@@ -103,7 +103,7 @@ const EditableDocumentView = ({
   return (
     <form onSubmit={handleFormSubmit} className="editable-document-view">
       <DocumentEditorToolbar 
-        onSave={(e) => handleSave(e as React.MouseEvent)}
+        onSave={handleSave}
         viewFormat={viewFormat}
         onFormatChange={toggleFormat}
       />

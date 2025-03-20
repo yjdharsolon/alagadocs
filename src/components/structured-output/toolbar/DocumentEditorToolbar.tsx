@@ -5,7 +5,7 @@ import { Save, List, AlignLeft } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface DocumentEditorToolbarProps {
-  onSave: () => void;
+  onSave: (e?: React.MouseEvent) => void;
   viewFormat: 'paragraph' | 'bullets';
   onFormatChange: (format: 'paragraph' | 'bullets') => void;
 }

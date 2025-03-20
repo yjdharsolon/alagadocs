@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { Pill, Plus, Save } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Save, PlusCircle } from 'lucide-react';
 import MedicationCard from './MedicationCard';
 import { Medication } from './types/prescriptionTypes';
 
@@ -11,7 +11,7 @@ interface MedicationsSectionProps {
   onMedicationChange: (index: number, field: keyof Medication, value: string) => void;
   onAddMedication: () => void;
   onRemoveMedication: (index: number) => void;
-  onSave: () => void;
+  onSave: (e: React.MouseEvent) => void;
 }
 
 const MedicationsSection: React.FC<MedicationsSectionProps> = ({
@@ -23,46 +23,48 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({
 }) => {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center">
-          <Pill className="h-5 w-5 mr-2" />
-          Medications
-        </CardTitle>
-        <div className="flex space-x-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-xl font-bold">Medications</CardTitle>
+        <div className="flex gap-2">
           <Button 
+            type="button"
             variant="outline" 
             size="sm" 
-            onClick={onAddMedication}
-            className="flex items-center"
+            className="h-8 gap-1" 
+            onClick={onSave}
           >
-            <Plus className="h-4 w-4 mr-1" />
-            Add Medication
+            <Save className="h-4 w-4" />
+            <span className="hidden sm:inline">Save Medications</span>
           </Button>
           <Button 
+            type="button"
+            variant="outline" 
             size="sm" 
-            onClick={onSave}
-            className="flex items-center bg-[#33C3F0] hover:bg-[#33C3F0]/90"
+            className="h-8 gap-1" 
+            onClick={onAddMedication}
           >
-            <Save className="h-4 w-4 mr-1" />
-            Save Prescription
+            <PlusCircle className="h-4 w-4" />
+            <span className="hidden sm:inline">Add Medication</span>
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent>
         {medications.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground">
-            No medications. Add a medication using the button above.
+          <div className="text-center py-8 text-gray-500">
+            No medications added. Click "Add Medication" to begin.
           </div>
         ) : (
-          medications.map((med, index) => (
-            <MedicationCard
-              key={index}
-              medication={med}
-              index={index}
-              onFieldChange={onMedicationChange}
-              onRemove={onRemoveMedication}
-            />
-          ))
+          <div className="space-y-4">
+            {medications.map((medication, index) => (
+              <MedicationCard 
+                key={index} 
+                medication={medication} 
+                index={index}
+                onChange={onMedicationChange}
+                onRemove={onRemoveMedication}
+              />
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
