@@ -169,6 +169,7 @@ export type Database = {
         Row: {
           content: Json
           created_at: string
+          format_type: string | null
           id: string
           original_id: string | null
           patient_id: string | null
@@ -179,6 +180,7 @@ export type Database = {
         Insert: {
           content: Json
           created_at?: string
+          format_type?: string | null
           id?: string
           original_id?: string | null
           patient_id?: string | null
@@ -189,6 +191,7 @@ export type Database = {
         Update: {
           content?: Json
           created_at?: string
+          format_type?: string | null
           id?: string
           original_id?: string | null
           patient_id?: string | null

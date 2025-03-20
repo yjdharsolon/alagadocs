@@ -32,9 +32,16 @@ export const usePatientNavigation = (patient: Patient | null, searchQuery?: stri
     });
   };
 
+  const handleEndConsultation = () => {
+    // Navigate to select patient page after consultation ends
+    console.log('Ending consultation, navigating to select-patient page');
+    navigate('/select-patient');
+  };
+
   return {
     handleStartConsultation,
     handleEditPatient,
-    handleBack
+    handleBack,
+    handleEndConsultation
   };
 };

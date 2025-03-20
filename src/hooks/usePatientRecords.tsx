@@ -11,7 +11,8 @@ export const usePatientRecords = (patient: Patient | null, searchQuery?: string,
   const { 
     handleStartConsultation, 
     handleEditPatient, 
-    handleBack 
+    handleBack,
+    handleEndConsultation
   } = usePatientNavigation(patient, searchQuery, searchResults);
   
   useEffect(() => {
@@ -47,6 +48,7 @@ export const usePatientRecords = (patient: Patient | null, searchQuery?: string,
     patientNotes,
     handleStartConsultation,
     handleEditPatient,
-    handleBack
+    handleBack,
+    handleEndConsultation
   };
 };
