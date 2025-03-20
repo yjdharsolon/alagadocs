@@ -39,17 +39,25 @@ const PrescriptionEditor: React.FC<PrescriptionEditorProps> = ({
   });
 
   // Function to save and stay in edit mode
-  const handleSaveOnly = () => {
+  const handleSaveOnly = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent form submission
     handleSave(true); // Save but stay in edit mode
   };
 
   // Function to submit and exit edit mode
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent form submission
+    handleSave(false); // Save and exit edit mode
+  };
+
+  // Handle form submission event
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent default form submission behavior
     handleSave(false); // Save and exit edit mode
   };
 
   return (
-    <div className="prescription-editor space-y-6">
+    <form onSubmit={handleFormSubmit} className="prescription-editor space-y-6">
       <PatientInfoCard
         patientInfo={patientInfo}
         onChange={handlePatientInfoChange}
@@ -77,11 +85,11 @@ const PrescriptionEditor: React.FC<PrescriptionEditorProps> = ({
           />
           <Label htmlFor="stay-in-edit-mode">Stay in edit mode after saving</Label>
         </div>
-        <Button onClick={handleSubmit} className="bg-[#33C3F0] hover:bg-[#33C3F0]/90">
+        <Button type="button" onClick={handleSubmit} className="bg-[#33C3F0] hover:bg-[#33C3F0]/90">
           Submit
         </Button>
       </div>
-    </div>
+    </form>
   );
 };
 

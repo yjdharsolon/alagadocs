@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { MedicalSections } from './types';
 import { toast } from 'sonner';
 import { getDocumentFormat } from './tabs/TabUtils';
@@ -11,11 +11,13 @@ import { formatContent } from './utils/contentFormatter';
 interface EditableDocumentViewProps {
   structuredData: MedicalSections;
   onSave?: (updatedData: MedicalSections, stayInEditMode?: boolean) => void;
+  updateDataDirectly?: (data: MedicalSections) => void;
 }
 
 const EditableDocumentView = ({ 
   structuredData, 
-  onSave 
+  onSave,
+  updateDataDirectly
 }: EditableDocumentViewProps) => {
   const [editableData, setEditableData] = useState<MedicalSections>({...structuredData});
   const [viewFormat, setViewFormat] = useState<'paragraph' | 'bullets'>('paragraph');
@@ -37,6 +39,7 @@ const EditableDocumentView = ({
             onSave(updatedData, stayInEditMode);
           }
         }}
+        updateDataDirectly={updateDataDirectly}
       />
     );
   }
@@ -78,11 +81,18 @@ const EditableDocumentView = ({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault(); // Prevent form submission
+    
     if (onSave) {
       // For standard formats, we don't stay in edit mode after saving
       onSave(editableData, false);
     }
+  };
+
+  const handleFormSubmit = (e: FormEvent) => {
+    e.preventDefault(); // Prevent default form submission
+    handleSave();
   };
 
   // Function to toggle between paragraph and bullets view format
@@ -91,9 +101,9 @@ const EditableDocumentView = ({
   };
 
   return (
-    <div className="editable-document-view">
+    <form onSubmit={handleFormSubmit} className="editable-document-view">
       <DocumentEditorToolbar 
-        onSave={handleSave}
+        onSave={(e) => handleSave(e as React.MouseEvent)}
         viewFormat={viewFormat}
         onFormatChange={toggleFormat}
       />
@@ -123,7 +133,7 @@ const EditableDocumentView = ({
           );
         })}
       </div>
-    </div>
+    </form>
   );
 };
 
