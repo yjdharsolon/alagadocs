@@ -30,6 +30,7 @@ export interface PrescriberInfo {
 export interface UsePrescriptionEditorProps {
   structuredData: MedicalSections;
   onSave: (updatedData: MedicalSections, stayInEditMode?: boolean) => void;
+  updateDataDirectly?: (data: MedicalSections) => void;
 }
 
 export interface PrescriptionEditorState {
