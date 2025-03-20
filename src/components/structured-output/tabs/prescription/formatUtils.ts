@@ -1,9 +1,8 @@
-
 import { MedicalSections } from '../../types';
 
 /**
  * Parse medication text to extract generic name, brand name and strength
- * This function handles formats like "Aspirin (aspilets) 80 mg"
+ * This function handles formats like "Aspirin (aspilets) 80mg"
  */
 export const parseMedicationName = (medicationText: string): { genericName: string, brandName: string, strength: string } => {
   if (!medicationText) return { genericName: 'Not specified', brandName: '', strength: '' };
@@ -53,28 +52,20 @@ export const formatMedications = (medications: any[]) => {
     Refills: Not specified`;
       }
       
-      // Format medication with generic and brand name (if available)
-      let genericName = med.genericName || med.name || 'Not specified'; // For backward compatibility
-      let brandName = med.brandName || '';
-      let strength = med.strength || '';
+      // Log the entire medication object for debugging
+      console.log(`Med ${medNumber} - Complete object:`, JSON.stringify(med, null, 2));
+      console.log(`Med ${medNumber} - Brand name property exists: ${'brandName' in med}`);
+      console.log(`Med ${medNumber} - Brand name value: ${med.brandName}`);
       
-      // If genericName contains a pattern like "Generic (Brand)", parse it
-      if (genericName.includes('(') && genericName.includes(')') && !brandName) {
-        const parsedNames = parseMedicationName(genericName);
-        genericName = parsedNames.genericName;
-        brandName = parsedNames.brandName;
-        // Only use parsed strength if original strength is empty
-        if (!strength && parsedNames.strength) {
-          strength = parsedNames.strength;
-        }
+      // Use the medication fields directly without transformation
+      let displayBrandName = med.brandName || '';
+      if (displayBrandName && displayBrandName !== 'Not specified') {
+        displayBrandName = ` (${displayBrandName})`;
+      } else {
+        displayBrandName = '';
       }
       
-      // Format brand name with parentheses if it exists
-      const formattedBrandName = brandName && brandName.trim() !== '' ? ` (${brandName})` : '';
-      
-      console.log(`Medication ${medNumber} - Generic Name: "${genericName}", Brand Name: "${brandName}", Formatted Brand: "${formattedBrandName}", Strength: "${strength}"`);
-      
-      return `${medNumber}. ${genericName}${formattedBrandName}${strength ? ` ${strength}` : ''} ${med.dosageForm ? `(${med.dosageForm})` : ''}
+      return `${medNumber}. ${med.genericName || 'Not specified'}${displayBrandName}${med.strength ? ` ${med.strength}` : ''} ${med.dosageForm ? `(${med.dosageForm})` : ''}
     Sig: ${med.sigInstructions || 'Not specified'}
     Quantity: ${med.quantity || 'Not specified'}
     Refills: ${med.refills || 'Not specified'}

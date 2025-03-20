@@ -21,18 +21,12 @@ export const validateAndSavePrescription = (
     console.log('[validateAndSavePrescription] Input medications:', JSON.stringify(medications, null, 2));
     console.log('[validateAndSavePrescription] stayInEditMode:', stayInEditMode);
     
-    // Prepare updated data with properly structured medications - preserve ALL fields
+    // Prepare updated data with properly structured medications
+    // IMPORTANT: We're now preserving ALL fields without any transformation
     const updatedData: MedicalSections = {
       ...structuredData,
       patientInformation: patientInfo,
-      medications: medications.map(med => {
-        // Return the complete medication object with all fields preserved
-        return {
-          ...med,
-          // Only add name for backward compatibility without overriding existing data
-          name: med.genericName
-        };
-      }),
+      medications: medications, // Store the array directly without any transformation
       prescriberInformation: prescriberInfo
     };
     

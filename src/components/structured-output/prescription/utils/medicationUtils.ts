@@ -28,10 +28,9 @@ export const handleMedicationChange = (
       ...medications.slice(index + 1)
     ];
     
-    // Debug logging for brand name changes
-    if (field === 'brandName') {
-      console.log(`Updated medication brand name at index ${index}: "${value}"`);
-    }
+    // Debug logging for medication changes
+    console.log(`Updated medication field '${field}' at index ${index} to: "${value}"`);
+    console.log('Medication after update:', JSON.stringify(updatedMedication, null, 2));
     
     return updatedMedications;
   } catch (error) {
@@ -98,7 +97,7 @@ export const removeMedication = (medications: Medication[], index: number): Medi
   }
 };
 
-// Initialize medications array from structured data with proper handling of legacy format
+// Initialize medications array from structured data with proper handling
 export const initializeMedications = (medications: any): Medication[] => {
   try {
     if (!medications) {
@@ -108,27 +107,26 @@ export const initializeMedications = (medications: any): Medication[] => {
     if (Array.isArray(medications)) {
       console.log('Initializing medications from array:', JSON.stringify(medications, null, 2));
       return medications.map((med, index) => {
-        // Properly handle the legacy 'name' field by mapping to genericName
-        const genericName = med.genericName || med.name || '';
+        // For string values, create a basic medication object
+        if (typeof med === 'string') {
+          return {
+            id: index + 1,
+            genericName: med,
+            brandName: '',
+            strength: '',
+            dosageForm: '',
+            sigInstructions: '',
+            quantity: '',
+            refills: '',
+            specialInstructions: ''
+          };
+        }
         
-        // Initialize brandName separately (it might not exist in legacy data)
-        const brandName = med.brandName || '';
-        
-        // Log brand name for debugging
-        console.log(`Initializing medication ${index + 1}:`, {
-          genericName,
-          brandName,
-          originalBrandName: med.brandName, 
-          hasNameProperty: 'name' in med,
-          hasGenericNameProperty: 'genericName' in med,
-          hasBrandNameProperty: 'brandName' in med
-        });
-        
-        // Ensure all fields have at least empty string values to prevent null/undefined errors
+        // For existing medication objects, preserve all fields exactly as they are
         return {
           id: med.id || index + 1,
-          genericName, // Use the mapped genericName
-          brandName,   // Use the explicit brandName field
+          genericName: med.genericName || med.name || '',
+          brandName: med.brandName || '',
           strength: med.strength || '',
           dosageForm: med.dosageForm || '',
           sigInstructions: med.sigInstructions || '',
@@ -140,7 +138,17 @@ export const initializeMedications = (medications: any): Medication[] => {
     } else if (typeof medications === 'string') {
       // Handle case where medications might be a string
       console.warn('Medications provided as string instead of array:', medications);
-      return [];
+      return [{
+        id: 1,
+        genericName: medications,
+        brandName: '',
+        strength: '',
+        dosageForm: '',
+        sigInstructions: '',
+        quantity: '',
+        refills: '',
+        specialInstructions: ''
+      }];
     }
   } catch (error) {
     console.error('Error initializing medications:', error);

@@ -31,8 +31,15 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
       transcriptionId
     });
     
+    // Ensure medications are preserved exactly as provided without normalization
+    const dataToSave = {
+      ...updatedData,
+      // Make sure medications array is preserved as-is without any transformation
+      medications: updatedData.medications
+    };
+    
     // First update the data - this will trigger re-renders with the new data
-    setStructuredData(updatedData);
+    setStructuredData(dataToSave);
     
     // Save to database if we have a transcription ID and user
     if (transcriptionId && user?.id) {
@@ -40,7 +47,7 @@ export const useEditMode = ({ setStructuredData, transcriptionId, patientId }: U
         await saveStructuredNote(
           user.id,
           transcriptionId,
-          updatedData,
+          dataToSave,
           patientId
         );
         setNoteSaved(true);

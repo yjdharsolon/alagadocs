@@ -23,6 +23,7 @@ const MedicationsTab: React.FC<MedicationsTabProps> = ({ medications }) => {
           console.log(`Med ${index + 1} - Generic Name:`, med.genericName);
           console.log(`Med ${index + 1} - Brand name value:`, med.brandName);
           console.log(`Med ${index + 1} - Strength:`, med.strength);
+          console.log(`Med ${index + 1} - Special Instructions:`, med.specialInstructions);
         } else {
           console.log(`Med ${index + 1} - Type:`, typeof med, 'Value:', med);
         }
