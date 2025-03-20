@@ -9,6 +9,10 @@ import AIResponse from './AIResponse';
 import StructuredOutput from './StructuredOutput';
 import { MedicalSections } from '@/components/structured-output/types';
 
+/**
+ * The main AskAI component that allows users to interact with AI
+ * for general questions or structuring medical text.
+ */
 const AskAI = () => {
   const [prompt, setPrompt] = useState('');
   const [response, setResponse] = useState('');
