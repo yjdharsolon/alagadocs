@@ -101,7 +101,6 @@ export const usePrescriptionEditor = ({
   // Hook up medication utility functions to state with improved logging
   const handleMedicationChangeState = (index: number, field: keyof Medication, value: string) => {
     console.log(`[usePrescriptionEditor] Medication change requested - Index: ${index}, Field: ${field}, Value: ${value}`);
-    console.log('[usePrescriptionEditor] Current medications before change:', JSON.stringify(medications, null, 2));
     
     const updatedMedications = handleMedicationChange(medications, index, field, value);
     console.log('[usePrescriptionEditor] Setting medications state with:', JSON.stringify(updatedMedications, null, 2));
@@ -112,14 +111,12 @@ export const usePrescriptionEditor = ({
   const handleAddMedication = () => {
     console.log('[usePrescriptionEditor] Adding new medication');
     const updatedMedications = addMedication(medications);
-    console.log('[usePrescriptionEditor] Setting medications state after add:', JSON.stringify(updatedMedications, null, 2));
     setMedications(updatedMedications);
   };
   
   const handleRemoveMedication = (index: number) => {
     console.log(`[usePrescriptionEditor] Removing medication at index ${index}`);
     const updatedMedications = removeMedication(medications, index);
-    console.log('[usePrescriptionEditor] Setting medications state after remove:', JSON.stringify(updatedMedications, null, 2));
     setMedications(updatedMedications);
   };
   
@@ -144,29 +141,24 @@ export const usePrescriptionEditor = ({
     
     // Use forceStayInEditMode if provided, otherwise use the stayInEditMode state
     const shouldStayInEditMode = forceStayInEditMode !== undefined ? forceStayInEditMode : stayInEditMode;
-    console.log('[usePrescriptionEditor] shouldStayInEditMode calculated as:', shouldStayInEditMode);
     
-    // Prepare updated data
-    const updatedData: MedicalSections = {
-      ...structuredData,
-      patientInformation: patientInfo,
-      medications: medications, 
-      prescriberInformation: prescriberInfo
-    };
-    
-    console.log('[usePrescriptionEditor] Prepared updatedData:', JSON.stringify({
-      hasPatientInfo: !!updatedData.patientInformation,
-      medicationsCount: Array.isArray(updatedData.medications) ? updatedData.medications.length : 'not array',
-      hasPrescriberInfo: !!updatedData.prescriberInformation
-    }));
-    
-    // ALWAYS use direct update regardless of stayInEditMode
-    // This is critical to ensure UI always shows latest data
+    // CRITICAL: Always update UI directly first before any other operations
     if (updateDataDirectly) {
       console.log('[usePrescriptionEditor] Directly updating UI with prescription data');
-      updateDataDirectly(updatedData);
+      
+      // Prepare a complete data object with everything needed
+      const directUpdateData: MedicalSections = {
+        ...structuredData,
+        patientInformation: patientInfo,
+        medications: JSON.parse(JSON.stringify(medications)), // Deep clone to avoid reference issues
+        prescriberInformation: prescriberInfo
+      };
+      
+      // Update UI state immediately
+      updateDataDirectly(directUpdateData);
     }
     
+    // Now handle the regular save flow, which may involve database updates
     validateAndSavePrescription(
       structuredData,
       patientInfo,

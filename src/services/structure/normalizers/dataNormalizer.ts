@@ -59,9 +59,13 @@ export const normalizeStructuredData = (data: any, role: string): MedicalSection
   
   console.log('Detected format for normalization:', format);
   
-  // Special handling for prescription data to ensure we don't lose medication arrays
+  // CRITICAL: Special handling for prescription data - ALWAYS preserve medication arrays exactly as they are
   if (format === 'prescription' && hasMedicationArray) {
-    console.log('Special handling for prescription medications array');
+    console.log('Special handling for prescription medications array - preserving original array');
+    
+    // Create a deep clone of the medication array to avoid reference issues
+    const medicationsClone = JSON.parse(JSON.stringify(data.medications));
+    
     return {
       patientInformation: normalizeObject(data.patientInformation, {
         name: '',
@@ -69,7 +73,7 @@ export const normalizeStructuredData = (data: any, role: string): MedicalSection
         age: '',
         date: '',
       }),
-      medications: data.medications, // Preserve the complete medications array
+      medications: medicationsClone, // Use the cloned array to preserve all properties
       prescriberInformation: normalizeObject(data.prescriberInformation, {
         name: '',
         licenseNumber: '',

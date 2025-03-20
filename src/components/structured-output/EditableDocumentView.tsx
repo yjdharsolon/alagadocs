@@ -1,4 +1,3 @@
-
 import React, { useState, FormEvent, useEffect } from 'react';
 import { MedicalSections } from './types';
 import { toast } from 'sonner';
@@ -44,7 +43,6 @@ const EditableDocumentView = ({
   
   // Detect document format
   const documentFormat = getDocumentFormat(structuredData);
-  console.log('[EditableDocumentView] Detected document format:', documentFormat);
   
   // For prescription format, use the specialized editor
   if (documentFormat === 'prescription') {
@@ -54,18 +52,13 @@ const EditableDocumentView = ({
         structuredData={structuredData}
         onSave={(updatedData, stayInEditMode = false) => {
           console.log('[EditableDocumentView] PrescriptionEditor onSave called with stayInEditMode:', stayInEditMode);
-          console.log('[EditableDocumentView] Updated data medications:', 
-            updatedData.medications ? 
-              (Array.isArray(updatedData.medications) ? 
-                JSON.stringify(updatedData.medications, null, 2) : 
-                'not array') : 
-              'none');
           
-          // Always update the UI directly regardless of onSave availability
+          // CRITICAL: Always update UI directly first
           if (updateDataDirectly) {
             console.log('[EditableDocumentView] Directly updating UI with prescription data');
-            // Use a deep clone to avoid reference issues
-            updateDataDirectly(JSON.parse(JSON.stringify(updatedData)));
+            // Deep clone to avoid reference issues
+            const safeData = JSON.parse(JSON.stringify(updatedData));
+            updateDataDirectly(safeData);
           }
           
           if (onSave) {
@@ -128,11 +121,12 @@ const EditableDocumentView = ({
         'none'
     }));
     
-    // Always update UI directly first
+    // CRITICAL: Always update UI directly first
     if (updateDataDirectly) {
       console.log('[EditableDocumentView] Directly updating UI');
       // Use deep clone to avoid reference issues
-      updateDataDirectly(JSON.parse(JSON.stringify(editableData)));
+      const safeData = JSON.parse(JSON.stringify(editableData));
+      updateDataDirectly(safeData);
     }
     
     if (onSave) {
