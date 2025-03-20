@@ -2,11 +2,11 @@
 import { MedicalSections } from '../../types';
 
 /**
- * Parse medication text to extract generic name and brand name
+ * Parse medication text to extract generic name, brand name and strength
  * This function handles formats like "Aspirin (aspilets) 80 mg"
  */
-export const parseMedicationName = (medicationText: string): { genericName: string, brandName: string } => {
-  if (!medicationText) return { genericName: 'Not specified', brandName: '' };
+export const parseMedicationName = (medicationText: string): { genericName: string, brandName: string, strength: string } => {
+  if (!medicationText) return { genericName: 'Not specified', brandName: '', strength: '' };
   
   try {
     // Regular expression to match pattern: GenericName (BrandName) Strength
@@ -16,16 +16,17 @@ export const parseMedicationName = (medicationText: string): { genericName: stri
     if (matches) {
       const genericName = matches[1]?.trim() || 'Not specified';
       const brandName = matches[2]?.trim() || '';
+      const strength = matches[3]?.trim() || '';
       
-      console.log(`Parsed medication: "${medicationText}" -> Generic: "${genericName}", Brand: "${brandName}"`);
-      return { genericName, brandName };
+      console.log(`Parsed medication: "${medicationText}" -> Generic: "${genericName}", Brand: "${brandName}", Strength: "${strength}"`);
+      return { genericName, brandName, strength };
     }
     
     // If no match with pattern, return the whole string as generic name
-    return { genericName: medicationText.trim(), brandName: '' };
+    return { genericName: medicationText.trim(), brandName: '', strength: '' };
   } catch (error) {
     console.error('Error parsing medication name:', error);
-    return { genericName: medicationText, brandName: '' };
+    return { genericName: medicationText, brandName: '', strength: '' };
   }
 };
 
@@ -43,10 +44,10 @@ export const formatMedications = (medications: any[]) => {
       
       // Handle case where medication might be a simple string from transcription
       if (typeof med === 'string') {
-        const { genericName, brandName } = parseMedicationName(med);
-        console.log(`Medication string "${med}" parsed as generic: "${genericName}", brand: "${brandName}"`);
+        const { genericName, brandName, strength } = parseMedicationName(med);
+        console.log(`Medication string "${med}" parsed as generic: "${genericName}", brand: "${brandName}", strength: "${strength}"`);
         
-        return `${medNumber}. ${genericName}${brandName ? ` (${brandName})` : ''} 
+        return `${medNumber}. ${genericName}${brandName ? ` (${brandName})` : ''}${strength ? ` ${strength}` : ''} 
     Sig: Not specified
     Quantity: Not specified
     Refills: Not specified`;
@@ -55,20 +56,25 @@ export const formatMedications = (medications: any[]) => {
       // Format medication with generic and brand name (if available)
       let genericName = med.genericName || med.name || 'Not specified'; // For backward compatibility
       let brandName = med.brandName || '';
+      let strength = med.strength || '';
       
       // If genericName contains a pattern like "Generic (Brand)", parse it
       if (genericName.includes('(') && genericName.includes(')') && !brandName) {
         const parsedNames = parseMedicationName(genericName);
         genericName = parsedNames.genericName;
         brandName = parsedNames.brandName;
+        // Only use parsed strength if original strength is empty
+        if (!strength && parsedNames.strength) {
+          strength = parsedNames.strength;
+        }
       }
       
       // Format brand name with parentheses if it exists
       const formattedBrandName = brandName && brandName.trim() !== '' ? ` (${brandName})` : '';
       
-      console.log(`Medication ${medNumber} - Generic Name: "${genericName}", Brand Name: "${brandName}", Formatted Brand: "${formattedBrandName}"`);
+      console.log(`Medication ${medNumber} - Generic Name: "${genericName}", Brand Name: "${brandName}", Formatted Brand: "${formattedBrandName}", Strength: "${strength}"`);
       
-      return `${medNumber}. ${genericName}${formattedBrandName} ${med.strength || ''} (${med.dosageForm || 'Not specified'})
+      return `${medNumber}. ${genericName}${formattedBrandName}${strength ? ` ${strength}` : ''} ${med.dosageForm ? `(${med.dosageForm})` : ''}
     Sig: ${med.sigInstructions || 'Not specified'}
     Quantity: ${med.quantity || 'Not specified'}
     Refills: ${med.refills || 'Not specified'}

@@ -1,4 +1,3 @@
-
 import { MedicalSections } from '@/components/structured-output/types';
 import { parseMedicationName } from '@/components/structured-output/tabs/prescription/formatUtils';
 
@@ -121,40 +120,19 @@ export const normalizeArray = (arr: any): any[] => {
     try {
       const parsed = JSON.parse(arr);
       if (Array.isArray(parsed)) {
-        return parsed;
+        return parsed.map(processIndividualMedication);
       }
       // Check if it's a medication string, like "Aspirin (aspilets) 80mg"
       if (typeof parsed === 'string' && (parsed.includes('(') || !parsed.startsWith('{'))) {
-        const { genericName, brandName } = parseMedicationName(parsed);
-        return [{ 
-          genericName, 
-          brandName, 
-          strength: '', 
-          dosageForm: '', 
-          sigInstructions: '', 
-          quantity: '', 
-          refills: '', 
-          specialInstructions: '' 
-        }];
+        return [processStringMedication(parsed)];
       }
       
       // If parsed but not an array, wrap in array
-      return [parsed];
+      return [processIndividualMedication(parsed)];
     } catch (e) {
       // Check if it's a medication string that needs parsing
       if (arr.includes('(')) {
-        const { genericName, brandName } = parseMedicationName(arr);
-        console.log(`Parsed medication string: "${arr}" -> Generic: "${genericName}", Brand: "${brandName}"`);
-        return [{ 
-          genericName, 
-          brandName,
-          strength: '', 
-          dosageForm: '', 
-          sigInstructions: '', 
-          quantity: '', 
-          refills: '', 
-          specialInstructions: '' 
-        }];
+        return [processStringMedication(arr)];
       }
       
       // If can't parse, return as a single medication with name set to the string
@@ -164,100 +142,105 @@ export const normalizeArray = (arr: any): any[] => {
   
   // If already an array, normalize each item
   if (Array.isArray(arr)) {
-    return arr.map(item => {
-      if (typeof item === 'string') {
-        // Parse medication strings in "GenericName (BrandName) Strength" format
-        if (item.includes('(')) {
-          const { genericName, brandName } = parseMedicationName(item);
-          return { 
-            genericName, 
-            brandName, 
-            strength: '', 
-            dosageForm: '', 
-            sigInstructions: '', 
-            quantity: '', 
-            refills: '', 
-            specialInstructions: '' 
-          };
-        }
-        return { 
-          genericName: item, 
-          brandName: '', 
-          strength: '', 
-          dosageForm: '', 
-          sigInstructions: '', 
-          quantity: '', 
-          refills: '', 
-          specialInstructions: '' 
-        };
-      }
-      
-      // Handle objects that might have genericName and name fields
-      const genericNameValue = item.genericName || item.name || '';
-      let brandNameValue = item.brandName || '';
-      
-      // If genericName contains a format like "Generic (Brand)", parse it
-      if (genericNameValue.includes('(') && genericNameValue.includes(')') && !brandNameValue) {
-        const { genericName, brandName } = parseMedicationName(genericNameValue);
-        return {
-          genericName,
-          brandName,
-          strength: ensureString(item.strength || ''),
-          dosageForm: ensureString(item.dosageForm || ''),
-          sigInstructions: ensureString(item.sigInstructions || ''),
-          quantity: ensureString(item.quantity || ''),
-          refills: ensureString(item.refills || ''),
-          specialInstructions: ensureString(item.specialInstructions || '')
-        };
-      }
-      
-      return {
-        genericName: genericNameValue,
-        brandName: brandNameValue,
-        strength: ensureString(item.strength || ''),
-        dosageForm: ensureString(item.dosageForm || ''),
-        sigInstructions: ensureString(item.sigInstructions || ''),
-        quantity: ensureString(item.quantity || ''),
-        refills: ensureString(item.refills || ''),
-        specialInstructions: ensureString(item.specialInstructions || '')
-      };
-    });
+    return arr.map(processIndividualMedication);
   }
   
   // If it's an object but not an array, wrap in array
   if (typeof arr === 'object') {
-    const genericNameValue = arr.genericName || arr.name || '';
-    let brandNameValue = arr.brandName || '';
-    
-    // If genericName contains "(BrandName)", extract it
-    if (genericNameValue.includes('(') && genericNameValue.includes(')') && !brandNameValue) {
-      const { genericName, brandName } = parseMedicationName(genericNameValue);
-      return [{
-        genericName,
-        brandName,
-        strength: ensureString(arr.strength || ''),
-        dosageForm: ensureString(arr.dosageForm || ''),
-        sigInstructions: ensureString(arr.sigInstructions || ''),
-        quantity: ensureString(arr.quantity || ''),
-        refills: ensureString(arr.refills || ''),
-        specialInstructions: ensureString(arr.specialInstructions || '')
-      }];
-    }
-    
-    return [{
-      genericName: genericNameValue,
-      brandName: brandNameValue,
-      strength: ensureString(arr.strength || ''),
-      dosageForm: ensureString(arr.dosageForm || ''),
-      sigInstructions: ensureString(arr.sigInstructions || ''),
-      quantity: ensureString(arr.quantity || ''),
-      refills: ensureString(arr.refills || ''),
-      specialInstructions: ensureString(arr.specialInstructions || '')
-    }];
+    return [processIndividualMedication(arr)];
   }
   
   // Default to empty array
   return [];
+};
+
+/**
+ * Process a string medication format like "Aspirin (aspilets) 80mg"
+ */
+const processStringMedication = (medicationString: string) => {
+  const { genericName, brandName, strength } = parseComplexMedicationString(medicationString);
+  console.log(`Processed string medication: "${medicationString}" -> Generic: "${genericName}", Brand: "${brandName}", Strength: "${strength}"`);
+  
+  return { 
+    genericName, 
+    brandName,
+    strength, 
+    dosageForm: '', 
+    sigInstructions: '', 
+    quantity: '', 
+    refills: '', 
+    specialInstructions: '' 
+  };
+};
+
+/**
+ * Enhanced parsing for medication strings that include brand names in parentheses and strength
+ */
+const parseComplexMedicationString = (text: string): { genericName: string, brandName: string, strength: string } => {
+  // Regular expression to match "GenericName (BrandName) Strength"
+  // This captures three groups: generic name, brand name (optional), and strength/dosage (optional)
+  const regex = /^([^(]+)\s*(?:\(([^)]+)\))?\s*(.*)$/;
+  const matches = text.match(regex);
+  
+  if (matches) {
+    const genericName = matches[1]?.trim() || '';
+    const brandName = matches[2]?.trim() || '';
+    const strength = matches[3]?.trim() || '';
+    
+    console.log(`Complex parsing: "${text}" -> Generic: "${genericName}", Brand: "${brandName}", Strength: "${strength}"`);
+    return { genericName, brandName, strength };
+  }
+  
+  return { genericName: text, brandName: '', strength: '' };
+};
+
+/**
+ * Process an individual medication object or string
+ */
+const processIndividualMedication = (item: any) => {
+  if (typeof item === 'string') {
+    // Parse medication strings in "GenericName (BrandName) Strength" format
+    if (item.includes('(')) {
+      return processStringMedication(item);
+    }
+    return { 
+      genericName: item, 
+      brandName: '', 
+      strength: '', 
+      dosageForm: '', 
+      sigInstructions: '', 
+      quantity: '', 
+      refills: '', 
+      specialInstructions: '' 
+    };
+  }
+  
+  // Handle objects that might have genericName and name fields
+  let genericNameValue = item.genericName || item.name || '';
+  let brandNameValue = item.brandName || '';
+  let strengthValue = item.strength || '';
+  
+  // If genericName contains a format like "Generic (Brand)", parse it
+  if (genericNameValue && genericNameValue.includes('(') && genericNameValue.includes(')') && !brandNameValue) {
+    const { genericName, brandName, strength } = parseComplexMedicationString(genericNameValue);
+    genericNameValue = genericName;
+    brandNameValue = brandName;
+    // Only use parsed strength if the original strength is empty
+    if (!strengthValue && strength) {
+      strengthValue = strength;
+    }
+  }
+  
+  return {
+    genericName: genericNameValue,
+    brandName: brandNameValue,
+    strength: ensureString(strengthValue),
+    dosageForm: ensureString(item.dosageForm || ''),
+    sigInstructions: ensureString(item.sigInstructions || ''),
+    quantity: ensureString(item.quantity || ''),
+    refills: ensureString(item.refills || ''),
+    specialInstructions: ensureString(item.specialInstructions || '')
+  };
 };
 
 /**

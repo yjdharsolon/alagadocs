@@ -25,7 +25,10 @@ Your task is to ONLY extract medication information from the provided transcript
 Format the provided transcription and extract ONLY medication details with these requirements:
 
 For EACH medication mentioned (there might be multiple medications):
-- Extract Medication Name and Strength (include both generic and brands available in the Philippines)
+- IMPORTANT: Always separate Generic Name and Brand Name into separate fields. If a medication is mentioned as "Generic (Brand)", extract them separately.
+- Extract Medication Name (generic name only)
+- Extract Brand Name if mentioned (usually in parentheses)
+- Extract Strength (dosage amount like "80 mg", "500 mg")
 - Identify Dosage Form (tablets, capsules, etc.)
 - Convert instructions into clear medical terminology (Sig)
 - Extract Quantity information
@@ -36,7 +39,8 @@ IMPORTANT: You MUST return the structured information in this exact JSON format:
 {
   "medications": [
     {
-      "name": "string",
+      "genericName": "string", 
+      "brandName": "string",
       "strength": "string",
       "dosageForm": "string",
       "sigInstructions": "string",
@@ -49,6 +53,8 @@ IMPORTANT: You MUST return the structured information in this exact JSON format:
 
 - Each medication should be a separate object in the medications array
 - If multiple medications are mentioned, list each one as a separate object
+- ALWAYS separate generic name and brand name into their own fields - do not combine them
+- For medications mentioned like "Aspirin (Aspilets) 80 mg", put "Aspirin" in genericName, "Aspilets" in brandName, and "80 mg" in strength
 - Extract all relevant medication information from the transcription
 - If certain medication details are not present, use "Not specified" as the value
 - Convert patient descriptions into proper medical terminology
