@@ -52,17 +52,13 @@ export const formatMedications = (medications: any[]) => {
     Refills: Not specified`;
       }
       
-      // Log the entire medication object for debugging
+      // When dealing with medication objects, always explicitly check for brandName presence
       console.log(`Med ${medNumber} - Complete object:`, JSON.stringify(med, null, 2));
-      console.log(`Med ${medNumber} - Brand name property exists: ${'brandName' in med}`);
-      console.log(`Med ${medNumber} - Brand name value: ${med.brandName}`);
       
-      // Use the medication fields directly without transformation
-      let displayBrandName = med.brandName || '';
-      if (displayBrandName && displayBrandName !== 'Not specified') {
-        displayBrandName = ` (${displayBrandName})`;
-      } else {
-        displayBrandName = '';
+      // Brand name handling with guard against undefined
+      let displayBrandName = '';
+      if (med.brandName !== undefined && med.brandName !== null && med.brandName !== '') {
+        displayBrandName = ` (${med.brandName})`;
       }
       
       return `${medNumber}. ${med.genericName || 'Not specified'}${displayBrandName}${med.strength ? ` ${med.strength}` : ''} ${med.dosageForm ? `(${med.dosageForm})` : ''}

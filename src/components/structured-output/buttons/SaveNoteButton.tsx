@@ -18,7 +18,7 @@ interface SaveNoteButtonProps {
     formatType: string;
     structuredData: MedicalSections;
   }>;
-  refreshData?: () => void; // Added refreshData prop to interface
+  refreshData?: () => void;
 }
 
 export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
@@ -29,18 +29,33 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
   transcriptionId,
   onNoteSaved,
   selectedFormats = [],
-  refreshData // Destructure the new prop
+  refreshData
 }) => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
+  // Log what we're about to save to help with debugging
+  const logSaveData = () => {
+    console.log('Saving note with sections:', sections);
+    if (sections.medications) {
+      console.log('Medications data being saved:', 
+        Array.isArray(sections.medications) 
+          ? JSON.stringify(sections.medications, null, 2) 
+          : sections.medications
+      );
+    }
+  };
+
   const mutation = useMutation({
-    mutationFn: () => saveStructuredNote(
-      user.id,
-      transcriptionId,
-      sections,
-      patientId
-    ),
+    mutationFn: () => {
+      logSaveData();
+      return saveStructuredNote(
+        user.id,
+        transcriptionId,
+        sections,
+        patientId
+      );
+    },
     onSuccess: () => {
       setIsSaving(false);
       toast({
@@ -81,7 +96,7 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
       variant="outline"
       className="bg-[#33C3F0] hover:bg-[#33C3F0]/90 text-white flex items-center gap-2"
       onClick={handleSaveNote}
-      disabled={isSaving || (!hasSelectedFormats && selectedFormats.length > 0)}
+      disabled={isSaving || (!hasSelectedFormats && selectedFormats.length === 0)}
     >
       <Save className="h-4 w-4" />
       {isSaving ? 'Saving...' : 'Save Note'}
