@@ -2,6 +2,14 @@
 import { normalizeStructuredData } from './dataNormalizer';
 import { ensureString, normalizeObject, normalizeArray } from './typeNormalizers';
 import { createFallbackStructure } from './fallbackCreator';
+import { detectFormat } from './formatDetector';
+import { getEmptyStructure } from './emptyStructures';
+import { 
+  normalizeSOAPFormat, 
+  normalizeConsultationFormat, 
+  normalizePrescriptionFormat, 
+  normalizeStandardFormat 
+} from './formatNormalizers';
 
 /**
  * This index file exports all normalizer utilities from their respective modules.
@@ -13,5 +21,11 @@ export {
   ensureString,
   normalizeObject,
   normalizeArray,
-  createFallbackStructure
+  createFallbackStructure,
+  detectFormat,
+  getEmptyStructure,
+  normalizeSOAPFormat,
+  normalizeConsultationFormat,
+  normalizePrescriptionFormat,
+  normalizeStandardFormat
 };
