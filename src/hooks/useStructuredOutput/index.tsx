@@ -94,13 +94,10 @@ export const useStructuredOutputPage = ({
     setNoteSaved(true);
   }, []);
   
-  // Handle end consult
+  // Handle end consult - FIXED THIS FUNCTION
   const handleEndConsult = useCallback(() => {
-    console.log('[useStructuredOutputPage] handleEndConsult called');
-    
-    // Add cache buster to dashboard URL to force a refresh
-    const dashboardUrl = addCacheBuster('/dashboard');
-    navigate(dashboardUrl);
+    console.log('[useStructuredOutputPage] handleEndConsult called, navigating to /select-patient');
+    navigate('/select-patient');
   }, [navigate]);
   
   return {
