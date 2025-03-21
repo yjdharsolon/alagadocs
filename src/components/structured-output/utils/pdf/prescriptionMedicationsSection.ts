@@ -15,10 +15,9 @@ export const addMedicationsSection = (
   let yPosition = startY;
   
   // Add Rx symbol
-  const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.text("Rx", pageWidth / 2, yPosition, { align: 'center' });
+  doc.text("Rx", margin, yPosition);
   
   yPosition += 12;
   
@@ -62,64 +61,53 @@ export const addMedicationsSection = (
             }
           }
         } else if (med && typeof med === 'object') {
-          // If medication is an object with structured data
-          // Handle both new format (genericName + brandName) and old format (name)
+          // If medication is a structured object
           const genericName = med.genericName || med.name || '';
           const brandName = med.brandName ? ` (${med.brandName})` : '';
-          const medStrength = med.strength || '';
-          const medDosageForm = med.dosageForm || '';
-          const medQuantity = med.quantity || '';
-          const medRefills = med.refills || '';
-          const medSigInstructions = med.sigInstructions || '';
-          const medSpecialInstructions = med.specialInstructions || '';
+          const strength = med.strength || '';
+          const dosageForm = med.dosageForm || '';
+          const quantity = med.quantity || '';
+          const refills = med.refills || '';
+          const sigInstructions = med.sigInstructions || '';
+          const specialInstructions = med.specialInstructions || '';
           
-          // Medication name, strength, and form
-          const medText = `${index + 1}. ${genericName}${brandName} ${medStrength} ${medDosageForm}`;
-          const qtyText = `Qty: ${medQuantity}`;
+          // Format the medication line
+          const medicationText = `${index + 1}. ${genericName}${brandName} ${strength} ${dosageForm}`;
+          doc.text(medicationText, margin, yPosition);
           
-          doc.text(medText, margin, yPosition);
-          
-          // Right-align quantity
-          const qtyX = pageWidth - margin - doc.getTextWidth(qtyText);
-          doc.text(qtyText, qtyX, yPosition);
+          // Add quantity on the same line but right-aligned
+          if (quantity) {
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const quantityText = `Qty: ${quantity}`;
+            const quantityWidth = doc.getTextWidth(quantityText);
+            doc.text(quantityText, pageWidth - margin - quantityWidth, yPosition);
+          }
           
           yPosition += 5;
           
-          // Add refills information
-          if (medRefills) {
-            const refillsText = `Refills: ${medRefills}`;
-            doc.text(refillsText, margin + 10, yPosition);
+          // Add refills if available
+          if (refills) {
+            doc.text(`Refills: ${refills}`, margin + 10, yPosition);
             yPosition += 5;
           }
           
-          // Instructions
-          if (medSigInstructions) {
-            const sigLabel = "Sig: ";
-            doc.text(sigLabel, margin + 10, yPosition);
-            
-            const sigLines = doc.splitTextToSize(medSigInstructions, contentWidth - 25);
-            doc.text(sigLines, margin + 25, yPosition);
-            yPosition += sigLines.length * 5;
+          // Add sig instructions if available
+          if (sigInstructions) {
+            doc.text(`Sig: ${sigInstructions}`, margin + 10, yPosition);
+            yPosition += 5;
           }
           
-          // Special instructions if any
-          if (medSpecialInstructions) {
-            const specialLabel = "Special Instructions: ";
-            doc.text(specialLabel, margin + 10, yPosition);
-            
-            const specialLines = doc.splitTextToSize(medSpecialInstructions, contentWidth - 45);
-            doc.text(specialLines, margin + 45, yPosition);
-            yPosition += specialLines.length * 5;
+          // Add special instructions if available
+          if (specialInstructions) {
+            doc.text(`Note: ${specialInstructions}`, margin + 10, yPosition);
+            yPosition += 5;
           }
         }
       } catch (error) {
-        console.error('Error processing medication for PDF:', error);
-        
-        // Fallback for any parsing errors
-        const medStr = ensureString(med);
-        const medLines = doc.splitTextToSize(`${index + 1}. ${medStr}`, contentWidth);
-        doc.text(medLines, margin, yPosition);
-        yPosition += medLines.length * 5;
+        console.error('Error processing medication:', error);
+        const medText = typeof med === 'object' ? JSON.stringify(med) : String(med);
+        doc.text(`${index + 1}. ${medText}`, margin, yPosition);
+        yPosition += 5;
       }
       
       // Add spacing between medications

@@ -11,19 +11,25 @@ interface PrescriptionDocumentProps {
 }
 
 const PrescriptionDocument: React.FC<PrescriptionDocumentProps> = ({ structuredData }) => {
-  // Get doctor profile information
+  // Get doctor profile information for the PDF header and footer
   const { profileData } = useProfileFields();
+  
+  // Log data for debugging
+  console.log('PrescriptionDocument rendering with profile data:', profileData);
   
   // Extract patient name from the patient information object
   const patientName = typeof structuredData.patientInformation === 'object' 
     ? structuredData.patientInformation?.name || null
-    : null;
+    : structuredData.patientInformation || null;
+  
+  // Format data for export
+  const formattedData = formatPrescriptionForExport(structuredData);
   
   return (
     <div>
       <div className="flex justify-end mb-4">
         <ExportButton 
-          sections={structuredData} 
+          sections={formattedData} 
           patientName={patientName} 
           profileData={profileData}
           isPrescription={true}

@@ -23,20 +23,34 @@ export const exportPrescriptionAsPDF = (
   const { pageWidth, margin, contentWidth } = getPageLayout(doc);
   const pageHeight = doc.internal.pageSize.getHeight();
   
-  // ===== HEADER SECTION (Doctor & Clinic Info) =====
-  let yPosition = addHeaderSection(doc, profileData, margin, contentWidth);
-  
-  // ===== PATIENT INFORMATION =====
-  doc.setFontSize(11);
-  yPosition = addPatientInfoSection(doc, sections.patientInformation, margin, patientName, yPosition);
-  
-  // ===== MEDICATIONS SECTION =====
-  yPosition = addMedicationsSection(doc, sections.medications, margin, contentWidth, yPosition);
-  
-  // ===== PRESCRIBER'S DETAILS (FOOTER) =====
-  addPrescriberSection(doc, sections.prescriberInformation, profileData, margin, contentWidth, pageHeight);
-  
-  // Save the PDF
-  const fileName = createPdfFilename('prescription', patientName);
-  doc.save(fileName);
+  try {
+    // Log data for debugging
+    console.log('Exporting prescription with sections:', sections);
+    
+    // ===== HEADER SECTION (Doctor & Clinic Info) =====
+    let yPosition = addHeaderSection(doc, profileData, margin, contentWidth);
+    
+    // ===== PATIENT INFORMATION =====
+    yPosition = addPatientInfoSection(doc, sections.patientInformation, margin, patientName, yPosition);
+    
+    // ===== MEDICATIONS SECTION =====
+    yPosition = addMedicationsSection(doc, sections.medications, margin, contentWidth, yPosition);
+    
+    // ===== PRESCRIBER'S DETAILS (FOOTER) =====
+    addPrescriberSection(doc, sections.prescriberInformation, profileData, margin, contentWidth, pageHeight);
+    
+    // Save the PDF
+    const fileName = createPdfFilename('prescription', patientName);
+    doc.save(fileName);
+  } catch (error) {
+    console.error('Error generating prescription PDF:', error);
+    // Create a simple fallback PDF with error information
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('Error generating prescription PDF', margin, margin);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Please try again or contact support. Error: ${error}`, margin, margin + 10);
+    doc.save('prescription_error.pdf');
+  }
 };
