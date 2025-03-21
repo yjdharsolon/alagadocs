@@ -30,9 +30,9 @@ export const PatientRecordsTable: React.FC<PatientRecordsTableProps> = ({
     // Map format types to display names
     const formatDisplayNames: Record<string, string> = {
       'standard': 'Standard',
+      'history': 'H&P',
       'soap': 'SOAP Note',
       'consultation': 'Consultation',
-      'history': 'H&P',
       'prescription': 'Prescription'
     };
     
@@ -79,6 +79,14 @@ export const PatientRecordsTable: React.FC<PatientRecordsTableProps> = ({
       return 'Error displaying content';
     }
   };
+
+  // Log to see actual format types in the data
+  React.useEffect(() => {
+    console.log('Patient notes:', patientNotes);
+    if (patientNotes.length > 0) {
+      console.log('Format types in notes:', patientNotes.map(note => note.format_type));
+    }
+  }, [patientNotes]);
 
   return (
     <Table>

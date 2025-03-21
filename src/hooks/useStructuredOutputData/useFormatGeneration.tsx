@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { MedicalSections } from '@/components/structured-output/types';
 import { structureText } from '@/services/structure/structureService';
 import { toast } from 'sonner';
+import { detectFormat } from '@/services/structure/normalizers/formatDetector';
 
 interface UseFormatGenerationProps {
   transcriptionData: any;
@@ -95,6 +96,7 @@ export const useFormatGeneration = ({
           );
           
           if (structuredResult) {
+            // Ensure we're using the correct format type
             console.log(`${formatType.name} format result:`, structuredResult);
             
             // Format the text representation
@@ -108,13 +110,13 @@ export const useFormatGeneration = ({
               .join('\n\n');
               
             formattedResults.push({
-              formatType: formatType.id,
+              formatType: formatType.id, // Use the exact format type
               formattedText,
               structuredData: structuredResult,
               selected: formatType.id === 'history' // Select history format by default
             });
             
-            console.log(`Added ${formatType.name} format to results`);
+            console.log(`Added ${formatType.name} format to results with type: ${formatType.id}`);
           } else {
             console.error(`No structured result returned for ${formatType.name} format`);
           }

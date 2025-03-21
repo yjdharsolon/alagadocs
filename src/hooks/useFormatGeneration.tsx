@@ -1,31 +1,12 @@
+
 import { useState } from 'react';
 import { MedicalSections } from '@/components/structured-output/types';
-import { structureText } from '@/services/structure';
+import { structureText } from '@/services/structure/structureService';
 import { toast } from 'sonner';
+import { detectFormat } from '@/services/structure/normalizers/formatDetector';
 
-interface UseFormatGenerationProps {
-  transcriptionData: any;
-  processingText: boolean;
-  setProcessingText: (value: boolean) => void;
-  structuredData: MedicalSections | null;
-  setStructuredData: (data: MedicalSections) => void;
-  setError: (error: string | null) => void;
-  loading: boolean;
-  noteId: string | null;
-  setLoading: (loading: boolean) => void;
-}
-
-export const useFormatGeneration = ({
-  transcriptionData,
-  processingText,
-  setProcessingText,
-  structuredData,
-  setStructuredData,
-  setError,
-  loading,
-  noteId,
-  setLoading
-}: UseFormatGenerationProps) => {
+export const useFormatGeneration = () => {
+  const [isProcessing, setIsProcessing] = useState(false);
   const [formattedVersions, setFormattedVersions] = useState<Array<{
     formatType: string;
     formattedText: string;
@@ -33,45 +14,13 @@ export const useFormatGeneration = ({
     selected: boolean;
   }>>([]);
 
-  // Process transcription data
-  const processTranscription = async () => {
-    if (!transcriptionData || !transcriptionData.text) {
-      setError('Missing transcription text');
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      setProcessingText(true);
-      console.log('Processing transcription:', transcriptionData.text);
-      
-      const structuredResult = await structureText(transcriptionData.text);
-      
-      if (structuredResult) {
-        console.log('Structured result received:', structuredResult);
-        setStructuredData(structuredResult);
-        toast.success('Medical notes structured successfully');
-      } else {
-        throw new Error('No structured data returned');
-      }
-    } catch (error: any) {
-      console.error('Error processing transcription:', error);
-      setError(`Failed to structure the transcription: ${error.message}`);
-      toast.error('Failed to structure the transcription');
-    } finally {
-      setProcessingText(false);
-      setLoading(false);
-    }
-  };
-
-  // Generate different format types
-  const generateFormats = async () => {
-    if (!transcriptionData?.text) {
-      setError('Missing transcription text');
-      return;
+  const generateFormattedVersions = async (transcriptionText: string) => {
+    if (!transcriptionText) {
+      toast.error('No transcription text provided');
+      return null;
     }
 
-    setProcessingText(true);
+    setIsProcessing(true);
     
     try {
       const formatTypes = [
@@ -87,14 +36,16 @@ export const useFormatGeneration = ({
         try {
           console.log(`Generating ${formatType.name} format...`);
           
-          // Explicitly pass format type as role
+          // Pass format type as role parameter
           const structuredResult = await structureText(
-            transcriptionData.text, 
-            formatType.id // Pass format type as role parameter
+            transcriptionText, 
+            formatType.id
           );
           
           if (structuredResult) {
-            console.log(`${formatType.name} format result:`, structuredResult);
+            // Ensure the format type is correctly set
+            const detectedFormat = detectFormat(structuredResult, formatType.id);
+            console.log(`Generated ${formatType.name} format, detected as: ${detectedFormat}`);
             
             // Format the text representation
             const formattedText = Object.entries(structuredResult)
@@ -110,12 +61,8 @@ export const useFormatGeneration = ({
               formatType: formatType.id,
               formattedText,
               structuredData: structuredResult,
-              selected: formatType.id === 'history' // Select history format by default
+              selected: formatType.id === 'history'  // Select history by default
             });
-            
-            console.log(`Added ${formatType.name} format to results`);
-          } else {
-            console.error(`No structured result returned for ${formatType.name} format`);
           }
         } catch (err) {
           console.error(`Error generating ${formatType.name} format:`, err);
@@ -123,53 +70,28 @@ export const useFormatGeneration = ({
       }
       
       if (formattedResults.length > 0) {
-        console.log('Setting formatted versions:', formattedResults);
         setFormattedVersions(formattedResults);
         
-        // Set the first format as the active one - prioritize History & Physical
+        // Return the default format (History & Physical)
         const defaultFormat = formattedResults.find(f => f.formatType === 'history') || formattedResults[0];
-        console.log('Setting default format:', defaultFormat);
-        setStructuredData(defaultFormat.structuredData);
-        
         toast.success('Multiple format types generated successfully');
-      } else {
-        // If all format generations failed, try a basic structure instead
-        console.log('No formats generated, falling back to basic structure');
-        await processTranscription();
-        
-        if (!structuredData) {
-          setError('No structured formats could be generated');
-          toast.error('Failed to generate formatted versions');
-        }
+        return defaultFormat.structuredData;
       }
-    } catch (error: any) {
-      console.error('Error processing multiple formats:', error);
-      setError(`Failed to structure the transcription: ${error.message}`);
-      toast.error('Failed to structure the transcription');
       
-      // Attempt to process as a single format as fallback
-      await processTranscription();
+      throw new Error('Failed to generate any formatted versions');
+    } catch (error) {
+      console.error('Error generating formatted versions:', error);
+      toast.error('Failed to generate formatted versions');
+      return null;
     } finally {
-      setProcessingText(false);
+      setIsProcessing(false);
     }
   };
 
-  // Initialize format generation if we have transcription data but no formats yet
-  if (
-    transcriptionData?.text && 
-    !processingText && 
-    !noteId && 
-    formattedVersions.length === 0 &&
-    !loading &&
-    typeof window !== 'undefined'
-  ) {
-    generateFormats();
-  }
-
   return {
+    isProcessing,
     formattedVersions,
     setFormattedVersions,
-    generateFormats,
-    processTranscription
+    generateFormattedVersions
   };
 };

@@ -53,23 +53,37 @@ export const SaveNoteButton: React.FC<SaveNoteButtonProps> = ({
       // If we have selected formats, save those
       if (selectedFormats.length > 0) {
         // Save each selected format
+        const savedIds = [];
         for (const format of selectedFormats) {
-          await saveUserNote({
+          console.log('Saving format type:', format.formatType);
+          const result = await saveUserNote({
             userId: user.id,
             patientId: patientId || undefined,
             transcriptionId,
             content: format.structuredData,
             formatType: format.formatType
           });
+          
+          if (result && result.id) {
+            savedIds.push(result.id);
+            console.log(`Saved note with format type '${format.formatType}', ID: ${result.id}`);
+          }
         }
+        console.log('All formats saved with IDs:', savedIds);
       } else {
         // Save the current format only
-        await saveUserNote({
+        console.log('Saving single format with type: standard');
+        const result = await saveUserNote({
           userId: user.id,
           patientId: patientId || undefined,
           transcriptionId,
-          content: sections
+          content: sections,
+          formatType: 'standard'
         });
+        
+        if (result && result.id) {
+          console.log(`Saved single format note with ID: ${result.id}`);
+        }
       }
       
       toast.success('Note saved successfully');

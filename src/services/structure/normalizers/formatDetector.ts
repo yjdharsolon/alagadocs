@@ -1,15 +1,15 @@
-
 /**
  * Determines the format type from the data structure and role
  * 
  * @param data - The structured data to analyze
  * @param role - The medical professional role or document format type
- * @returns The detected format type (soap, consultation, prescription, or standard)
+ * @returns The detected format type (soap, consultation, prescription, history, or standard)
  */
 export function detectFormat(data: any, role: string): string {
   // If role explicitly specifies a format, use that
-  if (['soap', 'consultation', 'prescription', 'history'].includes(role)) {
-    return role === 'history' ? 'standard' : role;
+  if (['soap', 'consultation', 'prescription', 'history', 'standard'].includes(role?.toLowerCase())) {
+    // Keep history as 'history' now instead of converting to 'standard'
+    return role.toLowerCase();
   }
   
   // Detect format based on data structure
@@ -22,7 +22,7 @@ export function detectFormat(data: any, role: string): string {
     return 'prescription';
   } else if (data.chiefComplaint !== undefined || 
              data.historyOfPresentIllness !== undefined) {
-    return 'standard';
+    return 'history';  // Change from 'standard' to 'history' to be more specific
   }
   
   // Default to standard format
