@@ -14,6 +14,14 @@ export const addMedicationsSection = (
 ): number => {
   let yPosition = startY;
   
+  console.log('DEBUG: Medications data type:', typeof medications);
+  console.log('DEBUG: Medications is array?', Array.isArray(medications));
+  console.log('DEBUG: Medications value:', 
+    typeof medications === 'object' 
+      ? JSON.stringify(medications).substring(0, 200) + '...' 
+      : medications
+  );
+  
   // Add Rx symbol
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
@@ -33,12 +41,14 @@ export const addMedicationsSection = (
   // Handle different formats of medication data
   if (!medications) {
     // No medications
+    console.log('DEBUG: No medications found');
     doc.text("No medications prescribed.", margin, yPosition);
     return yPosition + 8;
   }
   
   if (typeof medications === 'string') {
     // If medications is a string, display as is
+    console.log('DEBUG: Processing medications as string');
     const medLines = doc.splitTextToSize(medications, contentWidth);
     doc.text(medLines, margin, yPosition);
     return yPosition + medLines.length * 5;
@@ -46,8 +56,15 @@ export const addMedicationsSection = (
   
   if (Array.isArray(medications)) {
     // Process each medication in the array
+    console.log('DEBUG: Processing medications as array with', medications.length, 'items');
     medications.forEach((med, index) => {
       try {
+        console.log(`DEBUG: Processing medication ${index}:`, 
+          typeof med === 'object' 
+            ? JSON.stringify(med).substring(0, 100) + '...' 
+            : med
+        );
+        
         if (typeof med === 'string') {
           // If medication is a plain string
           const medLines = doc.splitTextToSize(med, contentWidth);
@@ -70,6 +87,11 @@ export const addMedicationsSection = (
           const refills = med.refills || '';
           const sigInstructions = med.sigInstructions || '';
           const specialInstructions = med.specialInstructions || '';
+          
+          console.log('DEBUG: Medication fields:', {
+            genericName, brandName, strength, dosageForm, 
+            quantity, refills, sigInstructions, specialInstructions
+          });
           
           // Format the medication line
           const medicationText = `${index + 1}. ${genericName}${brandName} ${strength} ${dosageForm}`;

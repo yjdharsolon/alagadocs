@@ -24,23 +24,40 @@ export const exportPrescriptionAsPDF = (
   const pageHeight = doc.internal.pageSize.getHeight();
   
   try {
-    // Log data for debugging
-    console.log('Exporting prescription with sections:', sections);
+    // Debug logging
+    console.log('DEBUG: PDF EXPORT - Starting prescription PDF export', {
+      sectionsAvailable: Object.keys(sections),
+      patientInfo: typeof sections.patientInformation === 'object' 
+        ? JSON.stringify(sections.patientInformation) 
+        : typeof sections.patientInformation,
+      medications: Array.isArray(sections.medications) 
+        ? `Array with ${sections.medications.length} items` 
+        : typeof sections.medications,
+      prescriberInfo: typeof sections.prescriberInformation === 'object'
+        ? JSON.stringify(sections.prescriberInformation)
+        : typeof sections.prescriberInformation,
+      profileDataAvailable: !!profileData,
+    });
     
     // ===== HEADER SECTION (Doctor & Clinic Info) =====
     let yPosition = addHeaderSection(doc, profileData, margin, contentWidth);
+    console.log('DEBUG: Added header section, yPosition =', yPosition);
     
     // ===== PATIENT INFORMATION =====
     yPosition = addPatientInfoSection(doc, sections.patientInformation, margin, patientName, yPosition);
+    console.log('DEBUG: Added patient info section, yPosition =', yPosition);
     
     // ===== MEDICATIONS SECTION =====
     yPosition = addMedicationsSection(doc, sections.medications, margin, contentWidth, yPosition);
+    console.log('DEBUG: Added medications section, yPosition =', yPosition);
     
     // ===== PRESCRIBER'S DETAILS (FOOTER) =====
     addPrescriberSection(doc, sections.prescriberInformation, profileData, margin, contentWidth, pageHeight);
+    console.log('DEBUG: Added prescriber section');
     
     // Save the PDF
     const fileName = createPdfFilename('prescription', patientName);
+    console.log('DEBUG: Saving PDF with filename:', fileName);
     doc.save(fileName);
   } catch (error) {
     console.error('Error generating prescription PDF:', error);

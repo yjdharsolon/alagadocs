@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import DocumentView from '../../DocumentView';
 import ExportButton from '../../buttons/ExportButton';
 import { MedicalSections } from '../../types';
@@ -15,15 +15,22 @@ const PrescriptionDocument: React.FC<PrescriptionDocumentProps> = ({ structuredD
   const { profileData } = useProfileFields();
   
   // Log data for debugging
-  console.log('PrescriptionDocument rendering with profile data:', profileData);
+  useEffect(() => {
+    console.log('PrescriptionDocument debugging:');
+    console.log('- structuredData:', JSON.stringify(structuredData, null, 2));
+    console.log('- profileData:', profileData ? JSON.stringify(profileData, null, 2) : 'No profile data');
+  }, [structuredData, profileData]);
   
   // Extract patient name from the patient information object
   const patientName = typeof structuredData.patientInformation === 'object' 
     ? structuredData.patientInformation?.name || null
     : structuredData.patientInformation || null;
   
+  console.log('DEBUG: Extracted patientName:', patientName);
+  
   // Format data for export
   const formattedData = formatPrescriptionForExport(structuredData);
+  console.log('DEBUG: Formatted prescription data:', formattedData);
   
   return (
     <div>

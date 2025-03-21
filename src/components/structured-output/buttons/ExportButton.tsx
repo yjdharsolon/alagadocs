@@ -36,17 +36,41 @@ const ExportButton: React.FC<ExportButtonProps> = ({
     try {
       setIsExporting(true);
       
+      // Add debugging information
+      console.log('Export request:', {
+        format,
+        isPrescription,
+        sections: JSON.stringify(sections, null, 2),
+        patientName,
+        hasProfileData: !!profileData,
+        profileDataSummary: profileData ? {
+          name: `${profileData.first_name || ''} ${profileData.last_name || ''}`,
+          clinic: profileData.clinic_name,
+          hasPRC: !!profileData.prc_license
+        } : 'No profile data'
+      });
+      
       if (format === 'pdf') {
         if (isPrescription) {
-          console.log('Exporting prescription PDF with profile data:', profileData);
+          console.log('DEBUG: Calling exportPrescriptionAsPDF with:', {
+            sectionsKeys: Object.keys(sections),
+            patientInfo: sections.patientInformation,
+            medications: Array.isArray(sections.medications) ? 
+              `Array with ${sections.medications.length} items` : 
+              typeof sections.medications,
+            prescriberInfo: sections.prescriberInformation,
+          });
+          
           // Directly use the function from pdf/index.ts to avoid circular imports
           exportPrescriptionAsPDF(sections, patientName, profileData);
           toast.success('Exported prescription as PDF');
         } else {
+          console.log('DEBUG: Calling exportAsPDF for non-prescription');
           exportAsPDF(sections, patientName);
           toast.success('Exported as PDF');
         }
       } else {
+        console.log('DEBUG: Calling exportAsText');
         exportAsText(sections, patientName);
         toast.success('Exported as text file');
       }
