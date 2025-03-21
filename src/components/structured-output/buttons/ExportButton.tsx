@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   DropdownMenu, 
@@ -32,14 +31,21 @@ const ExportButton: React.FC<ExportButtonProps> = ({
 }) => {
   const [isExporting, setIsExporting] = useState(false);
 
+  const shouldUsePrescriptionFormat = React.useMemo(() => {
+    if (isPrescription) return true;
+
+    const hasMedications = Array.isArray(sections.medications) && sections.medications.length > 0;
+    const hasPatientInfo = !!sections.patientInformation;
+    return hasMedications && hasPatientInfo;
+  }, [sections, isPrescription]);
+
   const handleExport = async (format: 'pdf' | 'text') => {
     try {
       setIsExporting(true);
       
-      // Add debugging information
       console.log('Export request:', {
         format,
-        isPrescription,
+        shouldUsePrescriptionFormat,
         sections: JSON.stringify(sections, null, 2),
         patientName,
         hasProfileData: !!profileData,
@@ -51,21 +57,12 @@ const ExportButton: React.FC<ExportButtonProps> = ({
       });
       
       if (format === 'pdf') {
-        if (isPrescription) {
-          console.log('DEBUG: Calling exportPrescriptionAsPDF with:', {
-            sectionsKeys: Object.keys(sections),
-            patientInfo: sections.patientInformation,
-            medications: Array.isArray(sections.medications) ? 
-              `Array with ${sections.medications.length} items` : 
-              typeof sections.medications,
-            prescriberInfo: sections.prescriberInformation,
-          });
-          
-          // Directly use the function from pdf/index.ts to avoid circular imports
+        if (shouldUsePrescriptionFormat) {
+          console.log('DEBUG: Using prescription PDF export format');
           exportPrescriptionAsPDF(sections, patientName, profileData);
           toast.success('Exported prescription as PDF');
         } else {
-          console.log('DEBUG: Calling exportAsPDF for non-prescription');
+          console.log('DEBUG: Using standard PDF export format');
           exportAsPDF(sections, patientName);
           toast.success('Exported as PDF');
         }
@@ -92,13 +89,13 @@ const ExportButton: React.FC<ExportButtonProps> = ({
           className="flex items-center gap-2 border-[#33C3F0] text-[#33C3F0] hover:bg-[#33C3F0]/10 transition-colors duration-200"
         >
           <FileDown className="h-4 w-4" />
-          Export
+          {shouldUsePrescriptionFormat ? 'Export Prescription' : 'Export'}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="border border-[#E0E0E0] shadow-md z-50 bg-white">
         <DropdownMenuItem onClick={() => handleExport('pdf')} className="cursor-pointer hover:bg-[#33C3F0]/10 hover:text-[#33C3F0] transition-colors duration-200">
           <FileType className="h-4 w-4 mr-2" />
-          Export as PDF
+          {shouldUsePrescriptionFormat ? 'Export as Prescription PDF' : 'Export as PDF'}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleExport('text')} className="cursor-pointer hover:bg-[#33C3F0]/10 hover:text-[#33C3F0] transition-colors duration-200">
           <FileText className="h-4 w-4 mr-2" />

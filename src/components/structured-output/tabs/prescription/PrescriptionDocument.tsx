@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import DocumentView from '../../DocumentView';
 import ExportButton from '../../buttons/ExportButton';
@@ -32,9 +31,12 @@ const PrescriptionDocument: React.FC<PrescriptionDocumentProps> = ({ structuredD
   const formattedData = formatPrescriptionForExport(structuredData);
   console.log('DEBUG: Formatted prescription data:', formattedData);
   
+  // This component will still render its own export button, but this button will be hidden
+  // in most views as the DocumentActions export button will take precedence. We keep this
+  // as a fallback in case the main button is not displaying properly.
   return (
     <div>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 hidden">
         <ExportButton 
           sections={formattedData} 
           patientName={patientName} 

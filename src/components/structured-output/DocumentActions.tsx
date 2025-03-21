@@ -47,6 +47,25 @@ const DocumentActions = ({
   updateDataDirectly,
   disableRefreshAfterSave
 }: DocumentActionsProps) => {
+  // Check if the document is a prescription by examining its structure
+  const isPrescription = React.useMemo(() => {
+    // If it has medications array and patient information, it's likely a prescription
+    return (Array.isArray(structuredData.medications) || 
+            typeof structuredData.patientInformation === 'object' ||
+            typeof structuredData.patientInformation === 'string') && 
+           (structuredData.prescriberInformation !== undefined);
+  }, [structuredData]);
+
+  // Log for debugging
+  React.useEffect(() => {
+    console.log('DocumentActions detected document type:', {
+      isPrescription,
+      hasMedications: Array.isArray(structuredData.medications),
+      hasPatientInfo: !!structuredData.patientInformation,
+      hasPrescriberInfo: !!structuredData.prescriberInformation
+    });
+  }, [isPrescription, structuredData]);
+
   const handleEndConsult = () => {
     console.log('End consultation triggered from DocumentActions');
     if (onEndConsult) {
@@ -71,7 +90,11 @@ const DocumentActions = ({
             disableRefreshAfterSave={disableRefreshAfterSave}
           />
           <CopyButton sections={structuredData} />
-          <ExportButton sections={structuredData} />
+          <ExportButton 
+            sections={structuredData} 
+            patientName={patientInfo.name}
+            isPrescription={isPrescription}
+          />
           <EditButton onClick={onToggleEditMode} />
           <EndConsultButton 
             isVisible={noteSaved} 
